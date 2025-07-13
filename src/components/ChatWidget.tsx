@@ -88,18 +88,31 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
     if (nameInput.trim()) {
       setUserName(nameInput.trim());
 
-      // Add welcome message when user first enters their name
-      const welcomeMessage: Message = {
-        id: Date.now().toString() + "-welcome",
+      // Add first welcome message when user first enters their name
+      const firstWelcomeMessage: Message = {
+        id: Date.now().toString() + "-welcome-1",
         text: `Hello ${
           nameInput.trim().charAt(0).toUpperCase() + nameInput.trim().slice(1)
-        }! 👋 Welcome to Ersona Chat! I'm here to help you with any questions you might have. Feel free to ask me anything!`,
+        }! 👋 Welcome to Ersona Chat!`,
         sender: "bot",
         timestamp: new Date(),
         direction: "ltr",
       };
 
-      setMessages([welcomeMessage]);
+      setMessages([firstWelcomeMessage]);
+
+      // Add second welcome message with a delay
+      setTimeout(() => {
+        const secondWelcomeMessage: Message = {
+          id: Date.now().toString() + "-welcome-2",
+          text: "I'm here to help you with any questions you might have. Feel free to ask me anything!",
+          sender: "bot",
+          timestamp: new Date(),
+          direction: "ltr",
+        };
+
+        setMessages((prev) => [...prev, secondWelcomeMessage]);
+      }, 1500);
     }
   };
 
