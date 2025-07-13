@@ -1,5 +1,5 @@
-(function() {
-  'use strict';
+(function () {
+  "use strict";
 
   // Prevent multiple initializations
   if (window.ChatWidgetInitialized) {
@@ -8,11 +8,8 @@
   window.ChatWidgetInitialized = true;
 
   // Default configuration
-  const config = {
-    // Replace with your actual domain
-    domain: 'http://localhost:3000',
-    // For production, use: 'https://yourdomain.com'
-  };
+  const BASE_URL = "http://localhost:3000";
+  // For production, use: 'https://yourdomain.com'
 
   // Create and inject styles
   const styles = `
@@ -22,7 +19,7 @@
       right: 20px;
       width: 60px;
       height: 60px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: #2686cb;
       border: none;
       border-radius: 50%;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -53,7 +50,7 @@
       width: 350px;
       height: 500px;
       border: none;
-      border-radius: 12px;
+      border-radius: 16px;
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
       z-index: 9998;
       background: white;
@@ -77,9 +74,10 @@
         left: 0;
         right: 0;
         bottom: 0;
-        width: 100vw;
-        height: 100vh;
-        border-radius: 0;
+        width: 96vw;
+        height: 60vh;
+        border-radius: 16px;
+        margin: auto auto 4.5rem auto;
       }
 
       #chat-widget-button {
@@ -100,38 +98,38 @@
   `;
 
   // Inject styles into the page
-  const styleSheet = document.createElement('style');
-  styleSheet.type = 'text/css';
+  const styleSheet = document.createElement("style");
+  styleSheet.type = "text/css";
   styleSheet.innerText = styles;
   document.head.appendChild(styleSheet);
 
   // Create the floating button
-  const button = document.createElement('button');
-  button.id = 'chat-widget-button';
-  button.innerHTML = '💬';
-  button.setAttribute('aria-label', 'Open chat widget');
-  button.setAttribute('title', 'Chat with us');
+  const button = document.createElement("button");
+  button.id = "chat-widget-button";
+  button.innerHTML = `<img src="${BASE_URL}/chat-icon.png" alt="Chat" style="width: 32px; height: 32px; object-fit: contain;">`;
+  button.setAttribute("aria-label", "Open chat widget");
+  button.setAttribute("title", "Chat with us");
 
   // Create the iframe
-  const iframe = document.createElement('iframe');
-  iframe.id = 'chat-widget-iframe';
-  iframe.setAttribute('aria-label', 'Chat widget');
-  iframe.setAttribute('title', 'Chat widget');
-  
+  const iframe = document.createElement("iframe");
+  iframe.id = "chat-widget-iframe";
+  iframe.setAttribute("aria-label", "Chat widget");
+  iframe.setAttribute("title", "Chat widget");
+
   // Get current URL parameters to pass to the iframe
   const urlParams = new URLSearchParams(window.location.search);
-  const userId = urlParams.get('userId');
-  const lang = urlParams.get('lang');
-  
+  const userId = urlParams.get("userId");
+  const lang = urlParams.get("lang");
+
   // Build iframe URL with parameters
-  let iframeSrc = config.domain + '/embed-chat';
+  let iframeSrc = BASE_URL + "/embed-chat";
   const params = new URLSearchParams();
-  if (userId) params.set('userId', userId);
-  if (lang) params.set('lang', lang);
+  if (userId) params.set("userId", userId);
+  if (lang) params.set("lang", lang);
   if (params.toString()) {
-    iframeSrc += '?' + params.toString();
+    iframeSrc += "?" + params.toString();
   }
-  
+
   iframe.src = iframeSrc;
 
   // State management
@@ -140,35 +138,35 @@
   // Toggle function
   function toggleChat() {
     isOpen = !isOpen;
-    
+
     if (isOpen) {
-      iframe.classList.add('open');
-      button.innerHTML = '✕';
-      button.setAttribute('aria-label', 'Close chat widget');
-      button.setAttribute('title', 'Close chat');
+      iframe.classList.add("open");
+      button.innerHTML = '<span style="color: #ffffff;">✕</span>';
+      button.setAttribute("aria-label", "Close chat widget");
+      button.setAttribute("title", "Close chat");
     } else {
-      iframe.classList.remove('open');
-      button.innerHTML = '💬';
-      button.setAttribute('aria-label', 'Open chat widget');
-      button.setAttribute('title', 'Chat with us');
+      iframe.classList.remove("open");
+      button.innerHTML = `<img src="${BASE_URL}/chat-icon.png" alt="Chat" style="width: 32px; height: 32px; object-fit: contain;">`;
+      button.setAttribute("aria-label", "Open chat widget");
+      button.setAttribute("title", "Chat with us");
     }
   }
 
   // Add click event listener
-  button.addEventListener('click', toggleChat);
+  button.addEventListener("click", toggleChat);
 
   // Close on escape key
-  document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape' && isOpen) {
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && isOpen) {
       toggleChat();
     }
   });
 
   // Close when clicking outside iframe (optional)
-  document.addEventListener('click', function(event) {
+  document.addEventListener("click", function (event) {
     const clickedInsideIframe = iframe.contains(event.target);
     const clickedButton = button.contains(event.target);
-    
+
     if (isOpen && !clickedInsideIframe && !clickedButton) {
       // Uncomment the line below if you want to close on outside click
       // toggleChat();
@@ -182,24 +180,23 @@
   }
 
   // Initialize when DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', addElementsToPage);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", addElementsToPage);
   } else {
     addElementsToPage();
   }
 
   // Expose public API
   window.ChatWidget = {
-    open: function() {
+    open: function () {
       if (!isOpen) toggleChat();
     },
-    close: function() {
+    close: function () {
       if (isOpen) toggleChat();
     },
     toggle: toggleChat,
-    isOpen: function() {
+    isOpen: function () {
       return isOpen;
-    }
+    },
   };
-
-})(); 
+})();
