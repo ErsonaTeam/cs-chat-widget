@@ -19,10 +19,11 @@
       right: 20px;
       width: 60px;
       height: 60px;
-      background: #2686cb;
-      border: none;
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
       border-radius: 50%;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -49,21 +50,25 @@
       right: 20px;
       width: 350px;
       height: 500px;
-      border: none;
+      border: 1px solid rgba(0, 0, 0, 1);
       border-radius: 16px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
       z-index: 9998;
-      background: white;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       transition: all 0.3s ease;
       opacity: 0;
       transform: translateY(20px) scale(0.95);
       pointer-events: none;
+      color-scheme: light;
     }
 
     #chat-widget-iframe.open {
       opacity: 1;
       transform: translateY(0) scale(1);
       pointer-events: all;
+      border: 1px solid rgba(0, 0, 0, 0.25);
     }
 
     /* Mobile responsive */
@@ -92,7 +97,12 @@
     /* Dark mode support */
     @media (prefers-color-scheme: dark) {
       #chat-widget-iframe {
-        background: #1a1a1a;
+        background: rgba(26, 26, 26, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      #chat-widget-button {
+        background: rgba(26, 26, 26, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
       }
     }
   `;
@@ -115,6 +125,9 @@
   iframe.id = "chat-widget-iframe";
   iframe.setAttribute("aria-label", "Chat widget");
   iframe.setAttribute("title", "Chat widget");
+  iframe.setAttribute("frameBorder", "0");
+  iframe.style.colorScheme = "light";
+  iframe.style.background = "transparent";
 
   // Get current URL parameters to pass to the iframe
   const urlParams = new URLSearchParams(window.location.search);

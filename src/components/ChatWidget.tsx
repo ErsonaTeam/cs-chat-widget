@@ -201,7 +201,7 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
   // Name input screen
   if (!userName) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-6 bg-white text-gray-900 rounded-2xl">
+      <div className="flex flex-col items-center justify-center h-full p-6 bg-transparent text-gray-900 rounded-2xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -221,18 +221,15 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
                 value={nameInput}
                 onChange={(e) => setNameInput(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-xl 
-                         bg-white text-gray-900 focus:outline-none focus:ring-2 
-                         focus:ring-blue-500"
+                         bg-white text-gray-900 focus:outline-none focus:ring-0"
                 placeholder="Your name..."
                 autoFocus
               />
             </div>
             <motion.button
               type="submit"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 
-                       rounded-xl transition-colors"
+              className="w-full bg-ersonaBlue hover:bg-blue-600 text-slate-900 font-medium py-2 px-4 border border-gray-300
+                        rounded-xl transition-colors"
             >
               Start Chat
             </motion.button>
@@ -244,20 +241,21 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
 
   // Chat interface
   return (
-    <div className="flex flex-col h-full backdrop-blur-sm text-gray-900 bg-gradient-to-br from-lightTurquoise via-violet-400 to-white">
+    <div className="flex flex-col h-full text-gray-900 bg-transparent rounded-2xl">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 backdrop-blur-sm rounded-t-2xl">
-        <h3 className="font-semibold flex items-center gap-2">
+      <div className="flex items-center justify-between py-2 px-4 bg-white/40 rounded-t-2xl chat-header shadow-lg shadow-black/10">
+        <h3 className="font-medium flex items-center gap-1 text-gray-800 text-sm">
           <div className="rounded-full bg-gray-100 p-1 flex items-end justify-end">
             <Image
-              src="/agent-pic.png"
-              alt="Ersona Agent"
-              width={24}
-              height={24}
-              className="object-bottom h-full w-full"
+              src="/ersona-logo.svg"
+              priority={true}
+              alt="Ersona Logo"
+              width={20}
+              height={20}
+              className="object-bottom w-5 h-5"
             />
           </div>
-          Ersona Agent
+          <span className="mb-0.5">Ersona Agent</span>
         </h3>
         <button
           onClick={resetChat}
@@ -268,7 +266,7 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white rounded-t-2xl">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white/50">
         <AnimatePresence>
           {messages.map((message) => (
             <motion.div
@@ -284,8 +282,8 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
                 dir={message.direction}
                 className={`max-w-xs lg:max-w-md px-4 py-2 rounded-xl ${
                   message.sender === "user"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 text-gray-900"
+                    ? "bg-ersonaBlue text-white chat-message-user shadow-sm"
+                    : "bg-white text-gray-900 shadow-sm border border-gray-200 chat-message-bot"
                 }`}
               >
                 <p className="text-sm">{message.text}</p>
@@ -303,8 +301,8 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
       </div>
 
       {/* Input */}
-      <div className="pt-4 px-4 pb-1 border-t border-gray-200 bg-white">
-        <form onSubmit={handleMessageSubmit} className="flex space-x-2">
+      <div className="pt-4 px-4 pb-1 bg-white/80">
+        <form onSubmit={handleMessageSubmit} className="flex">
           <input
             ref={inputRef}
             type="text"
@@ -312,23 +310,21 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
             dir={inputDirection}
-            className="flex-1 px-2 py-2 border border-gray-300 rounded-xl 
-                     bg-white text-gray-900 focus:outline-none focus:ring-0 
-                     text-sm placeholder:text-gray-500 placeholder:text-sm"
+            className="flex-1 px-2 py-2 border border-r-0 border-gray-300 rounded-l-xl 
+                     bg-white/80 text-gray-900 focus:outline-none focus:ring-0 
+                     text-sm placeholder:text-gray-500 placeholder:text-sm chat-input"
             placeholder="Ask me anything..."
           />
           <motion.button
             type="submit"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
             className="bg-ersonaBlue hover:bg-blue-500 text-white font-medium py-2 px-4 
-                     rounded-xl transition-colors text-sm flex items-center justify-center"
+                     rounded-r-xl transition-colors text-sm flex items-center justify-center chat-header border border-gray-300"
           >
             <LuSendHorizontal className="w-5 h-5" />
           </motion.button>
         </form>
       </div>
-      <div className="pb-1 px-2 bg-white text-center">
+      <div className="pb-1 px-2 bg-white/80 text-center rounded-b-2xl">
         <p className="text-[12px] text-gray-500">
           Powered by{" "}
           <a href="https://ersona.co" className="text-blue-500">
