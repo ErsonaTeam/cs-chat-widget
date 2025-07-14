@@ -318,7 +318,7 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
           <motion.button
             type="submit"
             className="bg-ersonaBlue hover:bg-blue-500 text-white font-medium py-2 px-4 
-                     rounded-r-xl transition-colors text-sm flex items-center justify-center chat-header border border-gray-300"
+                     rounded-r-xl transition-colors text-sm flex items-center justify-center chat-button-send border border-gray-300"
           >
             <LuSendHorizontal className="w-5 h-5" />
           </motion.button>

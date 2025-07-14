@@ -56,5 +56,9 @@ body.embed-transparent .chat-input {
 }
 
 body.embed-transparent .chat-header {
+  background-color: rgba(167, 167, 167, 0.25) !important;
+}
+
+body.embed-transparent .chat-button-send {
   background-color: rgba(167, 167, 167, 0.3) !important;
 }
