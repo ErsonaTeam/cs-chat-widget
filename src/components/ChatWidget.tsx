@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LuSendHorizontal } from "react-icons/lu";
 import Image from "next/image";
+import LoadingSpinner from "./LoadingSpinner";
+
 interface Message {
   id: string;
   text: string;
@@ -33,8 +35,60 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
   const [inputMessage, setInputMessage] = useState<string>("");
   const [inputDirection, setInputDirection] = useState<"ltr" | "rtl">("ltr");
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Get the parent page URL (where the widget is embedded)
+  const getParentPageURL = (): string => {
+    if (typeof window === "undefined") return "";
+
+    try {
+      // Try to get the parent window's URL (if same-origin)
+      if (window.parent && window.parent !== window) {
+        return window.parent.location.href;
+      }
+      // Try to get the top window's URL (if same-origin)
+      if (window.top && window.top !== window) {
+        return window.top.location.href;
+      }
+    } catch (error) {
+      // Cross-origin restriction - fall back to document.referrer
+      if (document.referrer) {
+        return document.referrer;
+      }
+    }
+
+    // Final fallback to current window location
+    return window.location.href;
+  };
+
+  // Initialize chat session with API
+  const initializeSession = async () => {
+    try {
+      const url = getParentPageURL();
+      const response = await fetch("/api/chat/init", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url,
+          userId,
+          lang,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to initialize session");
+      }
+
+      const data = await response.json();
+      console.log("Session initialized:", data);
+    } catch (error) {
+      console.error("Error initializing session:", error);
+    }
+  };
 
   // Load data from localStorage on mount
   useEffect(() => {
@@ -58,6 +112,9 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
     }
 
     setIsInitialized(true);
+
+    // Initialize session with API
+    initializeSession();
 
     // Log query parameters if provided
     if (userId) console.log("User ID:", userId);
@@ -116,33 +173,57 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
     }
   };
 
-  // Simulate bot reply
-  const generateBotReply = (userMessage: string, userName: string): Message => {
-    const botReplies = [
-      `Thanks for your message, ${userName}!`,
-      `Hello ${userName}, how can I help you today?`,
-      `I received your message "${userMessage}", ${userName}!`,
-      `Great to hear from you, ${userName}!`,
-      `${userName}, I'm here to assist you!`,
-    ];
+  // Send message to API and get bot response
+  const sendMessageToAPI = async (
+    message: string,
+    userName: string
+  ): Promise<Message> => {
+    try {
+      const url = getParentPageURL();
+      const response = await fetch("/api/chat/message", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url,
+          name: userName,
+          userId,
+          message,
+        }),
+      });
 
-    const randomReply =
-      botReplies[Math.floor(Math.random() * botReplies.length)];
-    const direction = detectTextDirection(randomReply);
+      if (!response.ok) {
+        throw new Error("Failed to send message");
+      }
 
-    return {
-      id: Date.now().toString() + "-bot",
-      text: randomReply,
-      sender: "bot",
-      timestamp: new Date(),
-      direction,
-    };
+      const data = await response.json();
+      const direction = detectTextDirection(data.response);
+
+      return {
+        id: Date.now().toString() + "-bot",
+        text: data.response,
+        sender: "bot",
+        timestamp: new Date(),
+        direction,
+      };
+    } catch (error) {
+      console.error("Error sending message:", error);
+      // Fallback response in case of error
+      return {
+        id: Date.now().toString() + "-bot-error",
+        text: "I'm sorry, I'm having trouble connecting right now. Please try again later.",
+        sender: "bot",
+        timestamp: new Date(),
+        direction: "ltr",
+      };
+    }
   };
 
   // Handle message submission
-  const handleMessageSubmit = (e: React.FormEvent) => {
+  const handleMessageSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputMessage.trim()) return;
+    if (!inputMessage.trim() || isLoading) return;
 
     const direction = detectTextDirection(inputMessage);
     const userMessage: Message = {
@@ -154,14 +235,15 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const messageText = inputMessage.trim();
     setInputMessage("");
     setInputDirection("ltr");
+    setIsLoading(true);
 
-    // Generate bot reply after 1 second
-    setTimeout(() => {
-      const botReply = generateBotReply(userMessage.text, userName);
-      setMessages((prev) => [...prev, botReply]);
-    }, 1000);
+    // Send message to API and get bot response
+    const botReply = await sendMessageToAPI(messageText, userName);
+    setMessages((prev) => [...prev, botReply]);
+    setIsLoading(false);
   };
 
   // Handle input change with direction detection
@@ -188,6 +270,9 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
     setUserName("");
     setMessages([]);
     setNameInput("");
+    setIsLoading(false);
+    // Re-initialize session
+    initializeSession();
   };
 
   if (!isInitialized) {
@@ -296,6 +381,16 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
               </div>
             </motion.div>
           ))}
+          {/* Loading indicator */}
+          {isLoading && (
+            <motion.div
+              // initial={{ opacity: 0, y: 20 }}
+              // animate={{ opacity: 1, y: 0 }}
+              className="flex justify-start"
+            >
+              <LoadingSpinner />
+            </motion.div>
+          )}
         </AnimatePresence>
         <div ref={messagesEndRef} />
       </div>
@@ -310,15 +405,21 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
             dir={inputDirection}
+            disabled={isLoading}
             className="flex-1 px-2 py-2 border border-r-0 border-gray-300 rounded-l-xl 
                      bg-white/80 text-gray-900 focus:outline-none focus:ring-0 
-                     text-sm placeholder:text-gray-500 placeholder:text-sm chat-input"
-            placeholder="Ask me anything..."
+                     text-sm placeholder:text-gray-500 placeholder:text-sm chat-input
+                     disabled:opacity-50 disabled:cursor-not-allowed"
+            placeholder={
+              isLoading ? "Waiting for response..." : "Ask me anything..."
+            }
           />
           <motion.button
             type="submit"
+            disabled={isLoading || !inputMessage.trim()}
             className="bg-ersonaBlue hover:bg-blue-500 text-white font-medium py-2 px-4 
-                     rounded-r-xl transition-colors text-sm flex items-center justify-center chat-button-send border border-gray-300"
+                     rounded-r-xl transition-colors text-sm flex items-center justify-center chat-button-send border border-gray-300
+                     disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-ersonaBlue"
           >
             <LuSendHorizontal className="w-5 h-5" />
           </motion.button>
