@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LuSendHorizontal } from "react-icons/lu";
 import Image from "next/image";
@@ -52,7 +52,7 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
       if (window.top && window.top !== window) {
         return window.top.location.href;
       }
-    } catch (error) {
+    } catch {
       // Cross-origin restriction - fall back to document.referrer
       if (document.referrer) {
         return document.referrer;
@@ -64,7 +64,7 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
   };
 
   // Initialize chat session with API
-  const initializeSession = async () => {
+  const initializeSession = useCallback(async () => {
     try {
       const url = getParentPageURL();
       const response = await fetch("/api/chat/init", {
@@ -88,7 +88,7 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
     } catch (error) {
       console.error("Error initializing session:", error);
     }
-  };
+  }, [userId, lang]);
 
   // Load data from localStorage on mount
   useEffect(() => {
@@ -100,7 +100,7 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
         if (savedName) {
           setUserName(savedName);
           setMessages(
-            savedMessages.map((msg: any) => ({
+            savedMessages.map((msg: Message & { timestamp: string }) => ({
               ...msg,
               timestamp: new Date(msg.timestamp),
             }))
@@ -119,7 +119,7 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
     // Log query parameters if provided
     if (userId) console.log("User ID:", userId);
     if (lang) console.log("Language:", lang);
-  }, [userId, lang]);
+  }, [userId, lang, initializeSession]);
 
   // Save data to localStorage whenever it changes
   useEffect(() => {
@@ -261,7 +261,8 @@ export default function ChatWidget({ userId, lang }: ChatWidgetProps) {
   // Handle Enter key press
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      handleMessageSubmit(e as any);
+      e.preventDefault();
+      handleMessageSubmit(e as unknown as React.FormEvent<HTMLFormElement>);
     }
   };
 
