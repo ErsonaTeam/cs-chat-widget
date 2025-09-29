@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Website - Chat Widget Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .content {
+            margin: 20px 0;
+        }
+        .highlight {
+            background: #e7f3ff;
+            padding: 15px;
+            border-left: 4px solid #007cba;
+            margin: 20px 0;
+        }
+        .api-buttons {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #005a8b;
+        }
+        .code {
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #1a1a1a;
+                color: #e0e0e0;
+            }
+            .container {
+                background: #2d2d2d;
+                color: #e0e0e0;
+            }
+            h1 {
+                color: #f0f0f0;
+            }
+            .highlight {
+                background: #1a3d5c;
+                border-left-color: #4da6e0;
+            }
+            .code {
+                background: #1e1e1e;
+                border-color: #444;
+                color: #e0e0e0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌟 Demo Website</h1>
+        <div class="content">
+            <p>This is a demonstration of how the chat widget works when embedded on any website.</p>
+            
+            <div class="highlight">
+                <strong>📝 Instructions:</strong>
+                <ol>
+                    <li>Look for the floating 💬 button in the bottom-right corner</li>
+                    <li>Click it to open the chat widget</li>
+                    <li>Enter your name to start chatting</li>
+                    <li>Try typing both English and Hebrew text to see RTL support</li>
+                    <li>Your messages and name are saved in localStorage</li>
+                </ol>
+            </div>
+
+            <h2>🚀 API Controls</h2>
+            <p>Test the programmatic API controls:</p>
+            <div class="api-buttons">
+                <button onclick="openChat()">Open Chat</button>
+                <button onclick="closeChat()">Close Chat</button>
+                <button onclick="toggleChat()">Toggle Chat</button>
+                <button onclick="checkStatus()">Check Status</button>
+            </div>
+
+            <h2>📋 Integration Code</h2>
+            <p>To add this widget to your website, simply include this script tag:</p>
+            <div class="code">
+                &lt;script src="http://localhost:3000/chat-widget.js"&gt;&lt;/script&gt;
+            </div>
+            <p><small><em>Note: Replace localhost:3000 with your actual domain in production</em></small></p>
+
+            <h2>🔧 Features Included</h2>
+            <ul>
+                <li>✅ Responsive design (mobile-friendly)</li>
+                <li>✅ Dark mode support</li>
+                <li>✅ Hebrew/RTL text detection</li>
+                <li>✅ LocalStorage persistence</li>
+                <li>✅ Smooth animations</li>
+                <li>✅ Bot auto-replies</li>
+                <li>✅ URL parameter support</li>
+                <li>✅ Keyboard shortcuts (ESC to close)</li>
+            </ul>
+
+            <h2>🌐 Test Different Scenarios</h2>
+            <div class="api-buttons">
+                <button onclick="location.href='?userId=demo123&lang=en'">Test with English</button>
+                <button onclick="location.href='?userId=demo456&lang=he'">Test with Hebrew</button>
+                <button onclick="location.href='demo.html'">Reset Parameters</button>
+            </div>
+
+            <div class="highlight">
+                <strong>💡 Try typing these for testing:</strong><br>
+                English: "Hello, how are you?"<br>
+                Hebrew: "שלום, מה שלומך?"<br>
+                Mixed: "Hello שלום world עולם"
+            </div>
+
+            <p style="margin-top: 40px; text-align: center; color: #666;">
+                This is a simulated external website to demonstrate the chat widget functionality.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // API control functions
+        function openChat() {
+            if (window.ChatWidget) {
+                window.ChatWidget.open();
+            } else {
+                alert('Chat widget not loaded yet!');
+            }
+        }
+
+        function closeChat() {
+            if (window.ChatWidget) {
+                window.ChatWidget.close();
+            } else {
+                alert('Chat widget not loaded yet!');
+            }
+        }
+
+        function toggleChat() {
+            if (window.ChatWidget) {
+                window.ChatWidget.toggle();
+            } else {
+                alert('Chat widget not loaded yet!');
+            }
+        }
+
+        function checkStatus() {
+            if (window.ChatWidget) {
+                const isOpen = window.ChatWidget.isOpen();
+                alert(`Chat widget is currently: ${isOpen ? 'OPEN' : 'CLOSED'}`);
+            } else {
+                alert('Chat widget not loaded yet!');
+            }
+        }
+
+        // Wait for chat widget to load
+        window.addEventListener('load', function() {
+            console.log('Demo page loaded. Chat widget should appear shortly.');
+        });
+    </script>
+
+    <!-- Include the chat widget script -->
+    <script>
+        // Dynamically load the chat widget script and update the domain for localhost testing
+        const script = document.createElement('script');
+        script.src = '/chat-widget.js';
+        
+        // Override the domain for local testing
+        script.onload = function() {
+            // Patch the domain configuration for local testing
+            if (window.ChatWidgetInitialized) {
+                console.log('Chat widget loaded successfully!');
+            }
+        };
+        
+        document.head.appendChild(script);
+        
+        // Alternative: direct script include (uncomment if you prefer)
+        // <script src="/chat-widget.js"></script>
+    </script>
+</body>
+</html> 
