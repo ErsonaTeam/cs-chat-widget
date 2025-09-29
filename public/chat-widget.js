@@ -8,7 +8,7 @@
   window.ChatWidgetInitialized = true;
 
   // Default configuration
-  const BASE_URL = "http://localhost:3000";
+  const BASE_URL = "https://cs-chat-widget-lymo.vercel.app";
   // For production, use: 'https://yourdomain.com'
 
   // Create and inject styles
