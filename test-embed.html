@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Widget Test - External Site</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        .test-buttons {
+            margin: 30px 0;
+        }
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 50px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .status {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 External Website Test</h1>
+        <p>This is a simulated external website to test your chat widget embedding.</p>
+        <p>Look for the floating chat button in the bottom-right corner!</p>
+        
+        <div class="test-buttons">
+            <button onclick="testOpen()">Open Chat</button>
+            <button onclick="testClose()">Close Chat</button>
+            <button onclick="testToggle()">Toggle Chat</button>
+            <button onclick="checkStatus()">Check Status</button>
+        </div>
+        
+        <div class="status" id="status">
+            Status: Widget loading...
+        </div>
+    </div>
+
+    <script>
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        function testOpen() {
+            if (window.ChatWidget) {
+                window.ChatWidget.open();
+                updateStatus('Status: Opened chat widget');
+            } else {
+                updateStatus('Error: ChatWidget not loaded yet');
+            }
+        }
+
+        function testClose() {
+            if (window.ChatWidget) {
+                window.ChatWidget.close();
+                updateStatus('Status: Closed chat widget');
+            } else {
+                updateStatus('Error: ChatWidget not loaded yet');
+            }
+        }
+
+        function testToggle() {
+            if (window.ChatWidget) {
+                window.ChatWidget.toggle();
+                updateStatus('Status: Toggled chat widget');
+            } else {
+                updateStatus('Error: ChatWidget not loaded yet');
+            }
+        }
+
+        function checkStatus() {
+            if (window.ChatWidget) {
+                const isOpen = window.ChatWidget.isOpen();
+                updateStatus(`Status: Chat widget is ${isOpen ? 'OPEN' : 'CLOSED'}`);
+            } else {
+                updateStatus('Error: ChatWidget not loaded yet');
+            }
+        }
+
+        // Check if widget loaded successfully
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                if (window.ChatWidget) {
+                    updateStatus('Status: Chat widget loaded successfully! ✅');
+                } else {
+                    updateStatus('Status: Chat widget failed to load ❌');
+                }
+            }, 2000);
+        });
+    </script>
+
+    <!-- Your chat widget script with companyId (using ID + data attribute method) -->
+    <script id="ersona-chat-widget" src="http://localhost:3000/chat-widget.js" data-company-id="widget_e97rtkce6"></script>
+</body>
+</html>
