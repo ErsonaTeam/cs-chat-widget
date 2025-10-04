@@ -7,9 +7,168 @@
   }
   window.ChatWidgetInitialized = true;
 
-  // Default configuration
-  const BASE_URL = "https://cs-chat-widget-lymo.vercel.app";
-  // For production, use: 'https://yourdomain.com'
+  // === MESSAGING INTEGRATION BLOCK START ===
+  // Extract companyId from script element (multiple methods for reliability)
+  const getCompanyId = () => {
+    // Method 1: Try to get by ID (most reliable)
+    const widgetScript = document.getElementById('ersona-chat-widget');
+    if (widgetScript && widgetScript.dataset.companyId) {
+      return widgetScript.dataset.companyId;
+    }
+    
+    // Method 2: Try to find any script with data attribute
+    const anyWidgetScript = document.querySelector('script[data-company-id]');
+    if (anyWidgetScript) {
+      return anyWidgetScript.dataset.companyId;
+    }
+    
+    return 'default'; // fallback
+  };
+
+  // Session management - always start fresh
+  const clearSessionOnLoad = () => {
+    // Always clear session storage on page load to ensure fresh sessions
+    sessionStorage.removeItem('chatWidget_conversationId');
+    
+    // Also clear any existing conversationId
+    conversationId = null;
+    isMessagingInitialized = false;
+  };
+
+  // Generate UUID for conversationId
+  const generateUUID = () => {
+    return 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  };
+
+  // Messaging state
+  let pusherClient = null;
+  let conversationId = null;
+  let isMessagingInitialized = false;
+
+  const companyId = getCompanyId();
+  const widgetServiceBaseUrl = "http://localhost:3000";
+  // const widgetServiceBaseUrl = "https://cs-chat-widget-lymo.vercel.app";
+  const pusherAppKey = "a4c044bc7363a3352ac7";
+  const pusherCluster = "eu";
+  const pusherJsUrl = 'https://js.pusher.com/8.2.0/pusher.min.js';
+
+  // Clear session on every load to ensure fresh sessions
+  clearSessionOnLoad();
+
+  // Initialize Pusher client (browser-safe options only)
+  const initializePusher = () => {
+    if (pusherClient || isMessagingInitialized) return;
+
+    try {
+      // Load Pusher dynamically
+      const script = document.createElement('script');
+      script.src = pusherJsUrl;
+      script.onload = () => {
+        pusherClient = new Pusher(pusherAppKey, {
+          cluster: pusherCluster,
+          forceTLS: true,
+          disableStats: true,
+          activityTimeout: 45000,
+        });
+
+        // Subscribe to conversation channel
+        const channelName = `c-${companyId}-${conversationId}`;
+        const channel = pusherClient.subscribe(channelName);
+
+        // Bind event handler
+        channel.bind('agent.message', handleAgentMessage);
+
+        isMessagingInitialized = true;
+      };
+      document.head.appendChild(script);
+    } catch (error) {
+      console.error('Chat Widget - Failed to initialize Pusher:', error);
+    }
+  };
+
+  // Event handler for Pusher events
+  const handleAgentMessage = (data) => {
+    if (data.conversationId && data.conversationId !== conversationId) return; // Defensive guard
+    
+    // Forward the agent message to the iframe via postMessage
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage({
+        type: 'CHAT_WIDGET_AGENT_MESSAGE',
+        message: data.message,
+        timestamp: data.timestamp
+      }, widgetServiceBaseUrl);
+    }
+  };
+
+  // Send message function
+  const sendMessage = async (message, userName) => {
+    // First send: always generate new conversation for this session
+    if (!conversationId) {
+      conversationId = generateUUID();
+      sessionStorage.setItem('chatWidget_conversationId', conversationId);
+      initializePusher();
+    }
+
+    const postUrl = `${widgetServiceBaseUrl}/api/widget/messages`;
+
+    try {
+      const response = await fetch(postUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          companyId,
+          conversationId,
+          message,
+          userName,
+          timestamp: new Date().toISOString(),
+          meta: {
+            userAgent: navigator.userAgent,
+            referrer: document.referrer,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // Expose messaging functions (for iframe communication)
+  window.__CHATWIDGET__ = window.__CHATWIDGET__ || {};
+  window.__CHATWIDGET__.sendMessage = sendMessage;
+  window.__CHATWIDGET__.getConversationId = () => conversationId;
+  
+
+  // Listen for postMessage from iframe for cross-origin communication
+  window.addEventListener('message', (event) => {
+    
+    // More flexible origin checking for development (localhost with any port)
+    const isLocalhost = event.origin.startsWith('http://localhost:')
+    const isExpectedOrigin = event.origin === widgetServiceBaseUrl;
+    
+    if (!isLocalhost && !isExpectedOrigin) {
+      return;
+    }
+
+    if (event.data && event.data.type === 'CHAT_WIDGET_SEND_MESSAGE') {
+      const { message, userName } = event.data;
+      if (message && typeof message === 'string') {
+        sendMessage(message, userName).catch(error => {
+          console.error('Chat Widget - Failed to send message via postMessage:', error);
+        });
+      }
+    }
+  });
+  // === MESSAGING INTEGRATION BLOCK END ===
 
   // Create and inject styles
   const styles = `
@@ -116,7 +275,7 @@
   // Create the floating button
   const button = document.createElement("button");
   button.id = "chat-widget-button";
-  button.innerHTML = `<img src="${BASE_URL}/chat-icon.png" alt="Chat" style="width: 32px; height: 32px; object-fit: contain;">`;
+  button.innerHTML = `<img src="${widgetServiceBaseUrl}/chat-icon.png" alt="Chat" style="width: 32px; height: 32px; object-fit: contain;">`;
   button.setAttribute("aria-label", "Open chat widget");
   button.setAttribute("title", "Chat with us");
 
@@ -128,22 +287,7 @@
   iframe.setAttribute("frameBorder", "0");
   iframe.style.colorScheme = "light";
   iframe.style.background = "transparent";
-
-  // Get current URL parameters to pass to the iframe
-  const urlParams = new URLSearchParams(window.location.search);
-  const userId = urlParams.get("userId");
-  const lang = urlParams.get("lang");
-
-  // Build iframe URL with parameters
-  let iframeSrc = BASE_URL + "/embed-chat";
-  const params = new URLSearchParams();
-  if (userId) params.set("userId", userId);
-  if (lang) params.set("lang", lang);
-  if (params.toString()) {
-    iframeSrc += "?" + params.toString();
-  }
-
-  iframe.src = iframeSrc;
+  iframe.src = widgetServiceBaseUrl + "/embed-chat";
 
   // State management
   let isOpen = false;
@@ -159,7 +303,7 @@
       button.setAttribute("title", "Close chat");
     } else {
       iframe.classList.remove("open");
-      button.innerHTML = `<img src="${BASE_URL}/chat-icon.png" alt="Chat" style="width: 32px; height: 32px; object-fit: contain;">`;
+      button.innerHTML = `<img src="${widgetServiceBaseUrl}/chat-icon.png" alt="Chat" style="width: 32px; height: 32px; object-fit: contain;">`;
       button.setAttribute("aria-label", "Open chat widget");
       button.setAttribute("title", "Chat with us");
     }
