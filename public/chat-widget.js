@@ -29,8 +29,6 @@
   const clearSessionOnLoad = () => {
     // Always clear session storage on page load to ensure fresh sessions
     sessionStorage.removeItem('chatWidget_conversationId');
-    
-    // Also clear any existing conversationId
     conversationId = null;
     isMessagingInitialized = false;
   };
@@ -44,12 +42,74 @@
     });
   };
 
+  // Cleanup Pusher connection - unsubscribe from channel
+  const cleanupPusher = () => {
+    try {
+      if (currentChannel) {
+        currentChannel.unbind(PUSHER_EVENTS.AGENT_MESSAGE, handleAgentMessage);
+        if (pusherClient) {
+          pusherClient.unsubscribe(currentChannel.name);
+        }
+        currentChannel = null;
+      }
+      isMessagingInitialized = false;
+    } catch (error) {
+      console.error('Chat Widget - Failed to cleanup Pusher:', error);
+    }
+  };
+
+  // Full Pusher disconnect - for page unload
+  const disconnectPusher = () => {
+    try {
+      cleanupPusher();
+      if (pusherClient) {
+        pusherClient.disconnect();
+        pusherClient = null;
+      }
+    } catch (error) {
+      console.error('Chat Widget - Failed to disconnect Pusher:', error);
+    }
+  };
+
   // Messaging state
   let pusherClient = null;
+  let currentChannel = null;
   let conversationId = null;
   let isMessagingInitialized = false;
+  let inactivityTimer = null;
+
+  // Inactivity cleanup (1 hour)
+  const INACTIVITY_TIMEOUT = 60 * 60 * 1000;
+
+  // Reset inactivity timer
+  const resetInactivityTimer = () => {
+    if (inactivityTimer) {
+      clearTimeout(inactivityTimer);
+    }
+    
+    inactivityTimer = setTimeout(() => {
+      console.log('Chat Widget - Cleaning up due to inactivity');
+      cleanupPusher();
+    }, INACTIVITY_TIMEOUT);
+  };
+
+  // Track user activity
+  const trackActivity = () => {
+    resetInactivityTimer();
+  };
 
   const companyId = getCompanyId();
+  
+  // Message type constants
+  const MESSAGE_TYPES = {
+    AGENT_MESSAGE: 'CHAT_WIDGET_AGENT_MESSAGE',
+    SEND_MESSAGE: 'CHAT_WIDGET_SEND_MESSAGE'
+  };
+
+  const PUSHER_EVENTS = {
+    AGENT_MESSAGE: 'agent.message'
+  };
+  
   // const widgetServiceBaseUrl = "http://localhost:3000";
   const widgetServiceBaseUrl = "https://cs-chat-widget-lymo.vercel.app";
   const pusherAppKey = "a4c044bc7363a3352ac7";
@@ -77,10 +137,9 @@
 
         // Subscribe to conversation channel
         const channelName = `c-${companyId}-${conversationId}`;
-        const channel = pusherClient.subscribe(channelName);
+        currentChannel = pusherClient.subscribe(channelName);
 
-        // Bind event handler
-        channel.bind('agent.message', handleAgentMessage);
+        currentChannel.bind(PUSHER_EVENTS.AGENT_MESSAGE, handleAgentMessage);
 
         isMessagingInitialized = true;
       };
@@ -97,7 +156,7 @@
     // Forward the agent message to the iframe via postMessage
     if (iframe && iframe.contentWindow) {
       iframe.contentWindow.postMessage({
-        type: 'CHAT_WIDGET_AGENT_MESSAGE',
+        type: MESSAGE_TYPES.AGENT_MESSAGE,
         message: data.message,
         timestamp: data.timestamp
       }, widgetServiceBaseUrl);
@@ -106,7 +165,8 @@
 
   // Send message function
   const sendMessage = async (message, userName) => {
-    // First send: always generate new conversation for this session
+    trackActivity();
+    
     if (!conversationId) {
       conversationId = generateUUID();
       sessionStorage.setItem('chatWidget_conversationId', conversationId);
@@ -147,11 +207,8 @@
   window.__CHATWIDGET__.sendMessage = sendMessage;
   window.__CHATWIDGET__.getConversationId = () => conversationId;
   
-
-  // Listen for postMessage from iframe for cross-origin communication
   window.addEventListener('message', (event) => {
-    
-    // More flexible origin checking for development (localhost with any port)
+
     const isLocalhost = event.origin.startsWith('http://localhost:')
     const isExpectedOrigin = event.origin === widgetServiceBaseUrl;
     
@@ -159,7 +216,7 @@
       return;
     }
 
-    if (event.data && event.data.type === 'CHAT_WIDGET_SEND_MESSAGE') {
+    if (event.data && event.data.type === MESSAGE_TYPES.SEND_MESSAGE) {
       const { message, userName } = event.data;
       if (message && typeof message === 'string') {
         sendMessage(message, userName).catch(error => {
@@ -297,6 +354,8 @@
     isOpen = !isOpen;
 
     if (isOpen) {
+      trackActivity();
+      
       iframe.classList.add("open");
       button.innerHTML = '<span style="color: #ffffff;">✕</span>';
       button.setAttribute("aria-label", "Close chat widget");
@@ -309,24 +368,11 @@
     }
   }
 
-  // Add click event listener
   button.addEventListener("click", toggleChat);
 
-  // Close on escape key
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && isOpen) {
       toggleChat();
-    }
-  });
-
-  // Close when clicking outside iframe (optional)
-  document.addEventListener("click", function (event) {
-    const clickedInsideIframe = iframe.contains(event.target);
-    const clickedButton = button.contains(event.target);
-
-    if (isOpen && !clickedInsideIframe && !clickedButton) {
-      // Uncomment the line below if you want to close on outside click
-      // toggleChat();
     }
   });
 
@@ -343,6 +389,14 @@
     addElementsToPage();
   }
 
+  // Cleanup when page is about to unload
+  window.addEventListener('beforeunload', () => {
+    if (inactivityTimer) {
+      clearTimeout(inactivityTimer);
+    }
+    disconnectPusher();
+  });
+
   // Expose public API
   window.ChatWidget = {
     open: function () {
@@ -354,6 +408,6 @@
     toggle: toggleChat,
     isOpen: function () {
       return isOpen;
-    },
+    }
   };
 })();

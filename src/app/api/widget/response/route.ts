@@ -1,16 +1,8 @@
 'use server';
 import { NextRequest, NextResponse } from 'next/server';
-import PusherServer from 'pusher';
+import { StatusCodes } from 'http-status-codes';
 import { corsHeaders } from '@/utils/cors';
-
-// Initialize Pusher server instance
-const pusherServer = new PusherServer({
-  appId: process.env.PUSHER_APP_ID || '',
-  key: process.env.NEXT_PUBLIC_PUSHER_KEY || '',
-  secret: process.env.PUSHER_SECRET || '',
-  cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER || '',
-  useTLS: true,
-});
+import { processWidgetResponse, type WidgetResponseData } from '@/app/actions/widget-response-actions';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,67 +10,36 @@ export async function POST(request: NextRequest) {
     
     const { companyId, conversationId, message, timestamp, error } = body;
     
-    // Validate required fields
-    if (!companyId || !conversationId) {
-      return NextResponse.json(
-        { error: 'Missing required fields: companyId, conversationId' },
-        { status: 400, headers: corsHeaders }
-      );
-    }
-
-    // ToDo: decide with Yair if its necessary or not
-    // // Validate API key/authorization if needed
-    // const authHeader = request.headers.get('authorization');
-    // const expectedApiKey = process.env.EMBEDDINGS_SERVICE_API_KEY;
+    // Prepare data for server action
+    const responseData: WidgetResponseData = {
+      companyId,
+      conversationId,
+      message,
+      timestamp,
+      error,
+    };
     
-    // if (expectedApiKey && authHeader !== `Bearer ${expectedApiKey}`) {
-    //   console.error('Widget Response API - Invalid or missing authorization');
-    //   return NextResponse.json(
-    //     { error: 'Unauthorized' },
-    //     { status: 401, headers: corsHeaders }
-    //   );
-    // }
+    // Process the response using server action
+    const result = await processWidgetResponse(responseData);
 
-    // Determine the message to send
-    let responseMessage: string;
-    if (error) {
-      console.error('Widget Response API - Error from embeddings service:', error);
-      responseMessage = "I'm sorry, I encountered an error while processing your message. Please try again.";
-    } else if (!message) {
-      console.error('Widget Response API - No message in response from embeddings service');
-      responseMessage = "I'm sorry, I didn't receive a proper response. Please try again.";
-    } else {
-      responseMessage = message;
-    }
-
-    // Send agent response via Pusher
-    const channel = `c-${companyId}-${conversationId}`;
-    
-    try {
-      await pusherServer.trigger(channel, 'agent.message', {
-        conversationId,
-        message: responseMessage,
-        timestamp: timestamp || new Date().toISOString(),
-      });
-    } catch (pusherError) {
-      console.error('Widget Response API - Pusher error:', pusherError);
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'Failed to send response to client' },
-        { status: 500, headers: corsHeaders }
+        { error: result.error },
+        { status: StatusCodes.INTERNAL_SERVER_ERROR, headers: corsHeaders }
       );
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Response delivered to client',
-      timestamp: new Date().toISOString(),
-    }, { status: 200, headers: corsHeaders });
+      message: result.message,
+      timestamp: result.timestamp,
+    }, { status: StatusCodes.OK, headers: corsHeaders });
     
   } catch (error) {
     console.error('Error processing widget response:', error);
     return NextResponse.json(
       { error: 'Failed to process response' },
-      { status: 500, headers: corsHeaders }
+      { status: StatusCodes.INTERNAL_SERVER_ERROR, headers: corsHeaders }
     );
   }
 }
@@ -86,7 +47,7 @@ export async function POST(request: NextRequest) {
 // Handle CORS preflight requests
 export async function OPTIONS() {
   return new NextResponse(null, {
-    status: 200,
+    status: StatusCodes.OK,
     headers: corsHeaders,
   });
 }

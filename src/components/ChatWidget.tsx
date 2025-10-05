@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { LuSendHorizontal } from "react-icons/lu";
 import Image from "next/image";
 import LoadingSpinner from "./LoadingSpinner";
+import { ChatWidgetMessageType } from "@/types/message-types";
 
 interface Message {
   id: string;
@@ -108,7 +109,7 @@ export default function ChatWidget() {
         return;
       }
 
-      if (event.data?.type === 'CHAT_WIDGET_AGENT_MESSAGE') {
+      if (event.data?.type === ChatWidgetMessageType.AGENT_MESSAGE) {
         
         // Add the agent message to the chat
         const agentMessage: Message = {
@@ -180,7 +181,7 @@ export default function ChatWidget() {
         
         // Use postMessage for iframe-to-parent communication
         window.parent.postMessage({
-          type: 'CHAT_WIDGET_SEND_MESSAGE',
+          type: ChatWidgetMessageType.SEND_MESSAGE,
           message: message,
           userName: userName
         }, '*');
