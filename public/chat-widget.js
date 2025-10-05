@@ -50,8 +50,8 @@
   let isMessagingInitialized = false;
 
   const companyId = getCompanyId();
-  const widgetServiceBaseUrl = "http://localhost:3000";
-  // const widgetServiceBaseUrl = "https://cs-chat-widget-lymo.vercel.app";
+  // const widgetServiceBaseUrl = "http://localhost:3000";
+  const widgetServiceBaseUrl = "https://cs-chat-widget-lymo.vercel.app";
   const pusherAppKey = "a4c044bc7363a3352ac7";
   const pusherCluster = "eu";
   const pusherJsUrl = 'https://js.pusher.com/8.2.0/pusher.min.js';
