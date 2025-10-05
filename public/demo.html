@@ -110,11 +110,24 @@
             </div>
 
             <h2>📋 Integration Code</h2>
-            <p>To add this widget to your website, simply include this script tag:</p>
+            <p>To add this widget to your website, choose one of these methods:</p>
+            
+            <h3>Method 1: ID + Data Attribute (Recommended)</h3>
             <div class="code">
-                &lt;script src="http://localhost:3000/chat-widget.js"&gt;&lt;/script&gt;
+                &lt;script id="ersona-chat-widget" src="http://localhost:3000/chat-widget.js" data-company-id="YOUR_COMPANY_ID"&gt;&lt;/script&gt;
             </div>
-            <p><small><em>Note: Replace localhost:3000 with your actual domain in production</em></small></p>
+            
+            <h3>Method 2: Data Attribute Only</h3>
+            <div class="code">
+                &lt;script src="http://localhost:3000/chat-widget.js" data-company-id="YOUR_COMPANY_ID"&gt;&lt;/script&gt;
+            </div>
+            
+            <h3>Method 3: URL Path (Legacy)</h3>
+            <div class="code">
+                &lt;script src="http://localhost:3000/widget/YOUR_COMPANY_ID"&gt;&lt;/script&gt;
+            </div>
+            
+            <p><small><em>Note: Replace localhost:3000 with your actual domain and YOUR_COMPANY_ID with your actual company identifier in production</em></small></p>
 
             <h2>🔧 Features Included</h2>
             <ul>
@@ -189,24 +202,7 @@
         });
     </script>
 
-    <!-- Include the chat widget script -->
-    <script>
-        // Dynamically load the chat widget script and update the domain for localhost testing
-        const script = document.createElement('script');
-        script.src = '/chat-widget.js';
-        
-        // Override the domain for local testing
-        script.onload = function() {
-            // Patch the domain configuration for local testing
-            if (window.ChatWidgetInitialized) {
-                console.log('Chat widget loaded successfully!');
-            }
-        };
-        
-        document.head.appendChild(script);
-        
-        // Alternative: direct script include (uncomment if you prefer)
-        // <script src="/chat-widget.js"></script>
-    </script>
+    <!-- Your chat widget script with companyId (using ID + data attribute method) -->
+    <script id="ersona-chat-widget" src="http://localhost:3000/chat-widget.js" data-company-id="company123"></script>
 </body>
 </html> 

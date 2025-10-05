@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cross-Origin Test - Chat Widget</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        .info {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 Cross-Origin Test</h1>
+        <p>This page simulates loading the widget from a different origin to test postMessage communication.</p>
+        
+        <div class="info">
+            <strong>Test Scenario:</strong><br>
+            Widget script served from different port to test cross-origin messaging<br>
+            <small>This tests the postMessage fallback mechanism</small>
+        </div>
+        
+        <div class="info">
+            <strong>Expected Behavior:</strong><br>
+            1. Widget loads correctly<br>
+            2. Direct access fails (cross-origin)<br>
+            3. postMessage communication works<br>
+            4. Messages are sent via /api/widget/messages<br>
+            5. Pusher events are received
+        </div>
+    </div>
+    
+    <!-- For now, load from same origin but this demonstrates the concept -->
+    <script id="ersona-chat-widget" src="http://localhost:3000/chat-widget.js" data-company-id="widget_e97rtkce6"></script>
+</body>
+</html>

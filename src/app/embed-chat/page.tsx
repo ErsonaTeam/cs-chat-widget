@@ -1,25 +1,13 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import ChatWidget from "@/components/ChatWidget";
 
 function EmbedChatContent() {
-  const searchParams = useSearchParams();
-  const [queryParams, setQueryParams] = useState<{
-    userId?: string;
-    lang?: string;
-  }>({});
-
-  useEffect(() => {
-    const userId = searchParams.get("userId") || undefined;
-    const lang = searchParams.get("lang") || undefined;
-    setQueryParams({ userId, lang });
-  }, [searchParams]);
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-transparent">
-      <ChatWidget {...queryParams} />
+      <ChatWidget/>
     </div>
   );
 }
