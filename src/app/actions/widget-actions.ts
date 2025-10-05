@@ -93,7 +93,7 @@ export async function processWidgetMessage(data: WidgetMessageData): Promise<Wid
     } catch (error) {
       return {
         success: false,
-        error: 'Message processing and fallback both failed',
+        error: 'Message processing and fallback both failed with error: ' + error,
         timestamp: new Date().toISOString(),
       };
     }
