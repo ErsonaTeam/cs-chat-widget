@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Widget Test - Conversation Continuity</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        .test-buttons {
+            margin: 30px 0;
+        }
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 50px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .status {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            font-family: monospace;
+        }
+        .navigation-links {
+            margin: 30px 0;
+        }
+        .navigation-links a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: 2px solid white;
+            border-radius: 25px;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        .navigation-links a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Conversation Continuity Test</h1>
+        <p>This page demonstrates conversation continuity across navigation.</p>
+        <p>Start a conversation on the main test page, then navigate here to see if the conversation continues!</p>
+        
+        <div class="navigation-links">
+            <a href="test-embed.html">← Back to Main Test Page</a>
+            <a href="test-cross-origin.html">Cross-Origin Test →</a>
+        </div>
+        
+        <div class="test-buttons">
+            <button onclick="testOpen()">Open Chat</button>
+            <button onclick="testClose()">Close Chat</button>
+            <button onclick="checkStatus()">Check Status</button>
+            <button onclick="getConversationId()">Get Conversation ID</button>
+            <button onclick="clearConversation()">Clear Conversation</button>
+        </div>
+        
+        <div class="status" id="status">
+            Status: Widget loading...
+        </div>
+        
+        <div style="margin-top: 40px; padding: 20px; background: rgba(0, 0, 0, 0.3); border-radius: 10px;">
+            <h3>How to Test Conversation Continuity:</h3>
+            <ol style="text-align: left; max-width: 600px; margin: 0 auto;">
+                <li>Go to the main test page (test-embed.html)</li>
+                <li>Start a conversation with the chat widget</li>
+                <li>Send a few messages to establish a conversation</li>
+                <li>Navigate back to this page using the link above</li>
+                <li>Open the chat widget - your conversation should continue!</li>
+                <li>Test URL navigation by asking the bot for a URL and clicking it</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        function testOpen() {
+            if (window.ChatWidget) {
+                window.ChatWidget.open();
+                updateStatus('Status: Opened chat widget');
+            } else {
+                updateStatus('Error: ChatWidget not loaded yet');
+            }
+        }
+
+        function testClose() {
+            if (window.ChatWidget) {
+                window.ChatWidget.close();
+                updateStatus('Status: Closed chat widget');
+            } else {
+                updateStatus('Error: ChatWidget not loaded yet');
+            }
+        }
+
+        function checkStatus() {
+            if (window.ChatWidget) {
+                const isOpen = window.ChatWidget.isOpen();
+                const conversationId = window.ChatWidget.getConversationId();
+                updateStatus(`Status: Chat widget is ${isOpen ? 'OPEN' : 'CLOSED'}, Conversation ID: ${conversationId || 'None'}`);
+            } else {
+                updateStatus('Error: ChatWidget not loaded yet');
+            }
+        }
+
+        function getConversationId() {
+            if (window.ChatWidget) {
+                const conversationId = window.ChatWidget.getConversationId();
+                updateStatus(`Current Conversation ID: ${conversationId || 'None'}`);
+            } else {
+                updateStatus('Error: ChatWidget not loaded yet');
+            }
+        }
+
+        function clearConversation() {
+            // Clear localStorage and sessionStorage
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('chatWidget_')) {
+                    localStorage.removeItem(key);
+                }
+            });
+            sessionStorage.removeItem('chatWidget_conversationId');
+            updateStatus('Status: Cleared all conversation data. Refresh the page to start fresh.');
+        }
+
+        // Check if widget loaded successfully
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                if (window.ChatWidget) {
+                    const conversationId = window.ChatWidget.getConversationId();
+                    updateStatus(`Status: Chat widget loaded successfully! ✅ ${conversationId ? 'Existing conversation found!' : 'No existing conversation.'}`);
+                } else {
+                    updateStatus('Status: Chat widget failed to load ❌');
+                }
+            }, 2000);
+        });
+    </script>
+
+    <!-- Your chat widget script with companyId -->
+    <!-- <script id="ersona-chat-widget" src="https://cs-chat-widget-lymo.vercel.app/chat-widget.js" data-company-id="widget_e97rtkce6"></script> -->
+    <script id="ersona-chat-widget" src="http://localhost:3000/chat-widget.js" data-company-id="widget_e97rtkce6"></script>
+</body>
+</html>

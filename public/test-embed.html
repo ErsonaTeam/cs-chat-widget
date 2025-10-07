@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Widget Test - External Site</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        .test-buttons {
+            margin: 30px 0;
+        }
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 50px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .status {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 External Website Test</h1>
+        <p>This is a simulated external website to test your chat widget embedding.</p>
+        <p>Look for the floating chat button in the bottom-right corner!</p>
+        
+        <div class="test-buttons">
+            <button onclick="testOpen()">Open Chat</button>
+            <button onclick="testClose()">Close Chat</button>
+            <button onclick="testToggle()">Toggle Chat</button>
+            <button onclick="checkStatus()">Check Status</button>
+            <button onclick="getConversationId()">Get Conversation ID</button>
+            <button onclick="simulateUrlMessage()">Simulate URL Message</button>
+        </div>
+        
+        <div class="status" id="status">
+            Status: Widget loading...
+        </div>
+    </div>
+
+    <script>
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        function testOpen() {
+            if (window.ChatWidget) {
+                window.ChatWidget.open();
+                updateStatus('Status: Opened chat widget');
+            } else {
+                updateStatus('Error: ChatWidget not loaded yet');
+            }
+        }
+
+        function testClose() {
+            if (window.ChatWidget) {
+                window.ChatWidget.close();
+                updateStatus('Status: Closed chat widget');
+            } else {
+                updateStatus('Error: ChatWidget not loaded yet');
+            }
+        }
+
+        function testToggle() {
+            if (window.ChatWidget) {
+                window.ChatWidget.toggle();
+                updateStatus('Status: Toggled chat widget');
+            } else {
+                updateStatus('Error: ChatWidget not loaded yet');
+            }
+        }
+
+        function checkStatus() {
+            if (window.ChatWidget && typeof window.ChatWidget.getConversationId === 'function') {
+                try {
+                    const isOpen = window.ChatWidget.isOpen();
+                    const conversationId = window.ChatWidget.getConversationId();
+                    updateStatus(`Status: Chat widget is ${isOpen ? 'OPEN' : 'CLOSED'}, Conversation ID: ${conversationId || 'None'}`);
+                } catch (error) {
+                    console.error('Error getting status:', error);
+                    updateStatus('Error: Failed to get widget status');
+                }
+            } else {
+                updateStatus('Error: ChatWidget not loaded yet or API not available');
+            }
+        }
+
+        function getConversationId() {
+            if (window.ChatWidget && typeof window.ChatWidget.getConversationId === 'function') {
+                try {
+                    const conversationId = window.ChatWidget.getConversationId();
+                    updateStatus(`Current Conversation ID: ${conversationId || 'None'}`);
+                } catch (error) {
+                    console.error('Error getting conversation ID:', error);
+                    updateStatus('Error: Failed to get conversation ID');
+                }
+            } else {
+                updateStatus('Error: ChatWidget not loaded yet or API not available');
+            }
+        }
+
+        function testUrlNavigation() {
+            updateStatus('Test: Try sending a message with a URL (like https://example.com) in the chat. When you click the URL, it should navigate in this page instead of opening a new tab.');
+        }
+
+        // Check if widget loaded successfully
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                if (window.ChatWidget && typeof window.ChatWidget.getConversationId === 'function') {
+                    try {
+                        const conversationId = window.ChatWidget.getConversationId();
+                        updateStatus(`Status: Chat widget loaded successfully! ✅ ${conversationId ? `Existing conversation found: ${conversationId.substring(0, 8)}...` : 'No existing conversation.'}`);
+                    } catch (error) {
+                        console.error('Error getting conversation ID:', error);
+                        updateStatus('Status: Chat widget loaded but conversation ID unavailable');
+                    }
+                } else {
+                    updateStatus('Status: Chat widget failed to load or API not ready ❌');
+                    console.log('ChatWidget object:', window.ChatWidget);
+                }
+            }, 3000); // Increased timeout to 3 seconds
+        });
+
+        // Add debugging for conversation persistence
+        window.addEventListener('beforeunload', function() {
+            const conversationId = window.ChatWidget ? window.ChatWidget.getConversationId() : null;
+            console.log('Page unloading, conversation ID:', conversationId);
+        });
+
+        // Debug function to inspect ChatWidget object
+        function debugChatWidget() {
+            console.log('=== ChatWidget Debug Info ===');
+            console.log('window.ChatWidget exists:', !!window.ChatWidget);
+            console.log('window.ChatWidget:', window.ChatWidget);
+            
+            if (window.ChatWidget) {
+                console.log('Available methods:');
+                Object.keys(window.ChatWidget).forEach(key => {
+                    console.log(`  ${key}:`, typeof window.ChatWidget[key]);
+                });
+                
+                updateStatus(`ChatWidget object exists with methods: ${Object.keys(window.ChatWidget).join(', ')}`);
+            } else {
+                updateStatus('ChatWidget object does not exist');
+            }
+        }
+
+        // Test conversation continuity
+        function testConversationContinuity() {
+            if (window.ChatWidget && typeof window.ChatWidget.getConversationId === 'function') {
+                try {
+                    const conversationId = window.ChatWidget.getConversationId();
+                    if (conversationId) {
+                        updateStatus(`Current conversation: ${conversationId.substring(0, 8)}... - Now refresh the page to test continuity!`);
+                    } else {
+                        updateStatus('No active conversation. Start a chat first, then refresh the page.');
+                    }
+                } catch (error) {
+                    console.error('Error in conversation continuity test:', error);
+                    updateStatus('Error: Failed to test conversation continuity');
+                }
+            } else {
+                updateStatus('Error: ChatWidget not loaded yet or API not available');
+            }
+        }
+
+        // Simulate receiving a message with URL for testing
+        function simulateUrlMessage() {
+            // Get the iframe element
+            const iframe = document.getElementById('chat-widget-iframe');
+            if (!iframe || !iframe.contentWindow) {
+                updateStatus('Error: Chat widget iframe not found. Try opening the chat first.');
+                return;
+            }
+
+            // Create a fake agent message with the current page URL
+            const currentUrl = window.location.href;
+            const testMessage = `Here's a link you can test: ${currentUrl} - Click it to test URL navigation!`;
+            
+            try {
+                // Send the fake message to the iframe using the correct message type
+                iframe.contentWindow.postMessage({
+                    type: 'CHAT_WIDGET_AGENT_MESSAGE', // This matches the enum value
+                    message: testMessage,
+                    timestamp: new Date().toISOString()
+                }, '*'); // Use wildcard for cross-origin iframe communication
+                
+                updateStatus(`Simulated agent message sent with URL: ${currentUrl} - Open the chat to see it and test clicking the URL!`);
+            } catch (error) {
+                console.error('Error simulating URL message:', error);
+                updateStatus('Error: Failed to simulate URL message');
+            }
+        }
+
+        // Simulate a simple URL message for testing
+        function simulateSimpleUrlMessage() {
+            const iframe = document.getElementById('chat-widget-iframe');
+            if (!iframe || !iframe.contentWindow) {
+                updateStatus('Error: Chat widget iframe not found. Try opening the chat first.');
+                return;
+            }
+
+            // Test with a simple URL message
+            const testMessage = `Check out this website: https://example.com and also visit http://localhost:3000/test-embed.html for more testing!`;
+            
+            try {
+                iframe.contentWindow.postMessage({
+                    type: 'CHAT_WIDGET_AGENT_MESSAGE',
+                    message: testMessage,
+                    timestamp: new Date().toISOString()
+                }, '*');
+                
+                updateStatus('Simulated simple URL message sent - Open chat to see clickable URLs!');
+            } catch (error) {
+                console.error('Error simulating simple URL message:', error);
+                updateStatus('Error: Failed to simulate simple URL message');
+            }
+        }
+    </script>
+
+    <!-- Your chat widget script with companyId (using ID + data attribute method) -->
+    <script id="ersona-chat-widget" src="http://localhost:3000/chat-widget.js" data-company-id="widget_e97rtkce6"></script>
+    <!-- <script id="ersona-chat-widget" src="https://cs-chat-widget-lymo.vercel.app/chat-widget.js" data-company-id="widget_e97rtkce6"></script> -->
+</body>
+</html>

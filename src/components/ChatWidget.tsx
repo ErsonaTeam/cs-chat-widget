@@ -52,17 +52,31 @@ const renderMessageWithLinks = (text: string, isUserMessage: boolean = false) =>
         <span key={index}>
           <a
             href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`underline hover:no-underline transition-colors font-medium inline-flex items-center gap-1 ${
+            className={`underline hover:no-underline transition-colors font-medium inline-flex items-center gap-1 cursor-pointer ${
               isUserMessage 
                 ? "text-blue-100 hover:text-white" 
                 : "text-blue-600 hover:text-blue-800"
             }`}
             onClick={(e) => {
+              e.preventDefault();
               e.stopPropagation();
+              
+              // Mark this as a chat-initiated navigation
+              sessionStorage.setItem('chatWidget_navigatedFromChat', 'true');
+              sessionStorage.setItem('chatWidget_navigationTimestamp', Date.now().toString());
+              
+              // Send navigation request to parent page
+              if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                  type: ChatWidgetMessageType.NAVIGATE_URL,
+                  url: href
+                }, '*');
+              } else {
+                // Fallback: open in current window if not in iframe
+                window.location.href = href;
+              }
             }}
-            title={`Open ${cleanUrl} in new tab`}
+            title={`Navigate to ${cleanUrl}`}
           >
             {displayText}
             <svg 
@@ -75,7 +89,7 @@ const renderMessageWithLinks = (text: string, isUserMessage: boolean = false) =>
                 strokeLinecap="round" 
                 strokeLinejoin="round" 
                 strokeWidth={2} 
-                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" 
+                d="M13 7l5 5m0 0l-5 5m5-5H6" 
               />
             </svg>
           </a>
@@ -96,10 +110,65 @@ export default function ChatWidget() {
   const [inputMessage, setInputMessage] = useState<string>("");
   const [inputDirection, setInputDirection] = useState<"ltr" | "rtl">("ltr");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Listen for agent messages forwarded from parent via postMessage
+  // Save conversation state to localStorage
+  const saveConversationState = () => {
+    if (conversationId && (userName || messages.length > 0)) {
+      const conversationState = {
+        conversationId,
+        userName,
+        messages,
+        timestamp: Date.now()
+      };
+      const storageKey = `chatWidget_conversation_${conversationId}`;
+      localStorage.setItem(storageKey, JSON.stringify(conversationState));
+      localStorage.setItem('chatWidget_lastConversationId', conversationId);
+    }
+  };
+
+  // Restore conversation state from localStorage
+  const restoreConversationState = (targetConversationId?: string) => {
+    try {
+      const conversationIdToRestore = targetConversationId || localStorage.getItem('chatWidget_lastConversationId');
+      
+      if (!conversationIdToRestore) return false;
+
+      const storageKey = `chatWidget_conversation_${conversationIdToRestore}`;
+      const savedState = localStorage.getItem(storageKey);
+      
+      if (!savedState) return false;
+
+      const parsedState = JSON.parse(savedState);
+      
+      // Check if conversation is not too old (24 hours)
+      const maxAge = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+      if (Date.now() - parsedState.timestamp > maxAge) {
+        localStorage.removeItem(storageKey);
+        return false;
+      }
+
+      setConversationId(parsedState.conversationId);
+      setUserName(parsedState.userName || "");
+      
+      // Convert timestamp strings back to Date objects
+      const restoredMessages = (parsedState.messages || []).map((msg: any) => ({
+        ...msg,
+        timestamp: new Date(msg.timestamp) // Convert string back to Date object
+      }));
+      
+      setMessages(restoredMessages);
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to restore conversation state:', error);
+      return false;
+    }
+  };
+
+  // Listen for messages from parent and handle conversation restoration
   useEffect(() => {
     const handleParentMessage = (event: MessageEvent) => {
       
@@ -121,6 +190,38 @@ export default function ChatWidget() {
         };
         
         setMessages((prev) => [...prev, agentMessage]);
+      } else if (event.data?.type === ChatWidgetMessageType.RESTORE_CONVERSATION) {
+        // Handle conversation restoration request from parent
+        const restored = restoreConversationState(event.data.conversationId);
+        
+        // Send response back to parent
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({
+            type: ChatWidgetMessageType.CONVERSATION_RESTORED,
+            success: restored,
+            conversationId: conversationId
+          }, '*');
+        }
+      } else if (event.data?.type === ChatWidgetMessageType.CONVERSATION_ID_RESPONSE) {
+        // Check if this page load was from a chat URL click
+        const navigatedFromChat = sessionStorage.getItem('chatWidget_navigatedFromChat');
+        const navigationTimestamp = sessionStorage.getItem('chatWidget_navigationTimestamp');
+        const isRecentChatNavigation = navigationTimestamp && 
+          (Date.now() - parseInt(navigationTimestamp)) < 5000; // Within 5 seconds
+        
+        if (event.data.conversationId && navigatedFromChat && isRecentChatNavigation) {
+          // Only restore if this was a chat-initiated navigation
+          setConversationId(event.data.conversationId);
+          restoreConversationState(event.data.conversationId);
+          
+          // Clear the navigation flags after restoration
+          sessionStorage.removeItem('chatWidget_navigatedFromChat');
+          sessionStorage.removeItem('chatWidget_navigationTimestamp');
+        } else {
+          // Clear any old conversation data for fresh start
+          sessionStorage.removeItem('chatWidget_navigatedFromChat');
+          sessionStorage.removeItem('chatWidget_navigationTimestamp');
+        }
       }
     };
 
@@ -129,12 +230,29 @@ export default function ChatWidget() {
     return () => {
       window.removeEventListener('message', handleParentMessage);
     };
-  }, []);
+  }, [conversationId]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Save conversation state whenever it changes
+  useEffect(() => {
+    if (conversationId && (userName || messages.length > 0)) {
+      saveConversationState();
+    }
+  }, [conversationId, userName, messages]);
+
+  // Request conversation ID from parent on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
+      // Request current conversation ID from parent
+      window.parent.postMessage({
+        type: ChatWidgetMessageType.REQUEST_CONVERSATION_ID
+      }, '*');
+    }
+  }, []);
 
   // Handle name submission
   const handleNameSubmit = (e: React.FormEvent) => {
@@ -183,7 +301,8 @@ export default function ChatWidget() {
         window.parent.postMessage({
           type: ChatWidgetMessageType.SEND_MESSAGE,
           message: message,
-          userName: userName
+          userName: userName,
+          conversationId: conversationId
         }, '*');
         
         // Don't return a placeholder message - real response will come via Pusher
@@ -262,10 +381,17 @@ export default function ChatWidget() {
 
   // Reset chat
   const resetChat = () => {
+    // Clear conversation state from localStorage
+    if (conversationId) {
+      localStorage.removeItem(`chatWidget_conversation_${conversationId}`);
+      localStorage.removeItem('chatWidget_lastConversationId');
+    }
+    
     setUserName("");
     setMessages([]);
     setNameInput("");
     setIsLoading(false);
+    setConversationId(null);
   };
 
 

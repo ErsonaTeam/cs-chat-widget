@@ -25,12 +25,15 @@
     return 'default'; // fallback
   };
 
-  // Session management - always start fresh
-  const clearSessionOnLoad = () => {
-    // Always clear session storage on page load to ensure fresh sessions
-    sessionStorage.removeItem('chatWidget_conversationId');
-    conversationId = null;
-    isMessagingInitialized = false;
+  // Session management - check for existing conversation on load
+  const initializeConversation = () => {
+    // Check if there's an existing conversation ID in sessionStorage
+    const existingConversationId = sessionStorage.getItem('chatWidget_conversationId');
+    if (existingConversationId) {
+      conversationId = existingConversationId;
+      // Mark that we need to initialize Pusher for existing conversation
+      shouldInitializePusherOnLoad = true;
+    }
   };
 
   // Generate UUID for conversationId
@@ -77,6 +80,7 @@
   let conversationId = null;
   let isMessagingInitialized = false;
   let inactivityTimer = null;
+  let shouldInitializePusherOnLoad = false;
 
   // Inactivity cleanup (1 hour)
   const INACTIVITY_TIMEOUT = 60 * 60 * 1000;
@@ -103,21 +107,26 @@
   // Message type constants
   const MESSAGE_TYPES = {
     AGENT_MESSAGE: 'CHAT_WIDGET_AGENT_MESSAGE',
-    SEND_MESSAGE: 'CHAT_WIDGET_SEND_MESSAGE'
+    SEND_MESSAGE: 'CHAT_WIDGET_SEND_MESSAGE',
+    NAVIGATE_URL: 'CHAT_WIDGET_NAVIGATE_URL',
+    RESTORE_CONVERSATION: 'CHAT_WIDGET_RESTORE_CONVERSATION',
+    CONVERSATION_RESTORED: 'CHAT_WIDGET_CONVERSATION_RESTORED',
+    REQUEST_CONVERSATION_ID: 'CHAT_WIDGET_REQUEST_CONVERSATION_ID',
+    CONVERSATION_ID_RESPONSE: 'CHAT_WIDGET_CONVERSATION_ID_RESPONSE'
   };
 
   const PUSHER_EVENTS = {
     AGENT_MESSAGE: 'agent.message'
   };
   
-  // const widgetServiceBaseUrl = "http://localhost:3000";
-  const widgetServiceBaseUrl = "https://cs-chat-widget-lymo.vercel.app";
+  const widgetServiceBaseUrl = "http://localhost:3000";
+  // const widgetServiceBaseUrl = "https://cs-chat-widget-lymo.vercel.app";
   const pusherAppKey = "a4c044bc7363a3352ac7";
   const pusherCluster = "eu";
   const pusherJsUrl = 'https://js.pusher.com/8.2.0/pusher.min.js';
 
   // Clear session on every load to ensure fresh sessions
-  clearSessionOnLoad();
+  initializeConversation();
 
   // Initialize Pusher client (browser-safe options only)
   const initializePusher = () => {
@@ -148,6 +157,11 @@
       console.error('Chat Widget - Failed to initialize Pusher:', error);
     }
   };
+
+  // Handle deferred Pusher initialization for existing conversations
+  if (shouldInitializePusherOnLoad && conversationId) {
+    initializePusher();
+  }
 
   // Event handler for Pusher events
   const handleAgentMessage = (data) => {
@@ -217,11 +231,46 @@
     }
 
     if (event.data && event.data.type === MESSAGE_TYPES.SEND_MESSAGE) {
-      const { message, userName } = event.data;
+      const { message, userName, conversationId: msgConversationId } = event.data;
       if (message && typeof message === 'string') {
+        // Use conversation ID from message if provided
+        if (msgConversationId && msgConversationId !== conversationId) {
+          conversationId = msgConversationId;
+          sessionStorage.setItem('chatWidget_conversationId', conversationId);
+        }
+        
         sendMessage(message, userName).catch(error => {
           console.error('Chat Widget - Failed to send message via postMessage:', error);
         });
+      }
+    } else if (event.data && event.data.type === MESSAGE_TYPES.NAVIGATE_URL) {
+      // Handle URL navigation from iframe
+      const { url } = event.data;
+      if (url && typeof url === 'string') {
+        // Mark this as a chat-initiated navigation before navigating
+        sessionStorage.setItem('chatWidget_navigatedFromChat', 'true');
+        sessionStorage.setItem('chatWidget_navigationTimestamp', Date.now().toString());
+        
+        // Navigate to the URL in the current page
+        window.location.href = url;
+      }
+    } else if (event.data && event.data.type === MESSAGE_TYPES.REQUEST_CONVERSATION_ID) {
+      // Send current conversation ID to iframe
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({
+          type: MESSAGE_TYPES.CONVERSATION_ID_RESPONSE,
+          conversationId: conversationId
+        }, widgetServiceBaseUrl);
+      }
+    } else if (event.data && event.data.type === MESSAGE_TYPES.CONVERSATION_RESTORED) {
+      // Handle conversation restoration notification from iframe
+      if (event.data.success && event.data.conversationId) {
+        conversationId = event.data.conversationId;
+        sessionStorage.setItem('chatWidget_conversationId', conversationId);
+        // Initialize Pusher for the restored conversation
+        if (!isMessagingInitialized) {
+          initializePusher();
+        }
       }
     }
   });
@@ -408,6 +457,19 @@
     toggle: toggleChat,
     isOpen: function () {
       return isOpen;
+    },
+    // New method to get current conversation ID
+    getConversationId: function () {
+      return conversationId;
+    },
+    // New method to restore a specific conversation
+    restoreConversation: function (targetConversationId) {
+      if (iframe && iframe.contentWindow && targetConversationId) {
+        iframe.contentWindow.postMessage({
+          type: MESSAGE_TYPES.RESTORE_CONVERSATION,
+          conversationId: targetConversationId
+        }, widgetServiceBaseUrl);
+      }
     }
   };
 })();
