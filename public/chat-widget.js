@@ -121,13 +121,20 @@
 
   // Initialize Pusher client (browser-safe options only)
   const initializePusher = () => {
-    if (pusherClient || isMessagingInitialized) return;
+    if (pusherClient || isMessagingInitialized) {
+      console.log('Chat Widget - Pusher already initialized');
+      return;
+    }
+
+    console.log('Chat Widget - Initializing Pusher for conversation:', conversationId);
+    console.log('Chat Widget - Company ID:', companyId);
 
     try {
       // Load Pusher dynamically
       const script = document.createElement('script');
       script.src = pusherJsUrl;
       script.onload = () => {
+        console.log('Chat Widget - Pusher script loaded, creating client');
         pusherClient = new Pusher(pusherAppKey, {
           cluster: pusherCluster,
           forceTLS: true,
@@ -137,12 +144,28 @@
 
         // Subscribe to conversation channel
         const channelName = `c-${companyId}-${conversationId}`;
+        console.log('Chat Widget - Subscribing to channel:', channelName);
         currentChannel = pusherClient.subscribe(channelName);
 
         currentChannel.bind(PUSHER_EVENTS.AGENT_MESSAGE, handleAgentMessage);
+        console.log('Chat Widget - Bound to agent message events');
+
+        // Add connection state logging
+        pusherClient.connection.bind('connected', () => {
+          console.log('Chat Widget - Pusher connected successfully');
+        });
+
+        pusherClient.connection.bind('error', (error) => {
+          console.error('Chat Widget - Pusher connection error:', error);
+        });
 
         isMessagingInitialized = true;
       };
+      
+      script.onerror = () => {
+        console.error('Chat Widget - Failed to load Pusher script');
+      };
+      
       document.head.appendChild(script);
     } catch (error) {
       console.error('Chat Widget - Failed to initialize Pusher:', error);
@@ -151,29 +174,58 @@
 
   // Event handler for Pusher events
   const handleAgentMessage = (data) => {
-    if (data.conversationId && data.conversationId !== conversationId) return; // Defensive guard
+    console.log('Chat Widget - Received Pusher message:', data);
+    console.log('Chat Widget - Current conversation ID:', conversationId);
+    console.log('Chat Widget - Message conversation ID:', data.conversationId);
+    
+    if (data.conversationId && data.conversationId !== conversationId) {
+      console.log('Chat Widget - Conversation ID mismatch, ignoring message');
+      return; // Defensive guard
+    }
     
     // Forward the agent message to the iframe via postMessage
     if (iframe && iframe.contentWindow) {
+      console.log('Chat Widget - Forwarding message to iframe:', {
+        type: MESSAGE_TYPES.AGENT_MESSAGE,
+        message: data.message,
+        timestamp: data.timestamp
+      });
       iframe.contentWindow.postMessage({
         type: MESSAGE_TYPES.AGENT_MESSAGE,
         message: data.message,
         timestamp: data.timestamp
       }, widgetServiceBaseUrl);
+    } else {
+      console.error('Chat Widget - No iframe or contentWindow available');
     }
   };
 
   // Send message function
   const sendMessage = async (message, userName) => {
+    console.log('Chat Widget - Sending message:', { message, userName, conversationId });
     trackActivity();
     
     if (!conversationId) {
       conversationId = generateUUID();
+      console.log('Chat Widget - Generated new conversation ID:', conversationId);
       sessionStorage.setItem('chatWidget_conversationId', conversationId);
       initializePusher();
     }
 
     const postUrl = `${widgetServiceBaseUrl}/api/widget/messages`;
+    const payload = {
+      companyId,
+      conversationId,
+      message,
+      userName,
+      timestamp: new Date().toISOString(),
+      meta: {
+        userAgent: navigator.userAgent,
+        referrer: document.referrer,
+      },
+    };
+
+    console.log('Chat Widget - Sending to API:', postUrl, payload);
 
     try {
       const response = await fetch(postUrl, {
@@ -181,23 +233,21 @@
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          companyId,
-          conversationId,
-          message,
-          userName,
-          timestamp: new Date().toISOString(),
-          meta: {
-            userAgent: navigator.userAgent,
-            referrer: document.referrer,
-          },
-        }),
+        body: JSON.stringify(payload),
       });
 
+      console.log('Chat Widget - API response status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        const errorText = await response.text();
+        console.error('Chat Widget - API error response:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
+
+      const responseData = await response.json();
+      console.log('Chat Widget - API response data:', responseData);
     } catch (error) {
+      console.error('Chat Widget - Send message error:', error);
       throw error;
     }
   };

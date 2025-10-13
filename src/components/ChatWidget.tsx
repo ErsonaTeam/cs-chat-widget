@@ -102,6 +102,10 @@ export default function ChatWidget() {
   // Listen for agent messages forwarded from parent via postMessage
   useEffect(() => {
     const handleParentMessage = (event: MessageEvent) => {
+      console.log('ChatWidget - Received message from parent:', event);
+      console.log('ChatWidget - Message origin:', event.origin);
+      console.log('ChatWidget - Message data:', event.data);
+      console.log('ChatWidget - Window location origin:', window.location.origin);
       
       // Accept messages from the widget service origin, null, or parent window (for cross-origin embedding)
       const isValidOrigin = event.origin === window.location.origin || 
@@ -115,11 +119,20 @@ export default function ChatWidget() {
       const hasValidMessageType = event.data?.type && 
         Object.values(ChatWidgetMessageType).includes(event.data.type);
       
+      console.log('ChatWidget - Origin validation:', {
+        isValidOrigin,
+        isParentMessage,
+        hasValidMessageType,
+        messageType: event.data?.type
+      });
+      
       if (!isValidOrigin && !(isParentMessage && hasValidMessageType)) {
+        console.log('ChatWidget - Message rejected due to origin validation');
         return;
       }
 
       if (event.data?.type === ChatWidgetMessageType.AGENT_MESSAGE) {
+        console.log('ChatWidget - Processing agent message:', event.data.message);
         
         // Add the agent message to the chat
         const agentMessage: Message = {
@@ -131,6 +144,7 @@ export default function ChatWidget() {
         };
         
         setMessages((prev) => [...prev, agentMessage]);
+        console.log('ChatWidget - Agent message added to chat');
       }
     };
 
