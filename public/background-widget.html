@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Background with Chat Widget</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-image: url('./image.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        
+        /* Override widget positioning to move it up */
+        #chat-widget-button {
+            bottom: 90px !important; /* Move button up from 20px to 80px */
+        }
+        
+        #chat-widget-iframe {
+            bottom: 150px !important; /* Move iframe up from 90px to 150px */
+        }
+    </style>
+</head>
+<body>
+    <script id="ersona-chat-widget" src="https://cs-chat-widget-lymo.vercel.app/chat-widget.js" data-company-id="widget_e97rtkce6"></script>
+</body>
+</html>

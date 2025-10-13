@@ -165,15 +165,26 @@
 
   // Event handler for Pusher events
   const handleAgentMessage = (data) => {
-    if (data.conversationId && data.conversationId !== conversationId) return; // Defensive guard
+    console.log('Chat Widget - Pusher message received:', data);
+    
+    if (data.conversationId && data.conversationId !== conversationId) {
+      console.log('Chat Widget - Message rejected due to conversation ID mismatch:', {
+        received: data.conversationId,
+        current: conversationId
+      });
+      return; // Defensive guard
+    }
     
     // Forward the agent message to the iframe via postMessage
     if (iframe && iframe.contentWindow) {
+      console.log('Chat Widget - Forwarding message to iframe:', data.message);
       iframe.contentWindow.postMessage({
         type: MESSAGE_TYPES.AGENT_MESSAGE,
         message: data.message,
         timestamp: data.timestamp
-      }, widgetServiceBaseUrl);
+      }, '*'); // Use wildcard to allow cross-origin communication
+    } else {
+      console.log('Chat Widget - No iframe available to forward message');
     }
   };
 
@@ -225,8 +236,19 @@
 
     const isLocalhost = event.origin.startsWith('http://localhost:')
     const isExpectedOrigin = event.origin === widgetServiceBaseUrl;
+    const isErsonaDomain = event.origin.includes('ersona.co') || event.origin.includes('abraham.ersona.co');
     
-    if (!isLocalhost && !isExpectedOrigin) {
+    // Debug logging for origin validation
+    console.log('Chat Widget - Message received from origin:', event.origin, {
+      isLocalhost,
+      isExpectedOrigin,
+      isErsonaDomain,
+      messageType: event.data?.type
+    });
+    
+    // Allow localhost (dev), exact widget service origin, and Ersona domains
+    if (!isLocalhost && !isExpectedOrigin && !isErsonaDomain) {
+      console.log('Chat Widget - Message rejected due to origin validation:', event.origin);
       return;
     }
 
@@ -260,7 +282,7 @@
         iframe.contentWindow.postMessage({
           type: MESSAGE_TYPES.CONVERSATION_ID_RESPONSE,
           conversationId: conversationId
-        }, widgetServiceBaseUrl);
+        }, '*'); // Use wildcard for cross-origin communication
       }
     } else if (event.data && event.data.type === MESSAGE_TYPES.CONVERSATION_RESTORED) {
       // Handle conversation restoration notification from iframe
@@ -468,7 +490,7 @@
         iframe.contentWindow.postMessage({
           type: MESSAGE_TYPES.RESTORE_CONVERSATION,
           conversationId: targetConversationId
-        }, widgetServiceBaseUrl);
+        }, '*'); // Use wildcard for cross-origin communication
       }
     }
   };
