@@ -208,13 +208,15 @@
   window.__CHATWIDGET__.getConversationId = () => conversationId;
   
   window.addEventListener('message', (event) => {
-
-    const isLocalhost = event.origin.startsWith('http://localhost:')
-    const isExpectedOrigin = event.origin === widgetServiceBaseUrl;
+    // Allow messages from the widget service iframe to any parent window
+    // const isLocalhost = event.origin.startsWith('http://localhost:')
+    // const isExpectedOrigin = event.origin === widgetServiceBaseUrl;
     
-    if (!isLocalhost && !isExpectedOrigin) {
-      return;
-    }
+    // For cross-origin embedding, we need to allow messages from the widget service iframe
+    // regardless of where the parent window is hosted
+    // if (!isLocalhost && !isExpectedOrigin) {
+    //   return;
+    // }
 
     if (event.data && event.data.type === MESSAGE_TYPES.SEND_MESSAGE) {
       const { message, userName } = event.data;
