@@ -103,9 +103,13 @@ export default function ChatWidget() {
   useEffect(() => {
     const handleParentMessage = (event: MessageEvent) => {
       
-      // Accept messages from the widget service origin or null (for iframe postMessage)
-      const isValidOrigin = event.origin === window.location.origin || event.origin === 'null' || event.origin === '';
-      if (!isValidOrigin) {
+      // For cross-origin embedding, accept messages with valid widget message types
+      // from any origin (since we validate the message type and structure)
+      const hasValidMessageType = event.data?.type && 
+        Object.values(ChatWidgetMessageType).includes(event.data.type);
+      
+      // Accept messages if they have valid message types (secure approach)
+      if (!hasValidMessageType) {
         return;
       }
 

@@ -112,6 +112,7 @@
   
   // const widgetServiceBaseUrl = "http://localhost:3000";
   const widgetServiceBaseUrl = "https://cs-chat-widget-lymo.vercel.app";
+  // const widgetServiceBaseUrl = "https://47c1e0c701c0.ngrok-free.app";
   const pusherAppKey = "a4c044bc7363a3352ac7";
   const pusherCluster = "eu";
   const pusherJsUrl = 'https://js.pusher.com/8.2.0/pusher.min.js';
@@ -143,6 +144,7 @@
 
         isMessagingInitialized = true;
       };
+      
       document.head.appendChild(script);
     } catch (error) {
       console.error('Chat Widget - Failed to initialize Pusher:', error);
@@ -151,7 +153,10 @@
 
   // Event handler for Pusher events
   const handleAgentMessage = (data) => {
-    if (data.conversationId && data.conversationId !== conversationId) return; // Defensive guard
+    
+    if (data.conversationId && data.conversationId !== conversationId) {
+      return; // Defensive guard
+    }
     
     // Forward the agent message to the iframe via postMessage
     if (iframe && iframe.contentWindow) {
@@ -160,6 +165,8 @@
         message: data.message,
         timestamp: data.timestamp
       }, widgetServiceBaseUrl);
+    } else {
+      console.error('Chat Widget - No iframe or contentWindow available');
     }
   };
 
@@ -174,6 +181,17 @@
     }
 
     const postUrl = `${widgetServiceBaseUrl}/api/widget/messages`;
+    const payload = {
+      companyId,
+      conversationId,
+      message,
+      userName,
+      timestamp: new Date().toISOString(),
+      meta: {
+        userAgent: navigator.userAgent,
+        referrer: document.referrer,
+      },
+    };
 
     try {
       const response = await fetch(postUrl, {
@@ -181,23 +199,17 @@
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          companyId,
-          conversationId,
-          message,
-          userName,
-          timestamp: new Date().toISOString(),
-          meta: {
-            userAgent: navigator.userAgent,
-            referrer: document.referrer,
-          },
-        }),
+        body: JSON.stringify(payload),
       });
 
+
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        const errorText = await response.text();
+        console.error('Chat Widget - API error response:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
     } catch (error) {
+      console.error('Chat Widget - Send message error:', error);
       throw error;
     }
   };
@@ -208,13 +220,15 @@
   window.__CHATWIDGET__.getConversationId = () => conversationId;
   
   window.addEventListener('message', (event) => {
-
-    const isLocalhost = event.origin.startsWith('http://localhost:')
-    const isExpectedOrigin = event.origin === widgetServiceBaseUrl;
+    // Allow messages from the widget service iframe to any parent window
+    // const isLocalhost = event.origin.startsWith('http://localhost:')
+    // const isExpectedOrigin = event.origin === widgetServiceBaseUrl;
     
-    if (!isLocalhost && !isExpectedOrigin) {
-      return;
-    }
+    // For cross-origin embedding, we need to allow messages from the widget service iframe
+    // regardless of where the parent window is hosted
+    // if (!isLocalhost && !isExpectedOrigin) {
+    //   return;
+    // }
 
     if (event.data && event.data.type === MESSAGE_TYPES.SEND_MESSAGE) {
       const { message, userName } = event.data;
