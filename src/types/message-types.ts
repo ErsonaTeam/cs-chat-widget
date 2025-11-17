@@ -11,7 +11,51 @@ export interface MediaImage {
   bigUrl: string;
   mediumUrl: string;
   smallUrl: string;
-  __typename: "MediaImage";
+  type: "MediaImage";
+}
+
+export interface CancellationPolicy {
+  notRefundable: boolean;
+  withoutChargeBeforeHours: number | null;
+}
+
+export interface MealPlan {
+  name: string;
+  type: string;
+}
+
+export interface Price {
+  amount: number;
+  amountIncludesTaxes: boolean;
+  currencyCode: string;
+  taxesPercent: number;
+}
+
+export interface Allocation {
+  adults: number;
+  children: number[];
+}
+
+export interface Offer {
+  id: string | null;
+  name: string | null;
+  descriptionHTML: string;
+  hasFlexiblePolicy: boolean;
+  hoursBeforeUrgencyMessage: number;
+  bookableRoomsRanges: any[];
+  isLoyaltyClubOffer: boolean;
+  availableQuantity: number;
+  roomTypeAvailableQuantity: number;
+  price: Price;
+  basePrice: Price;
+  cancellationPolicy: CancellationPolicy;
+  mealPlan: MealPlan;
+}
+
+export interface RoomOptionDetail {
+  signature: string;
+  allocation: Allocation;
+  offer: Offer;
 }
 
 export interface RoomOption {
@@ -22,6 +66,5 @@ export interface RoomOption {
   childrenCapacity: number;
   cribsCapacity: number;
   medias: MediaImage[];
-  bestPrice: string;
-  currencyCode: string;
+  options: RoomOptionDetail[];
 }

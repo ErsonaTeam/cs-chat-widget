@@ -2,6 +2,7 @@
 
 import PusherServer from 'pusher';
 import { PusherEventType, RoomOption } from '@/types/message-types';
+import { generateMessageKey, storeMessageData } from './redis-service';
 
 // Singleton Pusher instance (module-level)
 let pusherServer: PusherServer | null = null;
@@ -41,11 +42,22 @@ export async function sendPusherMessage(
   const pusher = await initializePusher();
   const channel = `c-${companyId}-${conversationId}`;
 
-  await pusher.trigger(channel, PusherEventType.AGENT_MESSAGE, {
+  // Generate unique key for this message
+  const messageKey = generateMessageKey();
+
+  // Store the actual message data in Redis with 5-minute TTL
+  const messageData = {
     conversationId,
     message,
     timestamp: timestamp || new Date().toISOString(),
-    roomOptions,
+    roomOptions: roomOptions || null,
+  };
+
+  await storeMessageData(messageKey, messageData, 300); // 300 seconds = 5 minutes
+
+  // Send only the key through Pusher (lightweight notification)
+  await pusher.trigger(channel, PusherEventType.AGENT_MESSAGE, {
+    messageKey,
   });
 }
 

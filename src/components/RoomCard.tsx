@@ -7,10 +7,10 @@ import { RoomOption } from "@/types/message-types";
 
 interface RoomCardProps {
   room: RoomOption;
-  onSelect: (room: RoomOption) => void;
+  onViewOptions: (room: RoomOption) => void;
 }
 
-export default function RoomCard({ room, onSelect }: RoomCardProps) {
+export default function RoomCard({ room, onViewOptions }: RoomCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const nextImage = () => {
@@ -117,19 +117,24 @@ export default function RoomCard({ room, onSelect }: RoomCardProps) {
           )}
         </div>
 
-        {/* Price */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-200">
-          <div>
-            <span className="text-2xl font-bold text-gray-900">
-              From {room.bestPrice}
-            </span>
-            <span className="text-sm text-gray-600 ml-1">{room.currencyCode}</span>
-          </div>
+        {/* Price & Options */}
+        <div className="pt-3 border-t border-gray-200">
+          {room.options && room.options.length > 0 && (
+            <>
+              <div className="flex items-baseline gap-2 mb-2">
+                <span className="text-xs text-gray-600">From</span>
+                <span className="text-2xl font-bold text-gray-900">
+                  ₪{Math.min(...room.options.map(opt => opt.offer.price.amount)).toLocaleString()}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mb-3">{room.options.length} option{room.options.length > 1 ? 's' : ''} available</p>
+            </>
+          )}
           <button
-            onClick={() => onSelect(room)}
-            className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors"
+            onClick={() => onViewOptions(room)}
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors"
           >
-            Select
+            View Options
           </button>
         </div>
       </div>

@@ -7,10 +7,10 @@ import { RoomOption } from "@/types/message-types";
 
 interface RoomCarouselProps {
   rooms: RoomOption[];
-  onSelectRoom: (room: RoomOption) => void;
+  onViewRoomOptions: (room: RoomOption) => void;
 }
 
-export default function RoomCarousel({ rooms, onSelectRoom }: RoomCarouselProps) {
+export default function RoomCarousel({ rooms, onViewRoomOptions }: RoomCarouselProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -95,7 +95,7 @@ export default function RoomCarousel({ rooms, onSelectRoom }: RoomCarouselProps)
           }}
         >
           {rooms.map((room) => (
-            <RoomCard key={room.id} room={room} onSelect={onSelectRoom} />
+            <RoomCard key={room.id} room={room} onViewOptions={onViewRoomOptions} />
           ))}
         </div>
 

@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { LuSendHorizontal } from "react-icons/lu";
 import Image from "next/image";
 import LoadingSpinner from "./LoadingSpinner";
-import { ChatWidgetMessageType, RoomOption } from "@/types/message-types";
+import { ChatWidgetMessageType, RoomOption, RoomOptionDetail } from "@/types/message-types";
 import RoomCarousel from "./RoomCarousel";
+import RoomOptionsView from "./RoomOptionsView";
 
 interface Message {
   id: string;
@@ -98,6 +99,7 @@ export default function ChatWidget() {
   const [inputMessage, setInputMessage] = useState<string>("");
   const [inputDirection, setInputDirection] = useState<"ltr" | "rtl">("ltr");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [selectedRoomForOptions, setSelectedRoomForOptions] = useState<RoomOption | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -142,6 +144,34 @@ export default function ChatWidget() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Adjust widget size when room options are displayed
+  useEffect(() => {
+    const hasRoomOptions = messages.some(msg => msg.roomOptions && msg.roomOptions.length > 0);
+    const showingOptionsView = selectedRoomForOptions !== null;
+
+    // Send resize request to parent window
+    if (window.parent && window.parent !== window) {
+      let newHeight = 500;
+      let newWidth = 350;
+
+      if (showingOptionsView) {
+        // Larger size for options view
+        newHeight = 700;
+        newWidth = 420;
+      } else if (hasRoomOptions) {
+        // Medium size for room carousel
+        newHeight = 650;
+        newWidth = 420;
+      }
+
+      window.parent.postMessage({
+        type: 'CHAT_WIDGET_RESIZE',
+        height: newHeight,
+        width: newWidth
+      }, '*');
+    }
+  }, [messages, selectedRoomForOptions]);
 
   // Handle name submission
   const handleNameSubmit = (e: React.FormEvent) => {
@@ -245,6 +275,11 @@ export default function ChatWidget() {
       setMessages((prev) => [...prev, botReply]);
     }
     setIsLoading(false);
+
+    // Refocus input field after sending message
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
   };
 
   // Handle input change with direction detection
@@ -260,8 +295,8 @@ export default function ChatWidget() {
   };
 
   // Handle Enter key press
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleMessageSubmit(e as unknown as React.FormEvent<HTMLFormElement>);
     }
@@ -275,11 +310,28 @@ export default function ChatWidget() {
     setIsLoading(false);
   };
 
-  // Handle room selection
-  const handleRoomSelection = async (room: RoomOption) => {
+  // Handle viewing room options
+  const handleViewRoomOptions = (room: RoomOption) => {
+    setSelectedRoomForOptions(room);
+  };
+
+  // Handle back from options view
+  const handleBackFromOptions = () => {
+    setSelectedRoomForOptions(null);
+  };
+
+  // Handle room option confirmation with quantity
+  const handleConfirmRoomOption = async (room: RoomOption, option: RoomOptionDetail, quantity: number) => {
     if (isLoading) return;
 
-    const selectionMessage = `I would like to select: ${room.name} - ${room.bestPrice} ${room.currencyCode}`;
+    const formatPrice = (amount: number) => new Intl.NumberFormat('en-US').format(amount);
+    const totalPrice = formatPrice(option.offer.price.amount * quantity);
+
+    const selectionMessage = `I would like to book:\n` +
+      `${room.name}\n` +
+      `${option.offer.name || 'Standard Rate'}\n` +
+      `Quantity: ${quantity} room${quantity > 1 ? 's' : ''}\n` +
+      `Total: ₪${totalPrice} ${option.offer.price.currencyCode}`;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -290,6 +342,7 @@ export default function ChatWidget() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    setSelectedRoomForOptions(null); // Close options view
     setIsLoading(true);
 
     // Send message to API and get bot response
@@ -373,9 +426,19 @@ export default function ChatWidget() {
         <AnimatePresence>
           {messages.map((message) => (
             <div key={message.id}>
-              {/* Room Carousel (if present) */}
+              {/* Room Carousel or Options View */}
               {message.roomOptions && message.roomOptions.length > 0 && (
-                <RoomCarousel rooms={message.roomOptions} onSelectRoom={handleRoomSelection} />
+                <>
+                  {selectedRoomForOptions ? (
+                    <RoomOptionsView
+                      room={selectedRoomForOptions}
+                      onConfirm={handleConfirmRoomOption}
+                      onBack={handleBackFromOptions}
+                    />
+                  ) : (
+                    <RoomCarousel rooms={message.roomOptions} onViewRoomOptions={handleViewRoomOptions} />
+                  )}
+                </>
               )}
 
               {/* Message Bubble */}
@@ -430,7 +493,7 @@ export default function ChatWidget() {
             type="text"
             value={inputMessage}
             onChange={handleInputChange}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             dir={inputDirection}
             disabled={isLoading}
             className="flex-1 px-2 py-2 border border-r-0 border-gray-300 rounded-l-xl 
