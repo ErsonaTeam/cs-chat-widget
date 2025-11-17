@@ -157,13 +157,14 @@
     if (data.conversationId && data.conversationId !== conversationId) {
       return; // Defensive guard
     }
-    
+
     // Forward the agent message to the iframe via postMessage
     if (iframe && iframe.contentWindow) {
       iframe.contentWindow.postMessage({
         type: MESSAGE_TYPES.AGENT_MESSAGE,
         message: data.message,
-        timestamp: data.timestamp
+        timestamp: data.timestamp,
+        roomOptions: data.roomOptions
       }, widgetServiceBaseUrl);
     } else {
       console.error('Chat Widget - No iframe or contentWindow available');

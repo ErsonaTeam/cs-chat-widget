@@ -1,7 +1,7 @@
 'use server';
 
 import PusherServer from 'pusher';
-import { PusherEventType } from '@/types/message-types';
+import { PusherEventType, RoomOption } from '@/types/message-types';
 
 // Singleton Pusher instance (module-level)
 let pusherServer: PusherServer | null = null;
@@ -35,7 +35,8 @@ export async function sendPusherMessage(
   companyId: string,
   conversationId: string,
   message: string,
-  timestamp?: string
+  timestamp?: string,
+  roomOptions?: RoomOption[]
 ): Promise<void> {
   const pusher = await initializePusher();
   const channel = `c-${companyId}-${conversationId}`;
@@ -44,6 +45,7 @@ export async function sendPusherMessage(
     conversationId,
     message,
     timestamp: timestamp || new Date().toISOString(),
+    roomOptions,
   });
 }
 

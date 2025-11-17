@@ -2,6 +2,7 @@
 
 import { sendPusherMessage } from '@/services/pusher-service';
 import { type WidgetActionResult } from './widget-actions';
+import { RoomOption } from '@/types/message-types';
 
 export interface WidgetResponseData {
   companyId: string;
@@ -9,11 +10,12 @@ export interface WidgetResponseData {
   message?: string;
   timestamp?: string;
   error?: string;
+  roomOptions?: RoomOption[];
 }
 
 export async function processWidgetResponse(data: WidgetResponseData): Promise<WidgetActionResult> {
-  const { companyId, conversationId, message, timestamp, error } = data;
-  
+  const { companyId, conversationId, message, timestamp, error, roomOptions } = data;
+
   if (!companyId || !conversationId) {
     return {
       success: false,
@@ -35,8 +37,8 @@ export async function processWidgetResponse(data: WidgetResponseData): Promise<W
   }
 
   try {
-    await sendPusherMessage(companyId, conversationId, responseMessage, timestamp);
-    
+    await sendPusherMessage(companyId, conversationId, responseMessage, timestamp, roomOptions);
+
     return {
       success: true,
       message: 'Response delivered to client',

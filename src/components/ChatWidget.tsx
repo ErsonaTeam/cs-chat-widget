@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { LuSendHorizontal } from "react-icons/lu";
 import Image from "next/image";
 import LoadingSpinner from "./LoadingSpinner";
-import { ChatWidgetMessageType } from "@/types/message-types";
+import { ChatWidgetMessageType, RoomOption } from "@/types/message-types";
+import RoomCarousel from "./RoomCarousel";
 
 interface Message {
   id: string;
@@ -13,6 +14,7 @@ interface Message {
   sender: "user" | "bot";
   timestamp: Date;
   direction: "ltr" | "rtl";
+  roomOptions?: RoomOption[];
 }
 
 // Hebrew character detection regex
@@ -114,7 +116,7 @@ export default function ChatWidget() {
       }
 
       if (event.data?.type === ChatWidgetMessageType.AGENT_MESSAGE) {
-        
+
         // Add the agent message to the chat
         const agentMessage: Message = {
           id: Date.now().toString() + "-agent",
@@ -122,8 +124,9 @@ export default function ChatWidget() {
           sender: "bot",
           timestamp: new Date(),
           direction: detectTextDirection(event.data.message),
+          roomOptions: event.data.roomOptions,
         };
-        
+
         setMessages((prev) => [...prev, agentMessage]);
       }
     };
@@ -272,6 +275,31 @@ export default function ChatWidget() {
     setIsLoading(false);
   };
 
+  // Handle room selection
+  const handleRoomSelection = async (room: RoomOption) => {
+    if (isLoading) return;
+
+    const selectionMessage = `I would like to select: ${room.name} - ${room.bestPrice} ${room.currencyCode}`;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text: selectionMessage,
+      sender: "user",
+      timestamp: new Date(),
+      direction: "ltr",
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+
+    // Send message to API and get bot response
+    const botReply = await sendMessageToAPI(selectionMessage, userName);
+    if (botReply) {
+      setMessages((prev) => [...prev, botReply]);
+    }
+    setIsLoading(false);
+  };
+
 
   // Name input screen
   if (!userName) {
@@ -344,34 +372,41 @@ export default function ChatWidget() {
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white/50">
         <AnimatePresence>
           {messages.map((message) => (
-            <motion.div
-              key={message.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className={`flex ${
-                message.sender === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
-              <div
-                dir={message.direction}
-                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-xl ${
-                  message.sender === "user"
-                    ? "bg-ersonaBlue text-white chat-message-user shadow-sm"
-                    : "bg-white text-gray-900 shadow-sm border border-gray-200 chat-message-bot"
+            <div key={message.id}>
+              {/* Room Carousel (if present) */}
+              {message.roomOptions && message.roomOptions.length > 0 && (
+                <RoomCarousel rooms={message.roomOptions} onSelectRoom={handleRoomSelection} />
+              )}
+
+              {/* Message Bubble */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className={`flex ${
+                  message.sender === "user" ? "justify-end" : "justify-start"
                 }`}
               >
-                <div className="text-sm">
-                  {renderMessageWithLinks(message.text, message.sender === "user")}
+                <div
+                  dir={message.direction}
+                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-xl ${
+                    message.sender === "user"
+                      ? "bg-ersonaBlue text-white chat-message-user shadow-sm"
+                      : "bg-white text-gray-900 shadow-sm border border-gray-200 chat-message-bot"
+                  }`}
+                >
+                  <div className="text-sm">
+                    {renderMessageWithLinks(message.text, message.sender === "user")}
+                  </div>
+                  <p className="text-xs opacity-70 mt-1">
+                    {message.timestamp.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
                 </div>
-                <p className="text-xs opacity-70 mt-1">
-                  {message.timestamp.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
           ))}
           {/* Loading indicator */}
           {isLoading && (
