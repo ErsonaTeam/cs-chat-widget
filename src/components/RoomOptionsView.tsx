@@ -13,6 +13,7 @@ interface RoomOptionsViewProps {
 export default function RoomOptionsView({ room, onConfirm, onBack }: RoomOptionsViewProps) {
   const [selectedOption, setSelectedOption] = useState<RoomOptionDetail | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
 
   const handleConfirm = () => {
     if (selectedOption) {
@@ -27,6 +28,28 @@ export default function RoomOptionsView({ room, onConfirm, onBack }: RoomOptions
   const calculateDiscount = (basePrice: number, price: number) => {
     if (basePrice <= price) return 0;
     return Math.round(((basePrice - price) / basePrice) * 100);
+  };
+
+  const toggleDescription = (signature: string) => {
+    setExpandedDescriptions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(signature)) {
+        newSet.delete(signature);
+      } else {
+        newSet.add(signature);
+      }
+      return newSet;
+    });
+  };
+
+  const formatDescription = (html: string) => {
+    return html
+      .replace(/\r\n/g, '\n')
+      .replace(/\n/g, '<br />');
+  };
+
+  const hasDescription = (option: RoomOptionDetail) => {
+    return option.offer.descriptionHTML && option.offer.descriptionHTML.trim().length > 0;
   };
 
   return (
@@ -149,6 +172,49 @@ export default function RoomOptionsView({ room, onConfirm, onBack }: RoomOptions
                   </div>
                 )}
               </div>
+
+              {/* Offer Description (if exists) */}
+              {hasDescription(option) && (
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleDescription(option.signature);
+                    }}
+                    className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {expandedDescriptions.has(option.signature) ? 'Hide details' : 'View offer details'}
+                    <svg
+                      className={`w-3 h-3 transition-transform ${expandedDescriptions.has(option.signature) ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  <AnimatePresence>
+                    {expandedDescriptions.has(option.signature) && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div
+                          className="mt-2 p-2 bg-blue-50 rounded text-xs text-gray-700 leading-relaxed max-h-48 overflow-y-auto"
+                          dangerouslySetInnerHTML={{ __html: formatDescription(option.offer.descriptionHTML) }}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
 
               {/* Selection indicator */}
               {isSelected && (
