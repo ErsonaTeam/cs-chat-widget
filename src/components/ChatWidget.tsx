@@ -5,7 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { LuSendHorizontal } from "react-icons/lu";
 import Image from "next/image";
 import LoadingSpinner from "./LoadingSpinner";
-import { ChatWidgetMessageType } from "@/types/message-types";
+import { ChatWidgetMessageType, RoomOption, RoomOptionDetail } from "@/types/message-types";
+import RoomCarousel from "./RoomCarousel";
+import RoomOptionsView from "./RoomOptionsView";
 
 interface Message {
   id: string;
@@ -13,6 +15,7 @@ interface Message {
   sender: "user" | "bot";
   timestamp: Date;
   direction: "ltr" | "rtl";
+  roomOptions?: RoomOption[];
 }
 
 // Hebrew character detection regex
@@ -96,6 +99,7 @@ export default function ChatWidget() {
   const [inputMessage, setInputMessage] = useState<string>("");
   const [inputDirection, setInputDirection] = useState<"ltr" | "rtl">("ltr");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [selectedRoomForOptions, setSelectedRoomForOptions] = useState<RoomOption | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -114,7 +118,7 @@ export default function ChatWidget() {
       }
 
       if (event.data?.type === ChatWidgetMessageType.AGENT_MESSAGE) {
-        
+
         // Add the agent message to the chat
         const agentMessage: Message = {
           id: Date.now().toString() + "-agent",
@@ -122,8 +126,9 @@ export default function ChatWidget() {
           sender: "bot",
           timestamp: new Date(),
           direction: detectTextDirection(event.data.message),
+          roomOptions: event.data.roomOptions,
         };
-        
+
         setMessages((prev) => [...prev, agentMessage]);
       }
     };
@@ -139,6 +144,34 @@ export default function ChatWidget() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Adjust widget size when room options are displayed
+  useEffect(() => {
+    const hasRoomOptions = messages.some(msg => msg.roomOptions && msg.roomOptions.length > 0);
+    const showingOptionsView = selectedRoomForOptions !== null;
+
+    // Send resize request to parent window
+    if (window.parent && window.parent !== window) {
+      let newHeight = 500;
+      let newWidth = 350;
+
+      if (showingOptionsView) {
+        // Larger size for options view
+        newHeight = 700;
+        newWidth = 420;
+      } else if (hasRoomOptions) {
+        // Medium size for room carousel
+        newHeight = 650;
+        newWidth = 420;
+      }
+
+      window.parent.postMessage({
+        type: 'CHAT_WIDGET_RESIZE',
+        height: newHeight,
+        width: newWidth
+      }, '*');
+    }
+  }, [messages, selectedRoomForOptions]);
 
   // Handle name submission
   const handleNameSubmit = (e: React.FormEvent) => {
@@ -242,6 +275,11 @@ export default function ChatWidget() {
       setMessages((prev) => [...prev, botReply]);
     }
     setIsLoading(false);
+
+    // Refocus input field after sending message
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
   };
 
   // Handle input change with direction detection
@@ -257,8 +295,8 @@ export default function ChatWidget() {
   };
 
   // Handle Enter key press
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleMessageSubmit(e as unknown as React.FormEvent<HTMLFormElement>);
     }
@@ -270,6 +308,122 @@ export default function ChatWidget() {
     setMessages([]);
     setNameInput("");
     setIsLoading(false);
+  };
+
+  // Handle viewing room options
+  const handleViewRoomOptions = (room: RoomOption) => {
+    setSelectedRoomForOptions(room);
+  };
+
+  // Handle back from options view
+  const handleBackFromOptions = () => {
+    setSelectedRoomForOptions(null);
+  };
+
+  // Handle room option confirmation with quantity
+  const handleConfirmRoomOption = async (room: RoomOption, option: RoomOptionDetail, quantity: number) => {
+    if (isLoading) return;
+
+    const formatPrice = (amount: number) => new Intl.NumberFormat('en-US').format(amount);
+    const totalPrice = formatPrice(option.offer.price.amount * quantity);
+
+    const selectionMessage = `I would like to book:\n` +
+      `${room.name}\n` +
+      `${option.offer.name || 'Standard Rate'}\n` +
+      `Quantity: ${quantity} room${quantity > 1 ? 's' : ''}\n` +
+      `Total: ₪${totalPrice} ${option.offer.price.currencyCode}`;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text: selectionMessage,
+      sender: "user",
+      timestamp: new Date(),
+      direction: "ltr",
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setSelectedRoomForOptions(null); // Close options view
+    setIsLoading(true);
+
+    try {
+      // Get companyId and conversationId from parent window
+      const parentWindow = window.parent as Window & {
+        __CHATWIDGET__?: {
+          getConversationId?: () => string | null;
+        };
+      };
+
+      const conversationId = parentWindow.__CHATWIDGET__?.getConversationId?.();
+
+      if (!conversationId) {
+        throw new Error('Conversation ID not available');
+      }
+
+      // Extract companyId from script element (same logic as chat-widget.js)
+      const getCompanyId = () => {
+        const widgetScript = parentWindow.document?.getElementById('ersona-chat-widget') as HTMLScriptElement | null;
+        if (widgetScript?.dataset?.companyId) {
+          return widgetScript.dataset.companyId;
+        }
+
+        const anyWidgetScript = parentWindow.document?.querySelector('script[data-company-id]') as HTMLScriptElement | null;
+        if (anyWidgetScript?.dataset?.companyId) {
+          return anyWidgetScript.dataset.companyId;
+        }
+
+        return 'default';
+      };
+
+      const companyId = getCompanyId();
+
+      // Call checkout endpoint
+      const checkoutResponse = await fetch('/api/widget/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          companyId,
+          conversationId,
+          signature: option.signature,
+          quantity,
+        }),
+      });
+
+      if (!checkoutResponse.ok) {
+        const errorData = await checkoutResponse.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to create checkout');
+      }
+
+      const { checkoutLink } = await checkoutResponse.json();
+
+      // Display checkout link as a bot message
+      const checkoutMessage: Message = {
+        id: Date.now().toString() + "-checkout",
+        text: `Great! Your booking is ready. Click the link below to complete your reservation:\n\n${checkoutLink}`,
+        sender: "bot",
+        timestamp: new Date(),
+        direction: "ltr",
+      };
+
+      setMessages((prev) => [...prev, checkoutMessage]);
+
+    } catch (error) {
+      console.error('Checkout error:', error);
+
+      // Display error message to user
+      const errorMessage: Message = {
+        id: Date.now().toString() + "-checkout-error",
+        text: "I'm sorry, there was an error creating your checkout link. Please try again or contact support.",
+        sender: "bot",
+        timestamp: new Date(),
+        direction: "ltr",
+      };
+
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
 
@@ -344,34 +498,51 @@ export default function ChatWidget() {
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white/50">
         <AnimatePresence>
           {messages.map((message) => (
-            <motion.div
-              key={message.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className={`flex ${
-                message.sender === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
-              <div
-                dir={message.direction}
-                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-xl ${
-                  message.sender === "user"
-                    ? "bg-ersonaBlue text-white chat-message-user shadow-sm"
-                    : "bg-white text-gray-900 shadow-sm border border-gray-200 chat-message-bot"
+            <div key={message.id}>
+              {/* Room Carousel or Options View */}
+              {message.roomOptions && message.roomOptions.length > 0 && (
+                <>
+                  {selectedRoomForOptions ? (
+                    <RoomOptionsView
+                      room={selectedRoomForOptions}
+                      onConfirm={handleConfirmRoomOption}
+                      onBack={handleBackFromOptions}
+                    />
+                  ) : (
+                    <RoomCarousel rooms={message.roomOptions} onViewRoomOptions={handleViewRoomOptions} />
+                  )}
+                </>
+              )}
+
+              {/* Message Bubble */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className={`flex ${
+                  message.sender === "user" ? "justify-end" : "justify-start"
                 }`}
               >
-                <div className="text-sm">
-                  {renderMessageWithLinks(message.text, message.sender === "user")}
+                <div
+                  dir={message.direction}
+                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-xl ${
+                    message.sender === "user"
+                      ? "bg-ersonaBlue text-white chat-message-user shadow-sm"
+                      : "bg-white text-gray-900 shadow-sm border border-gray-200 chat-message-bot"
+                  }`}
+                >
+                  <div className="text-sm">
+                    {renderMessageWithLinks(message.text, message.sender === "user")}
+                  </div>
+                  <p className="text-xs opacity-70 mt-1">
+                    {message.timestamp.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
                 </div>
-                <p className="text-xs opacity-70 mt-1">
-                  {message.timestamp.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
           ))}
           {/* Loading indicator */}
           {isLoading && (
@@ -395,7 +566,7 @@ export default function ChatWidget() {
             type="text"
             value={inputMessage}
             onChange={handleInputChange}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             dir={inputDirection}
             disabled={isLoading}
             className="flex-1 px-2 py-2 border border-r-0 border-gray-300 rounded-l-xl 

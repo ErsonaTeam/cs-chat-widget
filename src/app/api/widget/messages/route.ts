@@ -7,7 +7,8 @@ import { processWidgetMessage, type WidgetMessageData } from '@/app/actions/widg
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+    console.log(JSON.stringify(body));
+
     const { companyId, conversationId, message, userName, timestamp, meta } = body;
     
     // Prepare data for server action
