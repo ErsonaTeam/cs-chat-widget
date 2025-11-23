@@ -7,9 +7,9 @@ import { processWidgetResponse, type WidgetResponseData } from '@/app/actions/wi
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
-    const { companyId, conversationId, message, timestamp, error } = body;
-    
+
+    const { companyId, conversationId, message, timestamp, error, roomOptions } = body;
+
     // Prepare data for server action
     const responseData: WidgetResponseData = {
       companyId,
@@ -17,8 +17,9 @@ export async function POST(request: NextRequest) {
       message,
       timestamp,
       error,
+      roomOptions,
     };
-    
+
     // Process the response using server action
     const result = await processWidgetResponse(responseData);
 

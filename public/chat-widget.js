@@ -103,7 +103,8 @@
   // Message type constants
   const MESSAGE_TYPES = {
     AGENT_MESSAGE: 'CHAT_WIDGET_AGENT_MESSAGE',
-    SEND_MESSAGE: 'CHAT_WIDGET_SEND_MESSAGE'
+    SEND_MESSAGE: 'CHAT_WIDGET_SEND_MESSAGE',
+    RESIZE_WIDGET: 'CHAT_WIDGET_RESIZE'
   };
 
   const PUSHER_EVENTS = {
@@ -152,21 +153,64 @@
   };
 
   // Event handler for Pusher events
-  const handleAgentMessage = (data) => {
-    
-    if (data.conversationId && data.conversationId !== conversationId) {
-      return; // Defensive guard
-    }
-    
-    // Forward the agent message to the iframe via postMessage
-    if (iframe && iframe.contentWindow) {
-      iframe.contentWindow.postMessage({
-        type: MESSAGE_TYPES.AGENT_MESSAGE,
-        message: data.message,
-        timestamp: data.timestamp
-      }, widgetServiceBaseUrl);
+  const handleAgentMessage = async (data) => {
+    // Check if we received a messageKey (new Redis-based approach)
+    if (data.messageKey) {
+      try {
+        // Fetch the actual message data from the API using the key
+        const response = await fetch(`${widgetServiceBaseUrl}/api/widget/message?key=${data.messageKey}`);
+
+        if (!response.ok) {
+          console.error('Chat Widget - Failed to fetch message:', response.status);
+          return;
+        }
+
+        const result = await response.json();
+
+        if (!result.success || !result.data) {
+          console.error('Chat Widget - Invalid message data received');
+          return;
+        }
+
+        const messageData = result.data;
+
+        // Defensive guard - check conversationId if present
+        if (messageData.conversationId && messageData.conversationId !== conversationId) {
+          return;
+        }
+
+        // Forward the message data to the iframe
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage({
+            type: MESSAGE_TYPES.AGENT_MESSAGE,
+            message: messageData.message,
+            timestamp: messageData.timestamp,
+            roomOptions: messageData.roomOptions
+          }, widgetServiceBaseUrl);
+        } else {
+          console.error('Chat Widget - No iframe or contentWindow available');
+        }
+      } catch (error) {
+        console.error('Chat Widget - Error fetching message data:', error);
+      }
     } else {
-      console.error('Chat Widget - No iframe or contentWindow available');
+      // Fallback: handle old format (direct message in Pusher)
+      console.warn('Chat Widget - Received message in old format (without messageKey)');
+
+      if (data.conversationId && data.conversationId !== conversationId) {
+        return;
+      }
+
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({
+          type: MESSAGE_TYPES.AGENT_MESSAGE,
+          message: data.message,
+          timestamp: data.timestamp,
+          roomOptions: data.roomOptions
+        }, widgetServiceBaseUrl);
+      } else {
+        console.error('Chat Widget - No iframe or contentWindow available');
+      }
     }
   };
 
@@ -236,6 +280,28 @@
         sendMessage(message, userName).catch(error => {
           console.error('Chat Widget - Failed to send message via postMessage:', error);
         });
+      }
+    }
+
+    // Handle widget resize requests from iframe
+    if (event.data && event.data.type === MESSAGE_TYPES.RESIZE_WIDGET) {
+      const { height, width } = event.data;
+      if (iframe) {
+        // Handle height changes
+        if (height && typeof height === 'number') {
+          const minHeight = 500;
+          const maxHeight = 700;
+          const newHeight = Math.max(minHeight, Math.min(maxHeight, height));
+          iframe.style.height = `${newHeight}px`;
+        }
+
+        // Handle width changes
+        if (width && typeof width === 'number') {
+          const minWidth = 350;
+          const maxWidth = 450;
+          const newWidth = Math.max(minWidth, Math.min(maxWidth, width));
+          iframe.style.width = `${newWidth}px`;
+        }
       }
     }
   });
