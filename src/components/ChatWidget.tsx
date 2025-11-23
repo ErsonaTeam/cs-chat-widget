@@ -345,12 +345,85 @@ export default function ChatWidget() {
     setSelectedRoomForOptions(null); // Close options view
     setIsLoading(true);
 
-    // Send message to API and get bot response
-    const botReply = await sendMessageToAPI(selectionMessage, userName);
-    if (botReply) {
-      setMessages((prev) => [...prev, botReply]);
+    try {
+      // Get companyId and conversationId from parent window
+      const parentWindow = window.parent as Window & {
+        __CHATWIDGET__?: {
+          getConversationId?: () => string | null;
+        };
+      };
+
+      const conversationId = parentWindow.__CHATWIDGET__?.getConversationId?.();
+
+      if (!conversationId) {
+        throw new Error('Conversation ID not available');
+      }
+
+      // Extract companyId from script element (same logic as chat-widget.js)
+      const getCompanyId = () => {
+        const widgetScript = parentWindow.document?.getElementById('ersona-chat-widget') as HTMLScriptElement | null;
+        if (widgetScript?.dataset?.companyId) {
+          return widgetScript.dataset.companyId;
+        }
+
+        const anyWidgetScript = parentWindow.document?.querySelector('script[data-company-id]') as HTMLScriptElement | null;
+        if (anyWidgetScript?.dataset?.companyId) {
+          return anyWidgetScript.dataset.companyId;
+        }
+
+        return 'default';
+      };
+
+      const companyId = getCompanyId();
+
+      // Call checkout endpoint
+      const checkoutResponse = await fetch('/api/widget/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          companyId,
+          conversationId,
+          signature: option.signature,
+          quantity,
+        }),
+      });
+
+      if (!checkoutResponse.ok) {
+        const errorData = await checkoutResponse.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to create checkout');
+      }
+
+      const { checkoutLink } = await checkoutResponse.json();
+
+      // Display checkout link as a bot message
+      const checkoutMessage: Message = {
+        id: Date.now().toString() + "-checkout",
+        text: `Great! Your booking is ready. Click the link below to complete your reservation:\n\n${checkoutLink}`,
+        sender: "bot",
+        timestamp: new Date(),
+        direction: "ltr",
+      };
+
+      setMessages((prev) => [...prev, checkoutMessage]);
+
+    } catch (error) {
+      console.error('Checkout error:', error);
+
+      // Display error message to user
+      const errorMessage: Message = {
+        id: Date.now().toString() + "-checkout-error",
+        text: "I'm sorry, there was an error creating your checkout link. Please try again or contact support.",
+        sender: "bot",
+        timestamp: new Date(),
+        direction: "ltr",
+      };
+
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
 
