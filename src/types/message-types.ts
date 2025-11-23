@@ -42,7 +42,7 @@ export interface Offer {
   descriptionHTML: string;
   hasFlexiblePolicy: boolean;
   hoursBeforeUrgencyMessage: number;
-  bookableRoomsRanges: any[];
+  bookableRoomsRanges: unknown[];
   isLoyaltyClubOffer: boolean;
   availableQuantity: number;
   roomTypeAvailableQuantity: number;
