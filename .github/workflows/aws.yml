@@ -61,10 +61,10 @@ jobs:
         touch configmap-values.env
         
         declare -A param_mapping=(
-          ["/prod/cs-chat-widget/redis/host"]="REDIS_HOST"
-          ["/prod/cs-chat-widget/redis/port"]="REDIS_PORT"
-          ["/prod/cs-chat-widget/pusher/app-key"]="NEXT_PUBLIC_PUSHER_KEY"
-          ["/prod/cs-chat-widget/pusher/cluster"]="NEXT_PUBLIC_PUSHER_CLUSTER"
+          ["/prod/dbs/redis/host"]="REDIS_HOST"
+          ["/prod/dbs/redis/port"]="REDIS_PORT"
+          ["/prod/widget/pusher/app-key"]="NEXT_PUBLIC_PUSHER_KEY"
+          ["/prod/widget/pusher/cluster"]="NEXT_PUBLIC_PUSHER_CLUSTER"
           ["/prod/url/encoder"]="EMBEDDINGS_SERVICE_URL"
           ["/prod/url/widget/base-url"]="NEXT_PUBLIC_BASE_URL"
         )
