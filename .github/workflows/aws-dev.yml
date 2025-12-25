@@ -1,0 +1,209 @@
+name: Deploy to Amazon EKS
+
+on:
+  push:
+    branches: [ "dev" ]
+
+env:
+  AWS_REGION: eu-north-1
+  ECR_REPOSITORY: dev/cs-chat-widget
+  CONTAINER_NAME: cs-chat-widget
+  EKS_CLUSTER_NAME: ersona
+  NAMESPACE: dev
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    name: Deploy to Development
+    runs-on: ubuntu-latest
+    environment: development
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Authenticate with Vault
+      id: vault
+      uses: hashicorp/vault-action@v2
+      with:
+        url: ${{ secrets.VAULT_ADDR }}
+        method: approle
+        roleId: ${{ secrets.VAULT_ROLE_ID_DEV }}
+        secretId: ${{ secrets.VAULT_SECRET_ID_DEV }}
+        exportEnv: true
+        secrets: |
+          dev/data/static/cs-chat-widget REDIS_PASSWORD | REDIS_PASSWORD ;
+          dev/data/static/cs-chat-widget PUSHER_APP_ID | PUSHER_APP_ID ;
+          dev/data/static/cs-chat-widget PUSHER_SECRET | PUSHER_SECRET ;
+  
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 21
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-region: ${{ env.AWS_REGION }}
+        aws-access-key-id: ${{ secrets.AWS_ECR_ACCESS_KEY_ERSONA }}
+        aws-secret-access-key: ${{ secrets.AWS_ECR_ACCESS_SECRET_ERSONA }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Get AWS Parameter Store parameters
+      id: get-parameters
+      run: |
+        touch configmap-values.env
+        
+        declare -A param_mapping=(
+          ["/dev/cs-chat-widget/redis/host"]="REDIS_HOST"
+          ["/dev/cs-chat-widget/redis/port"]="REDIS_PORT"
+          ["/dev/cs-chat-widget/pusher/app-key"]="NEXT_PUBLIC_PUSHER_KEY"
+          ["/dev/cs-chat-widget/pusher/cluster"]="NEXT_PUBLIC_PUSHER_CLUSTER"
+          ["/dev/url/encoder"]="EMBEDDINGS_SERVICE_URL"
+          ["/dev/url/widget/base-url"]="NEXT_PUBLIC_BASE_URL"
+        )
+        
+        for param_path in "${!param_mapping[@]}"; do
+          env_var_name="${param_mapping[$param_path]}"
+          param_value=$(aws ssm get-parameter --name "$param_path" --with-decryption --query "Parameter.Value" --output text)
+          echo "${env_var_name}=${param_value}" >> $GITHUB_ENV
+          echo "${env_var_name}=${param_value}" >> configmap-values.env
+        done
+        
+        cat configmap-values.env | grep -v -i "password\|key\|token\|secret" || true
+
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      run: |
+        npm ci
+        npm run build
+        
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+        REDIS_HOST: ${{ env.REDIS_HOST }}
+        REDIS_PORT: ${{ env.REDIS_PORT }}
+        NEXT_PUBLIC_PUSHER_KEY: ${{ env.NEXT_PUBLIC_PUSHER_KEY }}
+        NEXT_PUBLIC_PUSHER_CLUSTER: ${{ env.NEXT_PUBLIC_PUSHER_CLUSTER }}
+        EMBEDDINGS_SERVICE_URL: ${{ env.EMBEDDINGS_SERVICE_URL }}
+        NEXT_PUBLIC_BASE_URL: ${{ env.NEXT_PUBLIC_BASE_URL }}
+
+    - name: Install kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Update kube config
+      run: |
+        aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+        kubectl config current-context
+
+    - name: Update ConfigMap
+      run: |
+        cat << EOF > ./k8s/configmap.yaml
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: cs-chat-widget-config
+          namespace: ${{ env.NAMESPACE }}
+        data:
+        EOF
+        
+        while IFS= read -r line; do
+          if [[ ! -z "$line" ]]; then
+            param_name=$(echo $line | cut -d= -f1)
+            param_value=$(echo $line | cut -d= -f2-)
+            echo "  $param_name: \"$param_value\"" >> ./k8s/configmap.yaml
+          fi
+        done < configmap-values.env
+        
+        cat ./k8s/configmap.yaml
+
+    - name: Update Secret manifest
+      run: |
+        cat << EOF > ./k8s/secrets.yaml
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: cs-chat-widget-secrets
+          namespace: ${{ env.NAMESPACE }}
+        type: Opaque
+        data:
+          REDIS_PASSWORD: $(echo -n "${{ env.REDIS_PASSWORD }}" | base64 -w 0)
+          PUSHER_APP_ID: $(echo -n "${{ env.PUSHER_APP_ID }}" | base64 -w 0)
+          PUSHER_SECRET: $(echo -n "${{ env.PUSHER_SECRET }}" | base64 -w 0)
+        EOF
+        
+        echo "Created secrets.yaml with Vault values"
+
+    - name: Update Deployment image
+      run: |
+        if grep -q "{{IMAGE_URL}}" ./k8s/deployment.yaml; then
+          sed -i "s|{{IMAGE_URL}}|${{ steps.build-image.outputs.image }}|g" ./k8s/deployment.yaml
+        else
+          sed -i "s|image: .*$ECR_REPOSITORY.*|image: ${{ steps.build-image.outputs.image }}|g" ./k8s/deployment.yaml
+        fi
+        echo "Updated deployment image to: ${{ steps.build-image.outputs.image }}"
+
+    - name: Update namespace in Kubernetes manifests
+      run: |
+        echo "Updating namespace to ${{ env.NAMESPACE }} in all manifest files..."
+        find ./k8s -type f -name "*.yaml" -exec sed -i 's/^  namespace: .*/  namespace: ${{ env.NAMESPACE }}/g' {} \;
+        find ./k8s -type f -name "*.yaml" -exec sed -i 's/namespace: .*/namespace: ${{ env.NAMESPACE }}/g' {} \;
+        find ./k8s -type f -name "*.yaml" -exec sed -i 's/app.kubernetes.io\/namespace: .*/app.kubernetes.io\/namespace: ${{ env.NAMESPACE }}/g' {} \;
+        find ./k8s -type f -name "network-policy.yaml" -exec sed -i 's/namespace: .*/namespace: ${{ env.NAMESPACE }}/g' {} \;
+        echo "Namespace updated in all manifest files"
+
+    - name: Apply Kubernetes manifests
+      run: |
+        if ! kubectl get namespace ${{ env.NAMESPACE }} > /dev/null 2>&1; then
+          echo "Namespace ${{ env.NAMESPACE }} does not exist. Creating..."
+          kubectl create namespace ${{ env.NAMESPACE }}
+        else
+          echo "Namespace ${{ env.NAMESPACE }} already exists."
+        fi
+        
+        echo "Applying ConfigMap..."
+        kubectl apply -f ./k8s/configmap.yaml
+        
+        echo "Applying Secrets..."
+        kubectl apply -f ./k8s/secrets.yaml
+        
+        echo "Applying Deployment..."
+        kubectl apply -f ./k8s/deployment.yaml
+        
+        echo "Applying Service..."
+        kubectl apply -f ./k8s/service.yaml
+        
+        if [ -f "./k8s/hpa.yaml" ]; then
+          echo "Applying HPA..."
+          kubectl apply -f ./k8s/hpa.yaml
+        fi
+        
+        if [ -f "./k8s/network-policy.yaml" ]; then
+          echo "Applying NetworkPolicy..."
+          kubectl apply -f ./k8s/network-policy.yaml
+        fi
+        
+        if [ -f "./k8s/ingress.yaml" ]; then
+          echo "Applying Ingress..."
+          kubectl apply -f ./k8s/ingress.yaml
+        fi
+
+    - name: Cleanup sensitive files
+      if: always()
+      run: |
+        rm -f ./k8s/secrets.yaml
+        rm -f configmap-values.env
+

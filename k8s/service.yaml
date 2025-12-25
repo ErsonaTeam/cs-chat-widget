@@ -1,0 +1,15 @@
+# service.yaml
+# Internal service for cluster communication
+apiVersion: v1
+kind: Service
+metadata:
+  name: cs-chat-widget
+  namespace: dev # Already created by Terraform, use dev or prod as needed
+spec:
+  selector:
+    app: cs-chat-widget
+  ports:
+  - port: 3000
+    targetPort: 3000
+  type: ClusterIP
+

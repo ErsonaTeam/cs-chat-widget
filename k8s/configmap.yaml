@@ -1,0 +1,12 @@
+# configmap.yaml
+# This file is dynamically generated during CI/CD pipeline from AWS Parameter Store
+# The template below shows the expected structure
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cs-chat-widget-config
+  namespace: dev # Already created by Terraform, use dev or prod as needed
+data:
+  # These values are populated from AWS Parameter Store during deployment
+  NODE_ENV: "development" # Change to 'production' for production environment
+  PORT: "3000"
