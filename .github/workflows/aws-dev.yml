@@ -35,9 +35,9 @@ jobs:
         secretId: ${{ secrets.VAULT_SECRET_ID_DEV }}
         exportEnv: true
         secrets: |
-          dev/data/static/cs-chat-widget REDIS_PASSWORD | REDIS_PASSWORD ;
-          dev/data/static/cs-chat-widget PUSHER_APP_ID | PUSHER_APP_ID ;
-          dev/data/static/cs-chat-widget PUSHER_SECRET | PUSHER_SECRET ;
+          dev/data/static/global/redis REDIS_PASSWORD | REDIS_PASSWORD ;
+          dev/data/static/widget PUSHER_APP_ID | PUSHER_APP_ID ;
+          dev/data/static/widget PUSHER_SECRET | PUSHER_SECRET ;
   
     - name: Setup Node.js
       uses: actions/setup-node@v4
