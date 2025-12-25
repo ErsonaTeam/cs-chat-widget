@@ -1,0 +1,21 @@
+# hpa.yaml (Horizontal Pod Autoscaler)
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: cs-chat-widget-hpa
+  namespace: dev # Already created by Terraform, use dev or prod as needed
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: cs-chat-widget
+  minReplicas: 1 # For local. For EKS, use 2 (matches your Terraform min_size)
+  maxReplicas: 5 # For local. For EKS, use 5 (matches your Terraform max_size)
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80
+
