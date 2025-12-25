@@ -81,7 +81,7 @@ jobs:
     - name: Build, tag, and push image to Amazon ECR
       id: build-image
       run: |
-        npm ci
+        npm i
         npm run build
         
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
