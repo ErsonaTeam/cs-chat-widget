@@ -112,7 +112,7 @@
   };
   
   // const widgetServiceBaseUrl = "http://localhost:3000";
-  const widgetServiceBaseUrl = "https://cs-chat-widget-lymo.vercel.app";
+  const widgetServiceBaseUrl = "https://dev-widget.ersona.co";
   // const widgetServiceBaseUrl = "https://47c1e0c701c0.ngrok-free.app";
   const pusherAppKey = "a4c044bc7363a3352ac7";
   const pusherCluster = "eu";
