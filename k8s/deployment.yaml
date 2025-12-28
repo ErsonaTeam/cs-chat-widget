@@ -1,0 +1,61 @@
+# deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cs-chat-widget
+  namespace: dev # Already created by Terraform, use dev or prod as needed
+  labels:
+    app: cs-chat-widget
+spec:
+  replicas: 2 # For local testing. For EKS, set to 2 (matches your Terraform min_size)
+  selector:
+    matchLabels:
+      app: cs-chat-widget
+  template:
+    metadata:
+      annotations:
+        cloudwatch.aws.amazon.com/auto-annotate-nodejs: "false"
+        cloudwatch.aws.amazon.com/auto-annotate-python: "false"
+        instrumentation.opentelemetry.io/inject-nodejs: "false"
+        instrumentation.opentelemetry.io/inject-python: "false"
+      labels:
+        app: cs-chat-widget
+    spec:
+      containers:
+      - name: cs-chat-widget
+        image: 448866508458.dkr.ecr.eu-north-1.amazonaws.com/dev/cs-chat-widget:latest # For local. For EKS, use ECR URL: {account-id}.dkr.ecr.eu-north-1.amazonaws.com/cs-chat-widget:{tag}
+        imagePullPolicy: Always # Change to Always for EKS
+        ports:
+        - containerPort: 3000
+        resources:
+          # Resources align with your Terraform limit_range settings
+          requests:
+            cpu: "128m" # Lightweight widget service
+            memory: "256Mi"
+          limits:
+            cpu: "256m"
+            memory: "512Mi"
+        envFrom:
+        - configMapRef:
+            name: cs-chat-widget-config
+        - secretRef:
+            name: cs-chat-widget-secrets
+        readinessProbe:
+          httpGet:
+            path: /api/healthz
+            port: 3000
+          initialDelaySeconds: 20
+          timeoutSeconds: 2
+          periodSeconds: 10
+          failureThreshold: 5
+        livenessProbe:
+          httpGet:
+            path: /api/healthz
+            port: 3000
+          initialDelaySeconds: 40
+          timeoutSeconds: 2
+          periodSeconds: 15
+          failureThreshold: 5
+      # For EKS with OIDC enabled (needs to be set in your Terraform):
+      # serviceAccountName: cs-chat-widget-sa
+

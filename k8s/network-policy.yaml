@@ -1,0 +1,27 @@
+# network-policy.yaml
+# Network policies are already defined by Terraform at namespace level
+# This adds app-specific rules
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cs-chat-widget-policy
+  namespace: dev # Already created by Terraform, use dev or prod as needed
+spec:
+  podSelector:
+    matchLabels:
+      app: cs-chat-widget
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from: []  # Allow incoming traffic from anywhere to reach the widget (public facing)
+    ports:
+    - protocol: TCP
+      port: 3000
+  egress:
+  - to: 
+    # Allow outbound to Redis and external services (Pusher)
+    - ipBlock:
+        cidr: "0.0.0.0/0"
+        # Your Terraform already excludes private ranges in the namespace policy
+

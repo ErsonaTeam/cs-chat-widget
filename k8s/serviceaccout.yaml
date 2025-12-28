@@ -1,0 +1,12 @@
+# serviceaccount.yaml
+# This will be needed for EKS with OIDC provider
+# For local, you can omit this file
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cs-chat-widget-sa
+  namespace: dev # Already created by Terraform, use dev or prod as needed
+  # For EKS with OIDC provider enabled (currently set to false in your Terraform):
+  # annotations:
+  #   eks.amazonaws.com/role-arn: arn:aws:iam::{account-id}:role/ersona-cs-chat-widget-role
+
