@@ -29,10 +29,10 @@ export default function RoomCard({ room, onViewOptions }: RoomCardProps) {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bg-white rounded-xl shadow-md overflow-hidden min-w-[280px] max-w-[320px] border border-gray-200"
+      className="bg-white rounded-xl shadow-md overflow-hidden min-w-[280px] max-w-[320px] border border-fattalNavy/10"
     >
       {/* Image Carousel */}
-      <div className="relative h-48 bg-gray-100">
+      <div className="relative h-48 bg-fattalCream">
         {room.medias.length > 0 && (
           <>
             <Image
@@ -48,7 +48,7 @@ export default function RoomCard({ room, onViewOptions }: RoomCardProps) {
               <>
                 <button
                   onClick={prevImage}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition-colors"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-fattalNavy/60 hover:bg-fattalNavy/80 text-white rounded-full p-1.5 transition-colors"
                   aria-label="Previous image"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,7 +57,7 @@ export default function RoomCard({ room, onViewOptions }: RoomCardProps) {
                 </button>
                 <button
                   onClick={nextImage}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-fattalNavy/60 hover:bg-fattalNavy/80 text-white rounded-full p-1.5 transition-colors"
                   aria-label="Next image"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -86,14 +86,14 @@ export default function RoomCard({ room, onViewOptions }: RoomCardProps) {
 
       {/* Room Details */}
       <div className="p-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">{room.name}</h3>
+        <h3 className="text-lg font-semibold text-fattalNavy mb-2">{room.name}</h3>
 
-        <p className="text-sm text-gray-600 mb-3 line-clamp-3">
+        <p className="text-sm text-fattalNavy/70 mb-3 line-clamp-3">
           {room.description}
         </p>
 
         {/* Capacity Info */}
-        <div className="flex items-center gap-3 mb-3 text-xs text-gray-600">
+        <div className="flex items-center gap-3 mb-3 text-xs text-fattalNavy/60">
           {room.adultsCapacity > 0 && (
             <div className="flex items-center gap-1">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -118,21 +118,21 @@ export default function RoomCard({ room, onViewOptions }: RoomCardProps) {
         </div>
 
         {/* Price & Options */}
-        <div className="pt-3 border-t border-gray-200">
+        <div className="pt-3 border-t border-fattalNavy/10">
           {room.options && room.options.length > 0 && (
             <>
               <div className="flex items-baseline gap-2 mb-2">
-                <span className="text-xs text-gray-600">From</span>
-                <span className="text-2xl font-bold text-gray-900">
+                <span className="text-xs text-fattalNavy/60">From</span>
+                <span className="text-2xl font-bold text-fattalNavy">
                   ₪{Math.min(...room.options.map(opt => opt.offer.price.amount)).toLocaleString()}
                 </span>
               </div>
-              <p className="text-xs text-gray-500 mb-3">{room.options.length} option{room.options.length > 1 ? 's' : ''} available</p>
+              <p className="text-xs text-fattalNavy/50 mb-3">{room.options.length} option{room.options.length > 1 ? 's' : ''} available</p>
             </>
           )}
           <button
             onClick={() => onViewOptions(room)}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors"
+            className="w-full bg-fattalGold hover:bg-fattalGold/90 text-white text-sm font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-sm"
           >
             View Options
           </button>

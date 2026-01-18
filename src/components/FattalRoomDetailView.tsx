@@ -131,14 +131,14 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200"
+      className="bg-white rounded-xl shadow-lg overflow-hidden border border-fattalNavy/10"
     >
       {/* Header with Back Button */}
-      <div className="flex items-center justify-between p-3 bg-gray-50 border-b border-gray-200">
+      <div className="flex items-center justify-between p-3 bg-fattalNavy">
         <button
           type="button"
           onClick={onBack}
-          className="flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors text-sm"
+          className="flex items-center gap-1 text-white/80 hover:text-white transition-colors text-sm"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -148,7 +148,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
       </div>
 
       {/* Image Gallery */}
-      <div className="relative h-48 bg-gray-100">
+      <div className="relative h-48 bg-fattalCream">
         <Image
           src={images[currentImageIndex].url}
           alt={images[currentImageIndex].description || room.name}
@@ -166,7 +166,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
             <button
               type="button"
               onClick={prevImage}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-fattalNavy/60 hover:bg-fattalNavy/80 text-white rounded-full p-2 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -175,7 +175,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
             <button
               type="button"
               onClick={nextImage}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-fattalNavy/60 hover:bg-fattalNavy/80 text-white rounded-full p-2 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -202,10 +202,10 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
 
       {/* Room Details */}
       <div className="p-4">
-        <h2 className="text-xl font-bold text-gray-900 mb-2">{room.name}</h2>
+        <h2 className="text-xl font-bold text-fattalNavy mb-2">{room.name}</h2>
 
         {/* Size & Composition */}
-        <div className="flex flex-wrap gap-3 text-sm text-gray-600 mb-3">
+        <div className="flex flex-wrap gap-3 text-sm text-fattalNavy/70 mb-3">
           {room.size && (
             <div className="flex items-center gap-1">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -225,7 +225,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
         </div>
 
         {room.description && (
-          <p className="text-sm text-gray-600 mb-3">{room.description}</p>
+          <p className="text-sm text-fattalNavy/70 mb-3">{room.description}</p>
         )}
 
         {/* Features */}
@@ -234,7 +234,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
             {room.features.map((feature, index) => (
               <span
                 key={index}
-                className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded"
+                className="inline-flex items-center gap-1 text-xs bg-fattalCream text-fattalNavy/80 px-2 py-1 rounded"
               >
                 {feature.iconUrl && (
                   <Image src={feature.iconUrl} alt="" width={12} height={12} className="w-3 h-3" />
@@ -246,15 +246,15 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
         )}
 
         {/* Divider */}
-        <div className="border-t border-gray-200 my-4" />
+        <div className="border-t border-fattalNavy/10 my-4" />
 
         {/* Club Member Toggle - Always visible */}
-        <div className="flex items-center justify-between mb-4 p-3 bg-blue-50 rounded-lg">
+        <div className="flex items-center justify-between mb-4 p-3 bg-fattalLightGold rounded-lg">
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-fattalGold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
             </svg>
-            <span className="text-sm font-medium text-gray-900">חבר מועדון פתאל</span>
+            <span className="text-sm font-medium text-fattalNavy">חבר מועדון פתאל</span>
           </div>
           <label className="relative inline-flex items-center cursor-pointer" dir="ltr">
             <input
@@ -264,7 +264,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
               className="sr-only peer"
               aria-label="חבר מועדון פתאל"
             />
-            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            <div className="w-11 h-6 bg-fattalNavy/20 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-fattalGold/30 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-fattalNavy/20 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-fattalGold"></div>
           </label>
         </div>
 
@@ -281,7 +281,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
             >
               {groupedPackages.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">בחר חבילה</h3>
+                  <h3 className="text-sm font-semibold text-fattalNavy mb-3">בחר חבילה</h3>
                   <div className="space-y-2">
                     {groupedPackages.map((groupedPkg) => {
                       // Calculate min price across all pensions for this grouped package
@@ -300,29 +300,29 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
                           key={groupedPkg.packageName}
                           type="button"
                           onClick={() => handleGroupedPackageSelect(groupedPkg.packageName)}
-                          className="w-full p-3 rounded-lg border border-gray-200 bg-white hover:border-blue-400 hover:bg-blue-50 text-right transition-all"
+                          className="w-full p-3 rounded-lg border border-fattalNavy/10 bg-white hover:border-fattalGold hover:bg-fattalLightGold text-right transition-all"
                         >
                           <div className="flex justify-between items-center">
                             <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-900">
+                              <p className="text-sm font-medium text-fattalNavy">
                                 {groupedPkg.packageName}
                               </p>
                               {groupedPkg.policyName && (
-                                <p className="text-xs text-gray-500 mt-0.5">{groupedPkg.policyName}</p>
+                                <p className="text-xs text-fattalNavy/50 mt-0.5">{groupedPkg.policyName}</p>
                               )}
                             </div>
                             <div className="text-left ml-3 flex items-center gap-2">
                               <div>
                                 {hasDiscount && (
-                                  <p className="text-xs text-gray-400 line-through">
+                                  <p className="text-xs text-fattalNavy/40 line-through">
                                     {formatPrice(minBasePrice)} ₪
                                   </p>
                                 )}
-                                <p className="text-sm font-bold text-gray-900">
+                                <p className="text-sm font-bold text-fattalNavy">
                                   החל מ-{formatPrice(minPrice)} ₪
                                 </p>
                               </div>
-                              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-4 h-4 text-fattalNavy/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                               </svg>
                             </div>
@@ -349,7 +349,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
                   <button
                     type="button"
                     onClick={handleBackToPackages}
-                    className="flex items-center gap-1 text-blue-600 hover:text-blue-800 transition-colors text-sm mb-3"
+                    className="flex items-center gap-1 text-fattalGold hover:text-fattalGold/80 transition-colors text-sm mb-3 font-medium"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -358,13 +358,13 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
                   </button>
 
                   {/* Selected package name */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                    <p className="text-xs text-blue-600 mb-1">חבילה נבחרת:</p>
-                    <p className="text-sm font-semibold text-gray-900">{selectedGroupedPackage.packageName}</p>
+                  <div className="bg-fattalLightGold border border-fattalGold/20 rounded-lg p-3 mb-4">
+                    <p className="text-xs text-fattalGold mb-1">חבילה נבחרת:</p>
+                    <p className="text-sm font-semibold text-fattalNavy">{selectedGroupedPackage.packageName}</p>
                   </div>
 
                   {/* Pensions list */}
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">בחר סוג פנסיון</h3>
+                  <h3 className="text-sm font-semibold text-fattalNavy mb-3">בחר סוג פנסיון</h3>
                   <div className="space-y-2">
                     {selectedGroupedPackage.prices.map((price) => {
                       const displayPrice = getDisplayPrice(price);
@@ -378,15 +378,15 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
                           key={priceKey}
                           type="button"
                           onClick={() => setSelectedPriceKey(priceKey)}
-                          className={`w-full p-3 rounded-lg border text-right transition-all ${
+                          className={`w-full p-3 rounded-lg border-2 text-right transition-all ${
                             isSelected
-                              ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500"
-                              : "border-gray-200 bg-white hover:border-gray-300"
+                              ? "border-fattalGold bg-fattalLightGold"
+                              : "border-fattalNavy/10 bg-white hover:border-fattalGold/50"
                           }`}
                         >
                           <div className="flex justify-between items-center">
                             <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-900">{price.hostingBase}</p>
+                              <p className="text-sm font-medium text-fattalNavy">{price.hostingBase}</p>
                               {price.availableRooms <= 3 && (
                                 <p className="text-xs text-orange-600 mt-0.5">
                                   נותרו {price.availableRooms} חדרים!
@@ -395,15 +395,15 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
                             </div>
                             <div className="text-left ml-3">
                               {(hasDiscount || hasClubDiscount) && (
-                                <p className="text-xs text-gray-400 line-through">
+                                <p className="text-xs text-fattalNavy/40 line-through">
                                   {formatPrice(price.totalBasePrice || price.totalPrice)} ₪
                                 </p>
                               )}
-                              <p className="text-lg font-bold text-gray-900">
+                              <p className="text-lg font-bold text-fattalNavy">
                                 {formatPrice(displayPrice)} ₪
                               </p>
                               {hasClubDiscount && (
-                                <p className="text-xs text-blue-600">מחיר מועדון</p>
+                                <p className="text-xs text-fattalGold font-medium">מחיר מועדון</p>
                               )}
                             </div>
                           </div>
@@ -429,7 +429,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
               <button
                 type="button"
                 onClick={handleConfirm}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                className="w-full bg-fattalNavy hover:bg-fattalNavyLight text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-md"
               >
                 <span className="flex items-center justify-center gap-2">
                   <span>המשך להזמנה</span>

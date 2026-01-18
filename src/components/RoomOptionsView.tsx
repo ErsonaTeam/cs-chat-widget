@@ -63,15 +63,15 @@ export default function RoomOptionsView({ room, onConfirm, onBack }: RoomOptions
       <div className="mb-4">
         <button
           onClick={onBack}
-          className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-2"
+          className="flex items-center gap-1 text-sm text-fattalGold hover:text-fattalGold/80 mb-2 font-medium"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back to rooms
         </button>
-        <h3 className="text-lg font-semibold text-gray-900">{room.name}</h3>
-        <p className="text-xs text-gray-600 mt-1">Select your preferred option</p>
+        <h3 className="text-lg font-semibold text-fattalNavy">{room.name}</h3>
+        <p className="text-xs text-fattalNavy/60 mt-1">Select your preferred option</p>
       </div>
 
       {/* Options List */}
@@ -90,20 +90,20 @@ export default function RoomOptionsView({ room, onConfirm, onBack }: RoomOptions
               className={`
                 relative p-3 rounded-lg border-2 cursor-pointer transition-all
                 ${isSelected
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 bg-white hover:border-blue-300'}
+                  ? 'border-fattalGold bg-fattalLightGold'
+                  : 'border-fattalNavy/10 bg-white hover:border-fattalGold/50'}
               `}
             >
               {/* Offer Name & Badge */}
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">
                   {option.offer.name ? (
-                    <h4 className="text-sm font-semibold text-gray-900">{option.offer.name}</h4>
+                    <h4 className="text-sm font-semibold text-fattalNavy">{option.offer.name}</h4>
                   ) : (
-                    <h4 className="text-sm font-semibold text-gray-900">Standard Rate</h4>
+                    <h4 className="text-sm font-semibold text-fattalNavy">Standard Rate</h4>
                   )}
                   {option.offer.isLoyaltyClubOffer && (
-                    <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 rounded">
+                    <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium bg-fattalGold/20 text-fattalGold rounded">
                       🔑 Club Member
                     </span>
                   )}
@@ -117,18 +117,18 @@ export default function RoomOptionsView({ room, onConfirm, onBack }: RoomOptions
 
               {/* Price */}
               <div className="flex items-baseline gap-2 mb-2">
-                <span className="text-xl font-bold text-gray-900">
+                <span className="text-xl font-bold text-fattalNavy">
                   ₪{formatPrice(option.offer.price.amount)}
                 </span>
                 {discount > 0 && (
-                  <span className="text-sm text-gray-500 line-through">
+                  <span className="text-sm text-fattalNavy/50 line-through">
                     ₪{formatPrice(option.offer.basePrice.amount)}
                   </span>
                 )}
               </div>
 
               {/* Details */}
-              <div className="space-y-1 text-xs text-gray-600">
+              <div className="space-y-1 text-xs text-fattalNavy/70">
                 <div className="flex items-center gap-1">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -175,13 +175,13 @@ export default function RoomOptionsView({ room, onConfirm, onBack }: RoomOptions
 
               {/* Offer Description (if exists) */}
               {hasDescription(option) && (
-                <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="mt-3 pt-3 border-t border-fattalNavy/10">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleDescription(option.signature);
                     }}
-                    className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium"
+                    className="flex items-center gap-1 text-xs text-fattalGold hover:text-fattalGold/80 font-medium"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -207,7 +207,7 @@ export default function RoomOptionsView({ room, onConfirm, onBack }: RoomOptions
                         className="overflow-hidden"
                       >
                         <div
-                          className="mt-2 p-2 bg-blue-50 rounded text-xs text-gray-700 leading-relaxed max-h-48 overflow-y-auto"
+                          className="mt-2 p-2 bg-fattalCream rounded text-xs text-fattalNavy/80 leading-relaxed max-h-48 overflow-y-auto"
                           dangerouslySetInnerHTML={{ __html: formatDescription(option.offer.descriptionHTML) }}
                         />
                       </motion.div>
@@ -219,7 +219,7 @@ export default function RoomOptionsView({ room, onConfirm, onBack }: RoomOptions
               {/* Selection indicator */}
               {isSelected && (
                 <div className="absolute top-2 right-2">
-                  <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-5 h-5 text-fattalGold" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 </div>
@@ -236,23 +236,23 @@ export default function RoomOptionsView({ room, onConfirm, onBack }: RoomOptions
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="border-t pt-4"
+            className="border-t border-fattalNavy/10 pt-4"
           >
             <div className="flex items-center justify-between mb-3">
-              <label className="text-sm font-medium text-gray-700">Quantity</label>
+              <label className="text-sm font-medium text-fattalNavy">Quantity</label>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   disabled={quantity <= 1}
-                  className="w-8 h-8 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-8 h-8 rounded border border-fattalNavy/20 flex items-center justify-center hover:bg-fattalCream disabled:opacity-50 disabled:cursor-not-allowed text-fattalNavy"
                 >
                   −
                 </button>
-                <span className="w-12 text-center font-medium">{quantity}</span>
+                <span className="w-12 text-center font-medium text-fattalNavy">{quantity}</span>
                 <button
                   onClick={() => setQuantity(Math.min(selectedOption.offer.availableQuantity, quantity + 1))}
                   disabled={quantity >= selectedOption.offer.availableQuantity}
-                  className="w-8 h-8 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-8 h-8 rounded border border-fattalNavy/20 flex items-center justify-center hover:bg-fattalCream disabled:opacity-50 disabled:cursor-not-allowed text-fattalNavy"
                 >
                   +
                 </button>
@@ -261,7 +261,7 @@ export default function RoomOptionsView({ room, onConfirm, onBack }: RoomOptions
 
             <button
               onClick={handleConfirm}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 rounded-lg transition-colors"
+              className="w-full bg-fattalNavy hover:bg-fattalNavyLight text-white font-semibold py-3 rounded-lg transition-colors shadow-md"
             >
               Confirm - ₪{formatPrice(selectedOption.offer.price.amount * quantity)} Total
             </button>

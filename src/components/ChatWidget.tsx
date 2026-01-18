@@ -39,8 +39,8 @@ const MarkdownLink = ({ href, children, isUserMessage }: { href?: string; childr
     rel="noopener noreferrer"
     className={`underline hover:no-underline transition-colors font-medium ${
       isUserMessage
-        ? "text-blue-100 hover:text-white"
-        : "text-blue-600 hover:text-blue-800"
+        ? "text-fattalNavy/80 hover:text-fattalNavy"
+        : "text-fattalNavy font-semibold hover:text-fattalNavy/80"
     }`}
   >
     {children}
@@ -62,12 +62,12 @@ export default function ChatWidget() {
   // Listen for agent messages forwarded from parent via postMessage
   useEffect(() => {
     const handleParentMessage = (event: MessageEvent) => {
-      
+
       // For cross-origin embedding, accept messages with valid widget message types
       // from any origin (since we validate the message type and structure)
-      const hasValidMessageType = event.data?.type && 
+      const hasValidMessageType = event.data?.type &&
         Object.values(ChatWidgetMessageType).includes(event.data.type);
-      
+
       // Accept messages if they have valid message types (secure approach)
       if (!hasValidMessageType) {
         return;
@@ -92,7 +92,7 @@ export default function ChatWidget() {
     };
 
     window.addEventListener('message', handleParentMessage);
-    
+
     return () => {
       window.removeEventListener('message', handleParentMessage);
     };
@@ -143,12 +143,12 @@ export default function ChatWidget() {
       // Add first welcome message when user first enters their name
       const firstWelcomeMessage: Message = {
         id: Date.now().toString() + "-welcome-1",
-        text: `Hello ${
+        text: `שלום ${
           nameInput.trim().charAt(0).toUpperCase() + nameInput.trim().slice(1)
-        }! 👋 Welcome to Ersona Chat!`,
+        }! 👋 ברוכים הבאים לפתאל!`,
         sender: "bot",
         timestamp: new Date(),
-        direction: "ltr",
+        direction: "rtl",
       };
 
       setMessages([firstWelcomeMessage]);
@@ -157,10 +157,10 @@ export default function ChatWidget() {
       setTimeout(() => {
         const secondWelcomeMessage: Message = {
           id: Date.now().toString() + "-welcome-2",
-          text: "I'm here to help you with any questions you might have. Feel free to ask me anything!",
+          text: "אני כאן כדי לעזור לך בכל שאלה. אל תהסס לשאול!",
           sender: "bot",
           timestamp: new Date(),
-          direction: "ltr",
+          direction: "rtl",
         };
 
         setMessages((prev) => [...prev, secondWelcomeMessage]);
@@ -176,14 +176,14 @@ export default function ChatWidget() {
     try {
       // Use the widget messaging system for iframe communication
       if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
-        
+
         // Use postMessage for iframe-to-parent communication
         window.parent.postMessage({
           type: ChatWidgetMessageType.SEND_MESSAGE,
           message: message,
           userName: userName
         }, '*');
-        
+
         // Don't return a placeholder message - real response will come via Pusher
         return null; // Signal that we handled this via widget system
       }
@@ -462,75 +462,107 @@ export default function ChatWidget() {
   };
 
 
-  // Name input screen
+  // Name input screen - Fattal branded
   if (!userName) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-6 bg-transparent text-gray-900 rounded-2xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md"
-        >
-          <h2 className="text-2xl font-bold text-center mb-6">
-            Welcome to Chat!
+      <div className="flex flex-col h-full rounded-2xl overflow-hidden shadow-xl">
+        {/* Header - thin with logo */}
+        <div className="bg-fattalNavy py-2 px-4 flex items-center justify-center gap-2">
+          <Image
+            src="https://d2nyvxq412w7ra.cloudfront.net/fattal_heart_color_addfa324af.svg"
+            priority={true}
+            alt="Fattal Logo"
+            width={24}
+            height={24}
+            className="object-contain"
+          />
+          <h2 className="text-lg font-bold text-white">
+            ברוכים הבאים לפתאל
           </h2>
-          <form onSubmit={handleNameSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium mb-2">
-                Please enter your name:
-              </label>
-              <input
-                id="name"
-                type="text"
-                value={nameInput}
-                onChange={(e) => setNameInput(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl 
-                         bg-white text-gray-900 focus:outline-none focus:ring-0"
-                placeholder="Your name..."
-                autoFocus
-              />
-            </div>
-            <motion.button
-              type="submit"
-              className="w-full bg-ersonaBlue hover:bg-blue-600 text-slate-900 font-medium py-2 px-4 border border-gray-300
-                        rounded-xl transition-colors"
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 flex flex-col items-center justify-center p-6 bg-fattalCream">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full max-w-md"
+          >
+            <form onSubmit={handleNameSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium mb-2 text-fattalNavy">
+                  נא להזין את שמך:
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-fattalNavy/20 rounded-xl
+                           bg-white text-fattalNavy focus:outline-none focus:border-fattalGold
+                           placeholder:text-fattalNavy/50"
+                  placeholder="השם שלך..."
+                  autoFocus
+                  dir="rtl"
+                />
+              </div>
+              <motion.button
+                type="submit"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full bg-fattalGold hover:bg-fattalGold/90 text-white font-semibold py-3 px-4
+                          rounded-xl transition-colors shadow-md"
+              >
+                התחל צ׳אט
+              </motion.button>
+            </form>
+          </motion.div>
+        </div>
+
+        {/* Footer */}
+        <div className="bg-white py-2 px-4 text-center border-t border-fattalNavy/10">
+          <p className="text-xs text-fattalNavy/60">
+            Powered by{" "}
+            <a
+              href="https://ersona.co"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-fattalGold hover:text-fattalGold/80 transition-colors font-medium"
             >
-              Start Chat
-            </motion.button>
-          </form>
-        </motion.div>
+              Ersona
+            </a>
+          </p>
+        </div>
       </div>
     );
   }
 
-  // Chat interface
+  // Chat interface - Fattal branded
   return (
-    <div className="flex flex-col h-full text-gray-900 bg-transparent rounded-2xl">
-      {/* Header */}
-      <div className="flex items-center justify-between py-2 px-4 bg-white/40 rounded-t-2xl chat-header shadow-lg shadow-black/10">
-        <h3 className="font-medium flex items-center gap-1 text-gray-800 text-sm">
-          <div className="rounded-full bg-gray-100 p-1 flex items-end justify-end">
-            <Image
-              src="/ersona-logo.svg"
-              priority={true}
-              alt="Ersona Logo"
-              width={20}
-              height={20}
-              className="object-bottom w-5 h-5"
-            />
-          </div>
-          <span className="mb-0.5">Ersona Agent</span>
+    <div className="flex flex-col h-full rounded-2xl overflow-hidden shadow-xl">
+      {/* Header - Navy background, thin */}
+      <div className="flex items-center justify-between py-2 px-4 bg-fattalNavy">
+        <h3 className="font-semibold flex items-center gap-2 text-white text-sm">
+          <Image
+            src="https://d2nyvxq412w7ra.cloudfront.net/fattal_heart_color_addfa324af.svg"
+            priority={true}
+            alt="Fattal Logo"
+            width={24}
+            height={24}
+            className="object-contain"
+          />
+          <span>פתאל - שירות לקוחות</span>
         </h3>
         <button
           onClick={resetChat}
-          className="text-sm text-gray-600 hover:text-gray-700 transition-colors"
+          className="text-sm text-white/80 hover:text-white transition-colors"
         >
-          Reset
+          איפוס
         </button>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white/50">
+      {/* Messages - Cream background */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-fattalCream">
         <AnimatePresence>
           {messages.map((message) => (
             <div key={message.id}>
@@ -580,10 +612,10 @@ export default function ChatWidget() {
               >
                 <div
                   dir={message.direction}
-                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-xl ${
+                  className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl shadow-sm ${
                     message.sender === "user"
-                      ? "bg-ersonaBlue text-white chat-message-user shadow-sm"
-                      : "bg-white text-gray-900 shadow-sm border border-gray-200 chat-message-bot"
+                      ? "bg-fattalGold text-fattalNavy"
+                      : "bg-white text-fattalNavy border border-fattalNavy/10"
                   }`}
                 >
                   <div className="text-sm prose prose-sm max-w-none [&>p]:m-0 [&>ul]:m-0 [&>ol]:m-0 [&>p+p]:mt-2 whitespace-pre-wrap">
@@ -601,7 +633,9 @@ export default function ChatWidget() {
                       {message.text}
                     </Markdown>
                   </div>
-                  <p className="text-xs opacity-70 mt-1">
+                  <p className={`text-xs mt-2 ${
+                    message.sender === "user" ? "text-fattalNavy/60" : "text-fattalNavy/50"
+                  }`}>
                     {message.timestamp.toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
@@ -614,8 +648,6 @@ export default function ChatWidget() {
           {/* Loading indicator */}
           {isLoading && (
             <motion.div
-              // initial={{ opacity: 0, y: 20 }}
-              // animate={{ opacity: 1, y: 0 }}
               className="flex justify-start"
             >
               <LoadingSpinner />
@@ -625,9 +657,9 @@ export default function ChatWidget() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="pt-4 px-4 pb-1 bg-white/80">
-        <form onSubmit={handleMessageSubmit} className="flex">
+      {/* Input - White background */}
+      <div className="p-4 bg-white border-t border-fattalNavy/10">
+        <form onSubmit={handleMessageSubmit} className="flex gap-2">
           <input
             ref={inputRef}
             type="text"
@@ -636,33 +668,37 @@ export default function ChatWidget() {
             onKeyDown={handleKeyDown}
             dir={inputDirection}
             disabled={isLoading}
-            className="flex-1 px-2 py-2 border border-r-0 border-gray-300 rounded-l-xl 
-                     bg-white/80 text-gray-900 focus:outline-none focus:ring-0 
-                     text-sm placeholder:text-gray-500 placeholder:text-sm chat-input
+            className="flex-1 px-4 py-3 border-2 border-fattalNavy/20 rounded-xl
+                     bg-white text-fattalNavy focus:outline-none focus:border-fattalGold
+                     text-sm placeholder:text-fattalNavy/40
                      disabled:opacity-50 disabled:cursor-not-allowed"
             placeholder={
-              isLoading ? "Waiting for response..." : "Ask me anything..."
+              isLoading ? "ממתין לתשובה..." : "הקלד הודעה..."
             }
           />
           <motion.button
             type="submit"
             disabled={isLoading || !inputMessage.trim()}
-            className="bg-ersonaBlue hover:bg-blue-500 text-white font-medium py-2 px-4 
-                     rounded-r-xl transition-colors text-sm flex items-center justify-center chat-button-send border border-gray-300
-                     disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-ersonaBlue"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="bg-fattalGold hover:bg-fattalGold/90 text-white font-medium p-3
+                     rounded-xl transition-colors flex items-center justify-center
+                     disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
           >
             <LuSendHorizontal className="w-5 h-5" />
           </motion.button>
         </form>
       </div>
-      <div className="pb-1 px-2 bg-white/80 text-center rounded-b-2xl">
-        <p className="text-[12px] text-gray-500">
+
+      {/* Footer */}
+      <div className="py-2 px-4 bg-white text-center">
+        <p className="text-xs text-fattalNavy/50">
           Powered by{" "}
-          <a 
-            href="https://ersona.co" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-blue-500 hover:text-blue-600 transition-colors"
+          <a
+            href="https://ersona.co"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-fattalGold hover:text-fattalGold/80 transition-colors font-medium"
           >
             Ersona
           </a>

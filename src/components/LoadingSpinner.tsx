@@ -21,14 +21,14 @@ export default function LoadingSpinner() {
   }, []);
 
   return (
-    <div className="bg-white text-gray-900 shadow-sm border border-gray-200 chat-message-bot px-8 py-3 rounded-xl space-x-2"
+    <div className="bg-white text-fattalNavy shadow-sm border border-fattalNavy/10 px-8 py-3 rounded-2xl space-x-2"
       style={{
         width: "50px",
         aspectRatio: "5",
         background: `
-          radial-gradient(circle closest-side, #4B5563 90%, transparent) 10% 50%,
-          radial-gradient(circle closest-side, #4B5563 90%, transparent) 50% 50%,
-          radial-gradient(circle closest-side, #4B5563 90%, transparent) 90% 50%
+          radial-gradient(circle closest-side, #1d2b4d 90%, transparent) 10% 50%,
+          radial-gradient(circle closest-side, #1d2b4d 90%, transparent) 50% 50%,
+          radial-gradient(circle closest-side, #1d2b4d 90%, transparent) 90% 50%
         `,
         backgroundSize: "calc(100%/5) 100%",
         backgroundRepeat: "no-repeat",
@@ -36,4 +36,4 @@ export default function LoadingSpinner() {
       }}
     />
   );
-} 
+}
