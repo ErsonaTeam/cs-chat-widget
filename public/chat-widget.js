@@ -185,7 +185,9 @@
             type: MESSAGE_TYPES.AGENT_MESSAGE,
             message: messageData.message,
             timestamp: messageData.timestamp,
-            roomOptions: messageData.roomOptions
+            roomOptions: messageData.roomOptions,
+            hotelOptions: messageData.hotelOptions,
+            roomSearchResults: messageData.roomSearchResults
           }, widgetServiceBaseUrl);
         } else {
           console.error('Chat Widget - No iframe or contentWindow available');
@@ -206,7 +208,9 @@
           type: MESSAGE_TYPES.AGENT_MESSAGE,
           message: data.message,
           timestamp: data.timestamp,
-          roomOptions: data.roomOptions
+          roomOptions: data.roomOptions,
+          hotelOptions: data.hotelOptions,
+          roomSearchResults: data.roomSearchResults
         }, widgetServiceBaseUrl);
       } else {
         console.error('Chat Widget - No iframe or contentWindow available');

@@ -4,10 +4,14 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LuSendHorizontal } from "react-icons/lu";
 import Image from "next/image";
+import Markdown from "react-markdown";
 import LoadingSpinner from "./LoadingSpinner";
-import { ChatWidgetMessageType, RoomOption, RoomOptionDetail } from "@/types/message-types";
+import { ChatWidgetMessageType, RoomOption, RoomOptionDetail, FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice } from "@/types/message-types";
 import RoomCarousel from "./RoomCarousel";
 import RoomOptionsView from "./RoomOptionsView";
+import HotelCarousel from "./HotelCarousel";
+import FattalRoomCarousel from "./FattalRoomCarousel";
+import FattalRoomDetailView from "./FattalRoomDetailView";
 
 interface Message {
   id: string;
@@ -16,6 +20,8 @@ interface Message {
   timestamp: Date;
   direction: "ltr" | "rtl";
   roomOptions?: RoomOption[];
+  hotelOptions?: FattalHotel[];
+  roomSearchResults?: FattalRoom[];
 }
 
 // Hebrew character detection regex
@@ -25,72 +31,21 @@ const detectTextDirection = (text: string): "ltr" | "rtl" => {
   return HEBREW_REGEX.test(text.charAt(0)) ? "rtl" : "ltr";
 };
 
-// Function to render text with clickable links
-const renderMessageWithLinks = (text: string, isUserMessage: boolean = false) => {
-  // Enhanced URL regex pattern that matches http/https URLs and www URLs
-  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
-  
-  // Split text by URLs while keeping the URLs in the result
-  const parts = text.split(urlRegex);
-  
-  return parts.map((part, index) => {
-    // Check if this part is a URL
-    if (urlRegex.test(part)) {
-      // Clean up the URL (remove trailing punctuation that might not be part of the URL)
-      const cleanUrl = part.replace(/[.,;!?]+$/, '');
-      const trailingPunctuation = part.slice(cleanUrl.length);
-      
-      // Add protocol if missing for www URLs
-      let href = cleanUrl;
-      if (cleanUrl.startsWith('www.')) {
-        href = `https://${cleanUrl}`;
-      }
-      
-      // Create a display text for very long URLs
-      const displayText = cleanUrl.length > 50 
-        ? `${cleanUrl.substring(0, 30)}...${cleanUrl.substring(cleanUrl.length - 15)}`
-        : cleanUrl;
-      
-      return (
-        <span key={index}>
-          <a
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`underline hover:no-underline transition-colors font-medium inline-flex items-center gap-1 ${
-              isUserMessage 
-                ? "text-blue-100 hover:text-white" 
-                : "text-blue-600 hover:text-blue-800"
-            }`}
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-            title={`Open ${cleanUrl} in new tab`}
-          >
-            {displayText}
-            <svg 
-              className="w-3 h-3 opacity-70" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" 
-              />
-            </svg>
-          </a>
-          {trailingPunctuation}
-        </span>
-      );
-    }
-    
-    // Regular text
-    return <span key={index}>{part}</span>;
-  });
-};
+// Custom link component for Markdown
+const MarkdownLink = ({ href, children, isUserMessage }: { href?: string; children: React.ReactNode; isUserMessage: boolean }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    className={`underline hover:no-underline transition-colors font-medium ${
+      isUserMessage
+        ? "text-blue-100 hover:text-white"
+        : "text-blue-600 hover:text-blue-800"
+    }`}
+  >
+    {children}
+  </a>
+);
 
 export default function ChatWidget() {
   const [userName, setUserName] = useState<string>("");
@@ -100,6 +55,7 @@ export default function ChatWidget() {
   const [inputDirection, setInputDirection] = useState<"ltr" | "rtl">("ltr");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedRoomForOptions, setSelectedRoomForOptions] = useState<RoomOption | null>(null);
+  const [selectedFattalRoom, setSelectedFattalRoom] = useState<FattalRoom | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -127,6 +83,8 @@ export default function ChatWidget() {
           timestamp: new Date(),
           direction: detectTextDirection(event.data.message),
           roomOptions: event.data.roomOptions,
+          hotelOptions: event.data.hotelOptions,
+          roomSearchResults: event.data.roomSearchResults,
         };
 
         setMessages((prev) => [...prev, agentMessage]);
@@ -145,22 +103,25 @@ export default function ChatWidget() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Adjust widget size when room options are displayed
+  // Adjust widget size when room options or hotel options are displayed
   useEffect(() => {
     const hasRoomOptions = messages.some(msg => msg.roomOptions && msg.roomOptions.length > 0);
+    const hasHotelOptions = messages.some(msg => msg.hotelOptions && msg.hotelOptions.length > 0);
+    const hasRoomSearchResults = messages.some(msg => msg.roomSearchResults && msg.roomSearchResults.length > 0);
     const showingOptionsView = selectedRoomForOptions !== null;
+    const showingFattalRoomDetail = selectedFattalRoom !== null;
 
     // Send resize request to parent window
     if (window.parent && window.parent !== window) {
       let newHeight = 500;
       let newWidth = 350;
 
-      if (showingOptionsView) {
-        // Larger size for options view
+      if (showingOptionsView || showingFattalRoomDetail) {
+        // Larger size for options/detail view
         newHeight = 700;
         newWidth = 420;
-      } else if (hasRoomOptions) {
-        // Medium size for room carousel
+      } else if (hasRoomOptions || hasHotelOptions || hasRoomSearchResults) {
+        // Medium size for room/hotel carousel
         newHeight = 650;
         newWidth = 420;
       }
@@ -171,7 +132,7 @@ export default function ChatWidget() {
         width: newWidth
       }, '*');
     }
-  }, [messages, selectedRoomForOptions]);
+  }, [messages, selectedRoomForOptions, selectedFattalRoom]);
 
   // Handle name submission
   const handleNameSubmit = (e: React.FormEvent) => {
@@ -318,6 +279,80 @@ export default function ChatWidget() {
   // Handle back from options view
   const handleBackFromOptions = () => {
     setSelectedRoomForOptions(null);
+  };
+
+  // Handle hotel selection (send hotel name as message)
+  const handleSelectHotel = async (hotel: FattalHotel) => {
+    if (isLoading) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text: hotel.hotelName,
+      sender: "user",
+      timestamp: new Date(),
+      direction: detectTextDirection(hotel.hotelName),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+
+    // Send message to API
+    const botReply = await sendMessageToAPI(hotel.hotelName, userName);
+    if (botReply) {
+      setMessages((prev) => [...prev, botReply]);
+    }
+    setIsLoading(false);
+  };
+
+  // Handle Fattal room selection - open detail view
+  const handleSelectFattalRoom = (room: FattalRoom) => {
+    setSelectedFattalRoom(room);
+  };
+
+  // Handle back from Fattal room detail view
+  const handleBackFromFattalRoom = () => {
+    setSelectedFattalRoom(null);
+  };
+
+  // Handle Fattal room booking confirmation
+  const handleConfirmFattalRoom = async (
+    room: FattalRoom,
+    selectedPackage: FattalRoomPackage,
+    selectedPrice: FattalPackagePrice,
+    isClubMember: boolean
+  ) => {
+    if (isLoading) return;
+
+    const formatPrice = (amount: number) => new Intl.NumberFormat('he-IL').format(Math.ceil(amount));
+    const displayPrice = isClubMember && selectedPrice.clubTotalPrice
+      ? selectedPrice.clubTotalPrice
+      : selectedPrice.totalPrice;
+
+    const selectionMessage = `אני מעוניין להזמין:\n` +
+      `חדר: ${room.name}\n` +
+      `חבילה: ${selectedPackage.packageName}\n` +
+      `סוג אירוח: ${selectedPrice.hostingBase}\n` +
+      `${isClubMember ? 'חבר מועדון: כן\n' : ''}` +
+      `מחיר: ${formatPrice(displayPrice)} ₪`;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text: selectionMessage,
+      sender: "user",
+      timestamp: new Date(),
+      direction: "rtl",
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setSelectedFattalRoom(null);
+    setIsLoading(true);
+
+    // Send message to API
+    const botReply = await sendMessageToAPI(selectionMessage, userName);
+    if (botReply) {
+      setMessages((prev) => [...prev, botReply]);
+    }
+    setIsLoading(false);
   };
 
   // Handle room option confirmation with quantity
@@ -499,7 +534,27 @@ export default function ChatWidget() {
         <AnimatePresence>
           {messages.map((message) => (
             <div key={message.id}>
-              {/* Room Carousel or Options View */}
+              {/* Hotel Carousel (Fattal) */}
+              {message.hotelOptions && message.hotelOptions.length > 0 && (
+                <HotelCarousel hotels={message.hotelOptions} onSelectHotel={handleSelectHotel} />
+              )}
+
+              {/* Fattal Room Carousel or Detail View */}
+              {message.roomSearchResults && message.roomSearchResults.length > 0 && (
+                <>
+                  {selectedFattalRoom ? (
+                    <FattalRoomDetailView
+                      room={selectedFattalRoom}
+                      onConfirm={handleConfirmFattalRoom}
+                      onBack={handleBackFromFattalRoom}
+                    />
+                  ) : (
+                    <FattalRoomCarousel rooms={message.roomSearchResults} onSelectRoom={handleSelectFattalRoom} />
+                  )}
+                </>
+              )}
+
+              {/* Room Carousel or Options View (SimpleBooking) */}
               {message.roomOptions && message.roomOptions.length > 0 && (
                 <>
                   {selectedRoomForOptions ? (
@@ -531,8 +586,20 @@ export default function ChatWidget() {
                       : "bg-white text-gray-900 shadow-sm border border-gray-200 chat-message-bot"
                   }`}
                 >
-                  <div className="text-sm">
-                    {renderMessageWithLinks(message.text, message.sender === "user")}
+                  <div className="text-sm prose prose-sm max-w-none [&>p]:m-0 [&>ul]:m-0 [&>ol]:m-0 [&>p+p]:mt-2 whitespace-pre-wrap">
+                    <Markdown
+                      components={{
+                        a: ({ href, children }) => (
+                          <MarkdownLink href={href} isUserMessage={message.sender === "user"}>
+                            {children}
+                          </MarkdownLink>
+                        ),
+                        strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                        em: ({ children }) => <em className="italic">{children}</em>,
+                      }}
+                    >
+                      {message.text}
+                    </Markdown>
                   </div>
                   <p className="text-xs opacity-70 mt-1">
                     {message.timestamp.toLocaleTimeString([], {
