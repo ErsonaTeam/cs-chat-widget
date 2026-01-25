@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { FattalRoom, FattalRoomPackage, FattalPackagePrice } from "@/types/message-types";
@@ -75,10 +75,40 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
     return Array.from(groupMap.values());
   }, [room.packages]);
 
+  // Filter packages based on club member status
+  const filteredGroupedPackages = useMemo((): GroupedPackage[] => {
+    return groupedPackages
+      .map((pkg) => {
+        // Filter prices based on isClubMember state
+        const filteredPrices = pkg.prices.filter((price) => {
+          if (isClubMember) {
+            // Club member - only packages with club price
+            return price.clubTotalPrice !== null;
+          } else {
+            // Not a member - only packages with regular price
+            return price.totalPrice > 0;
+          }
+        });
+
+        return {
+          ...pkg,
+          prices: filteredPrices,
+        };
+      })
+      .filter((pkg) => pkg.prices.length > 0); // Remove packages with no prices
+  }, [groupedPackages, isClubMember]);
+
+  // Reset selection when club member status changes
+  useEffect(() => {
+    setSelectedGroupedPackageName(null);
+    setSelectedPriceKey(null);
+    setViewStep('packages');
+  }, [isClubMember]);
+
   // Get selected grouped package
   const selectedGroupedPackage = useMemo(() =>
-    groupedPackages.find((g) => g.packageName === selectedGroupedPackageName),
-    [groupedPackages, selectedGroupedPackageName]
+    filteredGroupedPackages.find((g) => g.packageName === selectedGroupedPackageName),
+    [filteredGroupedPackages, selectedGroupedPackageName]
   );
 
   // Get selected price from the key "packageId:hostingBase"
@@ -115,7 +145,11 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
   };
 
   const getDisplayPrice = (price: FattalPackagePrice) => {
-    return isClubMember && price.clubTotalPrice ? price.clubTotalPrice : price.totalPrice;
+    // Explicit null check (not truthiness) to handle clubTotalPrice = 0
+    if (isClubMember && price.clubTotalPrice !== null) {
+      return price.clubTotalPrice;
+    }
+    return price.totalPrice;
   };
 
   const handleConfirm = () => {
@@ -279,15 +313,15 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
             >
-              {groupedPackages.length > 0 && (
+              {filteredGroupedPackages.length > 0 && (
                 <div>
                   <h3 className="text-sm font-semibold text-fattalNavy mb-3">בחר חבילה</h3>
                   <div className="space-y-2">
-                    {groupedPackages.map((groupedPkg) => {
+                    {filteredGroupedPackages.map((groupedPkg) => {
                       // Calculate min price across all pensions for this grouped package
                       const minPrice = Math.min(
                         ...groupedPkg.prices.map((p) =>
-                          isClubMember && p.clubTotalPrice ? p.clubTotalPrice : p.totalPrice
+                          isClubMember && p.clubTotalPrice !== null ? p.clubTotalPrice : p.totalPrice
                         )
                       );
                       const minBasePrice = Math.min(

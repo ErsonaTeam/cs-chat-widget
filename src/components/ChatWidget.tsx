@@ -13,6 +13,30 @@ import HotelCarousel from "./HotelCarousel";
 import FattalRoomCarousel from "./FattalRoomCarousel";
 import FattalRoomDetailView from "./FattalRoomDetailView";
 
+// ============================================
+// WIDGET CONFIGURATION - Quick settings
+// ============================================
+const WIDGET_CONFIG = {
+  // UI Direction: "rtl" for Hebrew/Arabic, "ltr" for English
+  direction: "rtl" as "rtl" | "ltr",
+
+  // UI Text (Hebrew)
+  text: {
+    welcomeTitle: "ברוכים הבאים לפתאל",
+    headerTitle: "פתאל - שירות לקוחות",
+    nameLabel: "נא להזין את שמך:",
+    namePlaceholder: "השם שלך...",
+    startChat: "התחל צ׳אט",
+    resetButton: "איפוס",
+    inputPlaceholder: "הקלד הודעה...",
+    loadingPlaceholder: "ממתין לתשובה...",
+  },
+
+  // Logo URL
+  logoUrl: "https://d2nyvxq412w7ra.cloudfront.net/fattal_heart_color_addfa324af.svg",
+};
+// ============================================
+
 interface Message {
   id: string;
   text: string;
@@ -465,11 +489,11 @@ export default function ChatWidget() {
   // Name input screen - Fattal branded
   if (!userName) {
     return (
-      <div className="flex flex-col h-full rounded-2xl overflow-hidden shadow-xl">
+      <div dir={WIDGET_CONFIG.direction} className="flex flex-col h-full rounded-2xl overflow-hidden shadow-xl">
         {/* Header - thin with logo */}
         <div className="bg-fattalNavy py-2 px-4 flex items-center justify-center gap-2">
           <Image
-            src="https://d2nyvxq412w7ra.cloudfront.net/fattal_heart_color_addfa324af.svg"
+            src={WIDGET_CONFIG.logoUrl}
             priority={true}
             alt="Fattal Logo"
             width={24}
@@ -477,7 +501,7 @@ export default function ChatWidget() {
             className="object-contain"
           />
           <h2 className="text-lg font-bold text-white">
-            ברוכים הבאים לפתאל
+            {WIDGET_CONFIG.text.welcomeTitle}
           </h2>
         </div>
 
@@ -491,7 +515,7 @@ export default function ChatWidget() {
             <form onSubmit={handleNameSubmit} className="space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium mb-2 text-fattalNavy">
-                  נא להזין את שמך:
+                  {WIDGET_CONFIG.text.nameLabel}
                 </label>
                 <input
                   id="name"
@@ -501,9 +525,8 @@ export default function ChatWidget() {
                   className="w-full px-4 py-3 border-2 border-fattalNavy/20 rounded-xl
                            bg-white text-fattalNavy focus:outline-none focus:border-fattalGold
                            placeholder:text-fattalNavy/50"
-                  placeholder="השם שלך..."
+                  placeholder={WIDGET_CONFIG.text.namePlaceholder}
                   autoFocus
-                  dir="rtl"
                 />
               </div>
               <motion.button
@@ -513,7 +536,7 @@ export default function ChatWidget() {
                 className="w-full bg-fattalGold hover:bg-fattalGold/90 text-white font-semibold py-3 px-4
                           rounded-xl transition-colors shadow-md"
               >
-                התחל צ׳אט
+                {WIDGET_CONFIG.text.startChat}
               </motion.button>
             </form>
           </motion.div>
@@ -539,25 +562,25 @@ export default function ChatWidget() {
 
   // Chat interface - Fattal branded
   return (
-    <div className="flex flex-col h-full rounded-2xl overflow-hidden shadow-xl">
+    <div dir={WIDGET_CONFIG.direction} className="flex flex-col h-full rounded-2xl overflow-hidden shadow-xl">
       {/* Header - Navy background, thin */}
       <div className="flex items-center justify-between py-2 px-4 bg-fattalNavy">
         <h3 className="font-semibold flex items-center gap-2 text-white text-sm">
           <Image
-            src="https://d2nyvxq412w7ra.cloudfront.net/fattal_heart_color_addfa324af.svg"
+            src={WIDGET_CONFIG.logoUrl}
             priority={true}
             alt="Fattal Logo"
             width={24}
             height={24}
             className="object-contain"
           />
-          <span>פתאל - שירות לקוחות</span>
+          <span>{WIDGET_CONFIG.text.headerTitle}</span>
         </h3>
         <button
           onClick={resetChat}
           className="text-sm text-white/80 hover:text-white transition-colors"
         >
-          איפוס
+          {WIDGET_CONFIG.text.resetButton}
         </button>
       </div>
 
@@ -673,7 +696,7 @@ export default function ChatWidget() {
                      text-sm placeholder:text-fattalNavy/40
                      disabled:opacity-50 disabled:cursor-not-allowed"
             placeholder={
-              isLoading ? "ממתין לתשובה..." : "הקלד הודעה..."
+              isLoading ? WIDGET_CONFIG.text.loadingPlaceholder : WIDGET_CONFIG.text.inputPlaceholder
             }
           />
           <motion.button
