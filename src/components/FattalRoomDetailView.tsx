@@ -18,6 +18,12 @@ interface GroupedPackage {
   prices: Array<FattalPackagePrice & { originalPackageId: number }>;
 }
 
+// Selected price identifier
+interface SelectedPriceId {
+  packageId: number;
+  hostingBase: string;
+}
+
 export default function FattalRoomDetailView({ room, onConfirm, onBack }: FattalRoomDetailViewProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isClubMember, setIsClubMember] = useState(false);
@@ -25,7 +31,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
   // Step navigation: 'packages' or 'pensions'
   const [viewStep, setViewStep] = useState<'packages' | 'pensions'>('packages');
   const [selectedGroupedPackageName, setSelectedGroupedPackageName] = useState<string | null>(null);
-  const [selectedPriceKey, setSelectedPriceKey] = useState<string | null>(null); // "packageId:hostingBase"
+  const [selectedPriceId, setSelectedPriceId] = useState<SelectedPriceId | null>(null);
 
   // Get images
   const images = room.gallery?.length
@@ -101,7 +107,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
   // Reset selection when club member status changes
   useEffect(() => {
     setSelectedGroupedPackageName(null);
-    setSelectedPriceKey(null);
+    setSelectedPriceId(null);
     setViewStep('packages');
   }, [isClubMember]);
 
@@ -111,15 +117,13 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
     [filteredGroupedPackages, selectedGroupedPackageName]
   );
 
-  // Get selected price from the key "packageId:hostingBase"
+  // Get selected price from the selected price ID
   const selectedPrice = useMemo(() => {
-    if (!selectedPriceKey || !selectedGroupedPackage) return null;
-    const [packageIdStr, hostingBase] = selectedPriceKey.split(':');
-    const packageId = parseInt(packageIdStr, 10);
+    if (!selectedPriceId || !selectedGroupedPackage) return null;
     return selectedGroupedPackage.prices.find(
-      (p) => p.originalPackageId === packageId && p.hostingBase === hostingBase
+      (p) => p.originalPackageId === selectedPriceId.packageId && p.hostingBase === selectedPriceId.hostingBase
     ) || null;
-  }, [selectedPriceKey, selectedGroupedPackage]);
+  }, [selectedPriceId, selectedGroupedPackage]);
 
   // Get the original package for the selected price (needed for onConfirm)
   const selectedOriginalPackage = useMemo(() => {
@@ -130,13 +134,13 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
   // Handle grouped package selection - navigate to pensions view
   const handleGroupedPackageSelect = (packageName: string) => {
     setSelectedGroupedPackageName(packageName);
-    setSelectedPriceKey(null);
+    setSelectedPriceId(null);
     setViewStep('pensions');
   };
 
   // Handle back to packages
   const handleBackToPackages = () => {
-    setSelectedPriceKey(null);
+    setSelectedPriceId(null);
     setViewStep('packages');
   };
 
@@ -155,6 +159,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
   const handleConfirm = () => {
     if (selectedOriginalPackage && selectedPrice) {
       // Remove the originalPackageId from the price before passing to onConfirm
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { originalPackageId, ...priceWithoutId } = selectedPrice;
       onConfirm(room, selectedOriginalPackage, priceWithoutId as FattalPackagePrice, isClubMember);
     }
@@ -404,14 +409,14 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
                       const displayPrice = getDisplayPrice(price);
                       const hasDiscount = price.totalBasePrice && price.totalBasePrice > displayPrice;
                       const hasClubDiscount = isClubMember && price.clubTotalPrice && price.clubTotalPrice < price.totalPrice;
-                      const priceKey = `${price.originalPackageId}:${price.hostingBase}`;
-                      const isSelected = selectedPriceKey === priceKey;
+                      const isSelected = selectedPriceId?.packageId === price.originalPackageId &&
+                                        selectedPriceId?.hostingBase === price.hostingBase;
 
                       return (
                         <button
-                          key={priceKey}
+                          key={`${price.originalPackageId}-${price.hostingBase}`}
                           type="button"
-                          onClick={() => setSelectedPriceKey(priceKey)}
+                          onClick={() => setSelectedPriceId({ packageId: price.originalPackageId, hostingBase: price.hostingBase })}
                           className={`w-full p-3 rounded-lg border-2 text-right transition-all ${
                             isSelected
                               ? "border-fattalGold bg-fattalLightGold"
@@ -453,7 +458,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
 
         {/* Confirm Button - Only show when pension is selected */}
         <AnimatePresence>
-          {selectedPriceKey && selectedPrice && (
+          {selectedPriceId && selectedPrice && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}

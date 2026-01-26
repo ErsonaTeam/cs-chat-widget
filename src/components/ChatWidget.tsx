@@ -6,9 +6,7 @@ import { LuSendHorizontal } from "react-icons/lu";
 import Image from "next/image";
 import Markdown from "react-markdown";
 import LoadingSpinner from "./LoadingSpinner";
-import { ChatWidgetMessageType, RoomOption, RoomOptionDetail, FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice } from "@/types/message-types";
-import RoomCarousel from "./RoomCarousel";
-import RoomOptionsView from "./RoomOptionsView";
+import { ChatWidgetMessageType, FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice } from "@/types/message-types";
 import HotelCarousel from "./HotelCarousel";
 import FattalRoomCarousel from "./FattalRoomCarousel";
 import FattalRoomDetailView from "./FattalRoomDetailView";
@@ -61,7 +59,6 @@ interface Message {
   sender: "user" | "bot";
   timestamp: Date;
   direction: "ltr" | "rtl";
-  roomOptions?: RoomOption[];
   hotelOptions?: FattalHotel[];
   roomSearchResults?: FattalRoom[];
 }
@@ -100,7 +97,6 @@ export default function ChatWidget() {
   const [inputMessage, setInputMessage] = useState<string>("");
   const [inputDirection, setInputDirection] = useState<"ltr" | "rtl">("ltr");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [selectedRoomForOptions, setSelectedRoomForOptions] = useState<RoomOption | null>(null);
   const [selectedFattalRoom, setSelectedFattalRoom] = useState<FattalRoom | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -128,7 +124,6 @@ export default function ChatWidget() {
           sender: "bot",
           timestamp: new Date(),
           direction: detectTextDirection(event.data.message),
-          roomOptions: event.data.roomOptions,
           hotelOptions: event.data.hotelOptions,
           roomSearchResults: event.data.roomSearchResults,
         };
@@ -149,12 +144,10 @@ export default function ChatWidget() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Adjust widget size when room options or hotel options are displayed
+  // Adjust widget size when hotel options or room search results are displayed
   useEffect(() => {
-    const hasRoomOptions = messages.some(msg => msg.roomOptions && msg.roomOptions.length > 0);
     const hasHotelOptions = messages.some(msg => msg.hotelOptions && msg.hotelOptions.length > 0);
     const hasRoomSearchResults = messages.some(msg => msg.roomSearchResults && msg.roomSearchResults.length > 0);
-    const showingOptionsView = selectedRoomForOptions !== null;
     const showingFattalRoomDetail = selectedFattalRoom !== null;
 
     // Send resize request to parent window
@@ -162,12 +155,12 @@ export default function ChatWidget() {
       let newHeight = 500;
       let newWidth = 350;
 
-      if (showingOptionsView || showingFattalRoomDetail) {
-        // Larger size for options/detail view
+      if (showingFattalRoomDetail) {
+        // Larger size for detail view
         newHeight = 700;
         newWidth = 420;
-      } else if (hasRoomOptions || hasHotelOptions || hasRoomSearchResults) {
-        // Medium size for room/hotel carousel
+      } else if (hasHotelOptions || hasRoomSearchResults) {
+        // Medium size for hotel/room carousel
         newHeight = 650;
         newWidth = 420;
       }
@@ -178,7 +171,7 @@ export default function ChatWidget() {
         width: newWidth
       }, '*');
     }
-  }, [messages, selectedRoomForOptions, selectedFattalRoom]);
+  }, [messages, selectedFattalRoom]);
 
   // Handle name submission
   const handleNameSubmit = (e: React.FormEvent) => {
@@ -334,16 +327,6 @@ export default function ChatWidget() {
     setIsLoading(false);
   };
 
-  // Handle viewing room options
-  const handleViewRoomOptions = (room: RoomOption) => {
-    setSelectedRoomForOptions(room);
-  };
-
-  // Handle back from options view
-  const handleBackFromOptions = () => {
-    setSelectedRoomForOptions(null);
-  };
-
   // Handle hotel selection (send hotel name as message)
   const handleSelectHotel = async (hotel: FattalHotel) => {
     if (isLoading) return;
@@ -417,113 +400,6 @@ export default function ChatWidget() {
     }
     setIsLoading(false);
   };
-
-  // Handle room option confirmation with quantity
-  const handleConfirmRoomOption = async (room: RoomOption, option: RoomOptionDetail, quantity: number) => {
-    if (isLoading) return;
-
-    const formatPrice = (amount: number) => new Intl.NumberFormat('en-US').format(amount);
-    const totalPrice = formatPrice(option.offer.price.amount * quantity);
-
-    const selectionMessage = `I would like to book:\n` +
-      `${room.name}\n` +
-      `${option.offer.name || 'Standard Rate'}\n` +
-      `Quantity: ${quantity} room${quantity > 1 ? 's' : ''}\n` +
-      `Total: ₪${totalPrice} ${option.offer.price.currencyCode}`;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text: selectionMessage,
-      sender: "user",
-      timestamp: new Date(),
-      direction: "ltr",
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setSelectedRoomForOptions(null); // Close options view
-    setIsLoading(true);
-
-    try {
-      // Get companyId and conversationId from parent window
-      const parentWindow = window.parent as Window & {
-        __CHATWIDGET__?: {
-          getConversationId?: () => string | null;
-        };
-      };
-
-      const conversationId = parentWindow.__CHATWIDGET__?.getConversationId?.();
-
-      if (!conversationId) {
-        throw new Error('Conversation ID not available');
-      }
-
-      // Extract companyId from script element (same logic as chat-widget.js)
-      const getCompanyId = () => {
-        const widgetScript = parentWindow.document?.getElementById('ersona-chat-widget') as HTMLScriptElement | null;
-        if (widgetScript?.dataset?.companyId) {
-          return widgetScript.dataset.companyId;
-        }
-
-        const anyWidgetScript = parentWindow.document?.querySelector('script[data-company-id]') as HTMLScriptElement | null;
-        if (anyWidgetScript?.dataset?.companyId) {
-          return anyWidgetScript.dataset.companyId;
-        }
-
-        return 'default';
-      };
-
-      const companyId = getCompanyId();
-
-      // Call checkout endpoint
-      const checkoutResponse = await fetch('/api/widget/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          companyId,
-          conversationId,
-          signature: option.signature,
-          quantity,
-        }),
-      });
-
-      if (!checkoutResponse.ok) {
-        const errorData = await checkoutResponse.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to create checkout');
-      }
-
-      const { checkoutLink } = await checkoutResponse.json();
-
-      // Display checkout link as a bot message
-      const checkoutMessage: Message = {
-        id: Date.now().toString() + "-checkout",
-        text: `Great! Your booking is ready. Click the link below to complete your reservation:\n\n${checkoutLink}`,
-        sender: "bot",
-        timestamp: new Date(),
-        direction: "ltr",
-      };
-
-      setMessages((prev) => [...prev, checkoutMessage]);
-
-    } catch (error) {
-      console.error('Checkout error:', error);
-
-      // Display error message to user
-      const errorMessage: Message = {
-        id: Date.now().toString() + "-checkout-error",
-        text: "I'm sorry, there was an error creating your checkout link. Please try again or contact support.",
-        sender: "bot",
-        timestamp: new Date(),
-        direction: "ltr",
-      };
-
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
 
   // Name input screen - Fattal branded
   if (!userName) {
@@ -685,21 +561,6 @@ export default function ChatWidget() {
                     />
                   ) : (
                     <FattalRoomCarousel rooms={message.roomSearchResults} onSelectRoom={handleSelectFattalRoom} />
-                  )}
-                </>
-              )}
-
-              {/* Room Carousel or Options View (SimpleBooking) */}
-              {message.roomOptions && message.roomOptions.length > 0 && (
-                <>
-                  {selectedRoomForOptions ? (
-                    <RoomOptionsView
-                      room={selectedRoomForOptions}
-                      onConfirm={handleConfirmRoomOption}
-                      onBack={handleBackFromOptions}
-                    />
-                  ) : (
-                    <RoomCarousel rooms={message.roomOptions} onViewRoomOptions={handleViewRoomOptions} />
                   )}
                 </>
               )}

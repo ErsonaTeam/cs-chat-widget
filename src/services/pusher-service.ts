@@ -1,7 +1,7 @@
 'use server';
 
 import PusherServer from 'pusher';
-import { PusherEventType, RoomOption, FattalHotel, FattalRoom } from '@/types/message-types';
+import { PusherEventType, FattalHotel, FattalRoom } from '@/types/message-types';
 import { generateMessageKey, storeMessageData } from './redis-service';
 
 // Singleton Pusher instance (module-level)
@@ -37,7 +37,6 @@ export async function sendPusherMessage(
   conversationId: string,
   message: string,
   timestamp?: string,
-  roomOptions?: RoomOption[],
   hotelOptions?: FattalHotel[],
   roomSearchResults?: FattalRoom[]
 ): Promise<void> {
@@ -52,7 +51,6 @@ export async function sendPusherMessage(
     conversationId,
     message,
     timestamp: timestamp || new Date().toISOString(),
-    roomOptions: roomOptions || null,
     hotelOptions: hotelOptions || null,
     roomSearchResults: roomSearchResults || null,
   };
