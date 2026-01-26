@@ -288,7 +288,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
             <svg className="w-5 h-5 text-fattalGold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
             </svg>
-            <span className="text-sm font-medium text-fattalNavy">חבר מועדון פתאל</span>
+            <span className="text-sm font-medium text-fattalNavy">חבר מועדון</span>
           </div>
           <label className="relative inline-flex items-center cursor-pointer" dir="ltr">
             <input
@@ -296,7 +296,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
               checked={isClubMember}
               onChange={(e) => setIsClubMember(e.target.checked)}
               className="sr-only peer"
-              aria-label="חבר מועדון פתאל"
+              aria-label="חבר מועדון"
             />
             <div className="w-11 h-6 bg-fattalNavy/20 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-fattalGold/30 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-fattalNavy/20 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-fattalGold"></div>
           </label>

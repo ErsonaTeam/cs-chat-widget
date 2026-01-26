@@ -219,9 +219,9 @@
   };
 
   // Send message function
-  const sendMessage = async (message, userName) => {
+  const sendMessage = async (message, userName, userPhone) => {
     trackActivity();
-    
+
     if (!conversationId) {
       conversationId = generateUUID();
       sessionStorage.setItem('chatWidget_conversationId', conversationId);
@@ -234,6 +234,7 @@
       conversationId,
       message,
       userName,
+      userPhone,
       timestamp: new Date().toISOString(),
       meta: {
         userAgent: navigator.userAgent,
@@ -279,9 +280,9 @@
     // }
 
     if (event.data && event.data.type === MESSAGE_TYPES.SEND_MESSAGE) {
-      const { message, userName } = event.data;
+      const { message, userName, userPhone } = event.data;
       if (message && typeof message === 'string') {
-        sendMessage(message, userName).catch(error => {
+        sendMessage(message, userName, userPhone).catch(error => {
           console.error('Chat Widget - Failed to send message via postMessage:', error);
         });
       }

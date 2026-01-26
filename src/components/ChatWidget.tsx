@@ -12,6 +12,7 @@ import RoomOptionsView from "./RoomOptionsView";
 import HotelCarousel from "./HotelCarousel";
 import FattalRoomCarousel from "./FattalRoomCarousel";
 import FattalRoomDetailView from "./FattalRoomDetailView";
+import { validatePhone, formatPhoneForStorage } from "@/utils/phone";
 
 // ============================================
 // WIDGET CONFIGURATION - Quick settings
@@ -22,18 +23,35 @@ const WIDGET_CONFIG = {
 
   // UI Text (Hebrew)
   text: {
-    welcomeTitle: "ברוכים הבאים לפתאל",
-    headerTitle: "פתאל - שירות לקוחות",
+    welcomeTitle: "ברוכים הבאים לבת שלמה",
+    headerTitle: "The Farmhouse",
     nameLabel: "נא להזין את שמך:",
     namePlaceholder: "השם שלך...",
+    phoneLabel: "מספר טלפון (אופציונלי):",
+    phonePlaceholder: "54-806-0982",
+    phoneError: "מספר טלפון לא תקין",
     startChat: "התחל צ׳אט",
     resetButton: "איפוס",
     inputPlaceholder: "הקלד הודעה...",
     loadingPlaceholder: "ממתין לתשובה...",
   },
 
+  // Country codes for phone input
+  countryCodes: [
+    { code: "972", label: "🇮🇱 +972", country: "Israel" },
+    { code: "1", label: "🇺🇸 +1", country: "USA" },
+    { code: "44", label: "🇬🇧 +44", country: "UK" },
+    { code: "49", label: "🇩🇪 +49", country: "Germany" },
+    { code: "33", label: "🇫🇷 +33", country: "France" },
+    { code: "39", label: "🇮🇹 +39", country: "Italy" },
+    { code: "34", label: "🇪🇸 +34", country: "Spain" },
+    { code: "31", label: "🇳🇱 +31", country: "Netherlands" },
+    { code: "41", label: "🇨🇭 +41", country: "Switzerland" },
+    { code: "43", label: "🇦🇹 +43", country: "Austria" },
+  ],
+
   // Logo URL
-  logoUrl: "https://d2nyvxq412w7ra.cloudfront.net/fattal_heart_color_addfa324af.svg",
+  logoUrl: "https://cdn.sbcdn.it/fu/newbooking_tmpl/3407191_IMG_ALG.png",
 };
 // ============================================
 
@@ -73,7 +91,11 @@ const MarkdownLink = ({ href, children, isUserMessage }: { href?: string; childr
 
 export default function ChatWidget() {
   const [userName, setUserName] = useState<string>("");
+  const [userPhone, setUserPhone] = useState<string>("");
   const [nameInput, setNameInput] = useState<string>("");
+  const [phoneInput, setPhoneInput] = useState<string>("");
+  const [phoneError, setPhoneError] = useState<string>("");
+  const [countryCode, setCountryCode] = useState<string>("972");
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState<string>("");
   const [inputDirection, setInputDirection] = useState<"ltr" | "rtl">("ltr");
@@ -161,41 +183,53 @@ export default function ChatWidget() {
   // Handle name submission
   const handleNameSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (nameInput.trim()) {
-      setUserName(nameInput.trim());
+    if (!nameInput.trim()) return;
 
-      // Add first welcome message when user first enters their name
-      const firstWelcomeMessage: Message = {
-        id: Date.now().toString() + "-welcome-1",
-        text: `שלום ${
-          nameInput.trim().charAt(0).toUpperCase() + nameInput.trim().slice(1)
-        }! 👋 ברוכים הבאים לפתאל!`,
+    // Validate phone if provided
+    let formattedPhone = '';
+    if (phoneInput.trim()) {
+      if (!validatePhone(phoneInput, countryCode)) {
+        setPhoneError(WIDGET_CONFIG.text.phoneError);
+        return;
+      }
+      formattedPhone = formatPhoneForStorage(phoneInput, countryCode);
+    }
+
+    setUserName(nameInput.trim());
+    setUserPhone(formattedPhone);
+
+    // Add first welcome message when user first enters their name
+    const firstWelcomeMessage: Message = {
+      id: Date.now().toString() + "-welcome-1",
+      text: `שלום ${
+        nameInput.trim().charAt(0).toUpperCase() + nameInput.trim().slice(1)
+      }! 👋 ברוכים הבאים לבת שלמה!`,
+      sender: "bot",
+      timestamp: new Date(),
+      direction: "rtl",
+    };
+
+    setMessages([firstWelcomeMessage]);
+
+    // Add second welcome message with a delay
+    setTimeout(() => {
+      const secondWelcomeMessage: Message = {
+        id: Date.now().toString() + "-welcome-2",
+        text: "אני כאן כדי לעזור לך בכל שאלה. אל תהסס לשאול!",
         sender: "bot",
         timestamp: new Date(),
         direction: "rtl",
       };
 
-      setMessages([firstWelcomeMessage]);
-
-      // Add second welcome message with a delay
-      setTimeout(() => {
-        const secondWelcomeMessage: Message = {
-          id: Date.now().toString() + "-welcome-2",
-          text: "אני כאן כדי לעזור לך בכל שאלה. אל תהסס לשאול!",
-          sender: "bot",
-          timestamp: new Date(),
-          direction: "rtl",
-        };
-
-        setMessages((prev) => [...prev, secondWelcomeMessage]);
-      }, 1500);
-    }
+      setMessages((prev) => [...prev, secondWelcomeMessage]);
+    }, 1500);
   };
 
   // Send message to API and get bot response
   const sendMessageToAPI = async (
     message: string,
-    userName: string
+    userName: string,
+    userPhone: string
   ): Promise<Message | null> => {
     try {
       // Use the widget messaging system for iframe communication
@@ -205,7 +239,8 @@ export default function ChatWidget() {
         window.parent.postMessage({
           type: ChatWidgetMessageType.SEND_MESSAGE,
           message: message,
-          userName: userName
+          userName: userName,
+          userPhone: userPhone,
         }, '*');
 
         // Don't return a placeholder message - real response will come via Pusher
@@ -254,7 +289,7 @@ export default function ChatWidget() {
     setIsLoading(true);
 
     // Send message to API and get bot response
-    const botReply = await sendMessageToAPI(messageText, userName);
+    const botReply = await sendMessageToAPI(messageText, userName, userPhone);
     if (botReply) {
       // Only add bot reply if it's not null (null means handled via widget system)
       setMessages((prev) => [...prev, botReply]);
@@ -290,8 +325,12 @@ export default function ChatWidget() {
   // Reset chat
   const resetChat = () => {
     setUserName("");
+    setUserPhone("");
     setMessages([]);
     setNameInput("");
+    setPhoneInput("");
+    setPhoneError("");
+    setCountryCode("972");
     setIsLoading(false);
   };
 
@@ -321,7 +360,7 @@ export default function ChatWidget() {
     setIsLoading(true);
 
     // Send message to API
-    const botReply = await sendMessageToAPI(hotel.hotelName, userName);
+    const botReply = await sendMessageToAPI(hotel.hotelName, userName, userPhone);
     if (botReply) {
       setMessages((prev) => [...prev, botReply]);
     }
@@ -372,7 +411,7 @@ export default function ChatWidget() {
     setIsLoading(true);
 
     // Send message to API
-    const botReply = await sendMessageToAPI(selectionMessage, userName);
+    const botReply = await sendMessageToAPI(selectionMessage, userName, userPhone);
     if (botReply) {
       setMessages((prev) => [...prev, botReply]);
     }
@@ -528,6 +567,47 @@ export default function ChatWidget() {
                   placeholder={WIDGET_CONFIG.text.namePlaceholder}
                   autoFocus
                 />
+              </div>
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium mb-2 text-fattalNavy">
+                  {WIDGET_CONFIG.text.phoneLabel}
+                </label>
+                <div className="flex gap-2" dir="ltr">
+                  <select
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    className="px-2 py-3 bg-fattalNavy/10 border-2 border-fattalNavy/20 rounded-xl
+                             text-fattalNavy font-medium text-sm focus:outline-none focus:border-fattalGold
+                             cursor-pointer appearance-none bg-no-repeat bg-right pr-6"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%231e3a5f'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                      backgroundSize: '16px',
+                      backgroundPosition: 'right 4px center',
+                    }}
+                  >
+                    {WIDGET_CONFIG.countryCodes.map((cc) => (
+                      <option key={cc.code} value={cc.code}>
+                        {cc.label}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    id="phone"
+                    type="tel"
+                    value={phoneInput}
+                    onChange={(e) => {
+                      setPhoneInput(e.target.value);
+                      setPhoneError("");
+                    }}
+                    className="flex-1 px-4 py-3 border-2 border-fattalNavy/20 rounded-xl
+                             bg-white text-fattalNavy focus:outline-none focus:border-fattalGold
+                             placeholder:text-fattalNavy/50"
+                    placeholder={WIDGET_CONFIG.text.phonePlaceholder}
+                  />
+                </div>
+                {phoneError && (
+                  <p className="text-red-500 text-xs mt-1 text-right">{phoneError}</p>
+                )}
               </div>
               <motion.button
                 type="submit"
