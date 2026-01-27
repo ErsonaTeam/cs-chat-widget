@@ -82,7 +82,7 @@ jobs:
       id: codeartifact-login
       run: |
         # Get the token explicitly so we can pass it to Docker
-        CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain ersona --domain-owner ${{ env.AWS_ACCOUNT_ID }} --region ${{ env.AWS_REGION }} --query authorizationToken --output text)
+        CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain ersona --region ${{ env.AWS_REGION }} --query authorizationToken --output text)
         echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
         echo "token=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_OUTPUT
         
