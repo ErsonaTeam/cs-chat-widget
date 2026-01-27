@@ -78,6 +78,10 @@ jobs:
         
         cat configmap-values.env | grep -v -i "password\|key\|token\|secret" || true
 
+    - name: Authenticate with CodeArtifact
+      run: |
+        aws codeartifact login --tool npm --domain ersona --repository ersona-npm-repo --region ${{ env.AWS_REGION }}
+
     - name: Build, tag, and push image to Amazon ECR
       id: build-image
       run: |
