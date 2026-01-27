@@ -12,6 +12,7 @@ RUN --mount=type=secret,id=npmrc,target=/root/.npmrc \
 
 COPY /.next ./.next
 COPY /public ./public
+COPY next.config.ts ./
 
 EXPOSE 3000
 
