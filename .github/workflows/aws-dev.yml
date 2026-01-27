@@ -79,21 +79,40 @@ jobs:
         cat configmap-values.env | grep -v -i "password\|key\|token\|secret" || true
 
     - name: Authenticate with CodeArtifact
+      id: codeartifact-login
       run: |
-        aws codeartifact login --tool npm --domain ersona --repository ersona-npm-repo --region ${{ env.AWS_REGION }}
+        # Get the token once and use it for both purposes
+        CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain ersona --domain-owner ${{ env.AWS_ACCOUNT_ID }} --region ${{ env.AWS_REGION }} --query authorizationToken --output text)
+        echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
+        echo "token=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_OUTPUT
+        
+        # Configure npm to use the token for the runner
+        npm config set //ersona-${{ env.AWS_ACCOUNT_ID }}.d.codeartifact.${{ env.AWS_REGION }}.amazonaws.com/npm/ersona-npm-repo/:_authToken $CODEARTIFACT_AUTH_TOKEN
+        npm config set registry https://ersona-${{ env.AWS_ACCOUNT_ID }}.d.codeartifact.${{ env.AWS_REGION }}.amazonaws.com/npm/ersona-npm-repo/
 
     - name: Build, tag, and push image to Amazon ECR
       id: build-image
       run: |
-        npm i
+        npm ci
         npm run build
         
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        # Create a temporary .npmrc to pass as a secret to Docker
+        # Replace <your-registry-url> with your actual CodeArtifact URL
+        echo "//ersona-${{ env.AWS_ACCOUNT_ID }}.d.codeartifact.${{ env.AWS_REGION }}.amazonaws.com/npm/ersona-npm-repo/:_authToken=${{ steps.codeartifact-login.outputs.token }}" > .npmrc_docker
+
+        docker build \
+          --secret id=npmrc,src=.npmrc_docker \
+          -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        
+        # Cleanup temporary file
+        rm .npmrc_docker
+
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
       env:
+        DOCKER_BUILDKIT: 1
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
         REDIS_HOST: ${{ env.REDIS_HOST }}
