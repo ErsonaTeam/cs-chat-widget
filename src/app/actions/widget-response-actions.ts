@@ -2,7 +2,7 @@
 
 import { sendPusherMessage } from '@/services/pusher-service';
 import { type WidgetActionResult } from './widget-actions';
-import { RoomOption } from '@/types/message-types';
+import { FattalHotel, FattalRoom } from '@/types/message-types';
 
 export interface WidgetResponseData {
   companyId: string;
@@ -10,11 +10,12 @@ export interface WidgetResponseData {
   message?: string;
   timestamp?: string;
   error?: string;
-  roomOptions?: RoomOption[];
+  hotelOptions?: FattalHotel[];
+  roomSearchResults?: FattalRoom[];
 }
 
 export async function processWidgetResponse(data: WidgetResponseData): Promise<WidgetActionResult> {
-  const { companyId, conversationId, message, timestamp, error, roomOptions } = data;
+  const { companyId, conversationId, message, timestamp, error, hotelOptions, roomSearchResults } = data;
 
   if (!companyId || !conversationId) {
     return {
@@ -37,7 +38,7 @@ export async function processWidgetResponse(data: WidgetResponseData): Promise<W
   }
 
   try {
-    await sendPusherMessage(companyId, conversationId, responseMessage, timestamp, roomOptions);
+    await sendPusherMessage(companyId, conversationId, responseMessage, timestamp, hotelOptions, roomSearchResults);
 
     return {
       success: true,

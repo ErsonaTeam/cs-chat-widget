@@ -185,7 +185,9 @@
             type: MESSAGE_TYPES.AGENT_MESSAGE,
             message: messageData.message,
             timestamp: messageData.timestamp,
-            roomOptions: messageData.roomOptions
+            roomOptions: messageData.roomOptions,
+            hotelOptions: messageData.hotelOptions,
+            roomSearchResults: messageData.roomSearchResults
           }, widgetServiceBaseUrl);
         } else {
           console.error('Chat Widget - No iframe or contentWindow available');
@@ -206,7 +208,9 @@
           type: MESSAGE_TYPES.AGENT_MESSAGE,
           message: data.message,
           timestamp: data.timestamp,
-          roomOptions: data.roomOptions
+          roomOptions: data.roomOptions,
+          hotelOptions: data.hotelOptions,
+          roomSearchResults: data.roomSearchResults
         }, widgetServiceBaseUrl);
       } else {
         console.error('Chat Widget - No iframe or contentWindow available');
@@ -215,9 +219,9 @@
   };
 
   // Send message function
-  const sendMessage = async (message, userName) => {
+  const sendMessage = async (message, userName, userPhone) => {
     trackActivity();
-    
+
     if (!conversationId) {
       conversationId = generateUUID();
       sessionStorage.setItem('chatWidget_conversationId', conversationId);
@@ -230,6 +234,7 @@
       conversationId,
       message,
       userName,
+      userPhone,
       timestamp: new Date().toISOString(),
       meta: {
         userAgent: navigator.userAgent,
@@ -275,9 +280,9 @@
     // }
 
     if (event.data && event.data.type === MESSAGE_TYPES.SEND_MESSAGE) {
-      const { message, userName } = event.data;
+      const { message, userName, userPhone } = event.data;
       if (message && typeof message === 'string') {
-        sendMessage(message, userName).catch(error => {
+        sendMessage(message, userName, userPhone).catch(error => {
           console.error('Chat Widget - Failed to send message via postMessage:', error);
         });
       }

@@ -2,15 +2,15 @@
 
 import { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import RoomCard from "./RoomCard";
-import { RoomOption } from "@/types/message-types";
+import HotelCard from "./HotelCard";
+import { FattalHotel } from "@/types/message-types";
 
-interface RoomCarouselProps {
-  rooms: RoomOption[];
-  onViewRoomOptions: (room: RoomOption) => void;
+interface HotelCarouselProps {
+  hotels: FattalHotel[];
+  onSelectHotel: (hotel: FattalHotel) => void;
 }
 
-export default function RoomCarousel({ rooms, onViewRoomOptions }: RoomCarouselProps) {
+export default function HotelCarousel({ hotels, onSelectHotel }: HotelCarouselProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -37,7 +37,7 @@ export default function RoomCarousel({ rooms, onViewRoomOptions }: RoomCarouselP
   useEffect(() => {
     // Recheck after render in case content changed
     checkScrollButtons();
-  }, [rooms]);
+  }, [hotels]);
 
   const scroll = (direction: "left" | "right") => {
     const container = scrollContainerRef.current;
@@ -55,7 +55,7 @@ export default function RoomCarousel({ rooms, onViewRoomOptions }: RoomCarouselP
     }
   };
 
-  if (rooms.length === 0) return null;
+  if (hotels.length === 0) return null;
 
   return (
     <motion.div
@@ -66,7 +66,7 @@ export default function RoomCarousel({ rooms, onViewRoomOptions }: RoomCarouselP
       {/* Carousel Header */}
       <div className="mb-3 px-1">
         <h3 className="text-sm font-semibold text-gray-700">
-          Available Rooms ({rooms.length})
+          מלונות זמינים ({hotels.length})
         </h3>
       </div>
 
@@ -94,8 +94,8 @@ export default function RoomCarousel({ rooms, onViewRoomOptions }: RoomCarouselP
             msOverflowStyle: "none",
           }}
         >
-          {rooms.map((room) => (
-            <RoomCard key={room.id} room={room} onViewOptions={onViewRoomOptions} />
+          {hotels.map((hotel) => (
+            <HotelCard key={hotel.hotelId} hotel={hotel} onSelect={onSelectHotel} />
           ))}
         </div>
 

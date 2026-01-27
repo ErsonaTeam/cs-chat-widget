@@ -7,6 +7,7 @@ export interface WidgetMessageData {
   conversationId: string;
   message: string;
   userName: string;
+  userPhone?: string;
   timestamp: string;
   meta?: {
     userAgent?: string;
@@ -40,6 +41,7 @@ export async function sendToEmbeddingsService(data: WidgetMessageData): Promise<
         conversationId: data.conversationId,
         message: data.message,
         userName: data.userName,
+        phone: data.userPhone,
         timestamp: data.timestamp,
         meta: data.meta,
       }),

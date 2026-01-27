@@ -1,7 +1,7 @@
 'use server';
 
 import PusherServer from 'pusher';
-import { PusherEventType, RoomOption } from '@/types/message-types';
+import { PusherEventType, FattalHotel, FattalRoom } from '@/types/message-types';
 import { generateMessageKey, storeMessageData } from './redis-service';
 
 // Singleton Pusher instance (module-level)
@@ -37,7 +37,8 @@ export async function sendPusherMessage(
   conversationId: string,
   message: string,
   timestamp?: string,
-  roomOptions?: RoomOption[]
+  hotelOptions?: FattalHotel[],
+  roomSearchResults?: FattalRoom[]
 ): Promise<void> {
   const pusher = await initializePusher();
   const channel = `c-${companyId}-${conversationId}`;
@@ -50,7 +51,8 @@ export async function sendPusherMessage(
     conversationId,
     message,
     timestamp: timestamp || new Date().toISOString(),
-    roomOptions: roomOptions || null,
+    hotelOptions: hotelOptions || null,
+    roomSearchResults: roomSearchResults || null,
   };
 
   await storeMessageData(messageKey, messageData, 300); // 300 seconds = 5 minutes
