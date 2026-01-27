@@ -81,14 +81,13 @@ jobs:
     - name: Authenticate with CodeArtifact
       id: codeartifact-login
       run: |
-        # Get the token once and use it for both purposes
+        # Get the token explicitly so we can pass it to Docker
         CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain ersona --domain-owner ${{ env.AWS_ACCOUNT_ID }} --region ${{ env.AWS_REGION }} --query authorizationToken --output text)
         echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
         echo "token=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_OUTPUT
         
-        # Configure npm to use the token for the runner
-        npm config set //ersona-${{ env.AWS_ACCOUNT_ID }}.d.codeartifact.${{ env.AWS_REGION }}.amazonaws.com/npm/ersona-npm-repo/:_authToken $CODEARTIFACT_AUTH_TOKEN
-        npm config set registry https://ersona-${{ env.AWS_ACCOUNT_ID }}.d.codeartifact.${{ env.AWS_REGION }}.amazonaws.com/npm/ersona-npm-repo/
+        # This still logs in the runner for your 'npm run build' step
+        aws codeartifact login --tool npm --domain ersona --repository ersona-npm-repo --region ${{ env.AWS_REGION }}
 
     - name: Build, tag, and push image to Amazon ECR
       id: build-image
