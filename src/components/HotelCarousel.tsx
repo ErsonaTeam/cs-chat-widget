@@ -4,13 +4,16 @@ import { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import HotelCard from "./HotelCard";
 import { FattalHotel } from "@/types/message-types";
+import { Language, t, getLanguageConfig } from "@/utils/i18n";
 
 interface HotelCarouselProps {
   hotels: FattalHotel[];
   onSelectHotel: (hotel: FattalHotel) => void;
+  lang?: Language;
 }
 
-export default function HotelCarousel({ hotels, onSelectHotel }: HotelCarouselProps) {
+export default function HotelCarousel({ hotels, onSelectHotel, lang = 'HE' }: HotelCarouselProps) {
+  const langConfig = getLanguageConfig(lang);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -61,12 +64,13 @@ export default function HotelCarousel({ hotels, onSelectHotel }: HotelCarouselPr
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
+      dir={langConfig.dir}
       className="relative w-full mb-4"
     >
       {/* Carousel Header */}
       <div className="mb-3 px-1">
         <h3 className="text-sm font-semibold text-gray-700">
-          מלונות זמינים ({hotels.length})
+          {t(lang, 'availableHotels')} ({hotels.length})
         </h3>
       </div>
 
@@ -95,7 +99,7 @@ export default function HotelCarousel({ hotels, onSelectHotel }: HotelCarouselPr
           }}
         >
           {hotels.map((hotel) => (
-            <HotelCard key={hotel.hotelId} hotel={hotel} onSelect={onSelectHotel} />
+            <HotelCard key={hotel.hotelId} hotel={hotel} onSelect={onSelectHotel} lang={lang} />
           ))}
         </div>
 

@@ -4,18 +4,17 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { FattalRoom } from "@/types/message-types";
+import { Language, t, formatPrice, getLanguageConfig } from "@/utils/i18n";
 
 interface FattalRoomCardProps {
   room: FattalRoom;
   onSelect: (room: FattalRoom) => void;
+  lang?: Language;
 }
 
-export default function FattalRoomCard({ room, onSelect }: FattalRoomCardProps) {
+export default function FattalRoomCard({ room, onSelect, lang = 'HE' }: FattalRoomCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('he-IL').format(Math.ceil(price));
-  };
+  const langConfig = getLanguageConfig(lang);
 
   // Use gallery if available, otherwise fallback to single imageUrl
   const images = room.gallery?.length
@@ -34,6 +33,7 @@ export default function FattalRoomCard({ room, onSelect }: FattalRoomCardProps) 
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
+      dir={langConfig.dir}
       className="bg-white rounded-xl shadow-md overflow-hidden min-w-[280px] max-w-[320px] border border-fattalNavy/10"
     >
       {/* Room Image Carousel */}
@@ -88,7 +88,7 @@ export default function FattalRoomCard({ room, onSelect }: FattalRoomCardProps) 
                 />
               ))}
               {images.length > 5 && (
-                <span className="text-white text-xs ml-1">+{images.length - 5}</span>
+                <span className="text-white text-xs ms-1">+{images.length - 5}</span>
               )}
             </div>
           </>
@@ -157,9 +157,9 @@ export default function FattalRoomCard({ room, onSelect }: FattalRoomCardProps) 
         <div className="pt-3 border-t border-fattalNavy/10">
           {room.minPrice !== null && (
             <div className="flex items-baseline gap-2 mb-3">
-              <span className="text-xs text-fattalNavy/60">החל מ-</span>
+              <span className="text-xs text-fattalNavy/60">{t(lang, 'startingFrom')}</span>
               <span className="text-xl font-bold text-fattalNavy">
-                {formatPrice(room.minPrice)}
+                {formatPrice(room.minPrice, lang)}
               </span>
               <span className="text-sm text-fattalNavy/60">
                 {room.currency === 'ILS' ? '₪' : room.currency}
@@ -175,7 +175,7 @@ export default function FattalRoomCard({ room, onSelect }: FattalRoomCardProps) 
             }}
             className="w-full bg-fattalGold hover:bg-fattalGold/90 text-white text-sm font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-sm"
           >
-            בחר
+            {t(lang, 'select')}
           </button>
         </div>
       </div>

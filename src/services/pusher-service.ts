@@ -38,7 +38,8 @@ export async function sendPusherMessage(
   message: string,
   timestamp?: string,
   hotelOptions?: FattalHotel[],
-  roomSearchResults?: FattalRoom[]
+  roomSearchResults?: FattalRoom[],
+  languageCode?: string
 ): Promise<void> {
   const pusher = await initializePusher();
   const channel = `c-${companyId}-${conversationId}`;
@@ -53,6 +54,7 @@ export async function sendPusherMessage(
     timestamp: timestamp || new Date().toISOString(),
     hotelOptions: hotelOptions || null,
     roomSearchResults: roomSearchResults || null,
+    languageCode: languageCode || null,
   };
 
   await storeMessageData(messageKey, messageData, 300); // 300 seconds = 5 minutes

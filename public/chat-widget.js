@@ -187,7 +187,8 @@
             timestamp: messageData.timestamp,
             roomOptions: messageData.roomOptions,
             hotelOptions: messageData.hotelOptions,
-            roomSearchResults: messageData.roomSearchResults
+            roomSearchResults: messageData.roomSearchResults,
+            languageCode: messageData.languageCode
           }, widgetServiceBaseUrl);
         } else {
           console.error('Chat Widget - No iframe or contentWindow available');
@@ -210,7 +211,8 @@
           timestamp: data.timestamp,
           roomOptions: data.roomOptions,
           hotelOptions: data.hotelOptions,
-          roomSearchResults: data.roomSearchResults
+          roomSearchResults: data.roomSearchResults,
+          languageCode: data.languageCode
         }, widgetServiceBaseUrl);
       } else {
         console.error('Chat Widget - No iframe or contentWindow available');

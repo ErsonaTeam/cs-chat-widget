@@ -4,11 +4,13 @@ import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { FattalRoom, FattalRoomPackage, FattalPackagePrice } from "@/types/message-types";
+import { Language, t, formatPrice, getLanguageConfig } from "@/utils/i18n";
 
 interface FattalRoomDetailViewProps {
   room: FattalRoom;
   onConfirm: (room: FattalRoom, selectedPackage: FattalRoomPackage, selectedPrice: FattalPackagePrice, isClubMember: boolean) => void;
   onBack: () => void;
+  lang?: Language;
 }
 
 // Grouped package type - merges packages with same name
@@ -24,9 +26,10 @@ interface SelectedPriceId {
   hostingBase: string;
 }
 
-export default function FattalRoomDetailView({ room, onConfirm, onBack }: FattalRoomDetailViewProps) {
+export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = 'HE' }: FattalRoomDetailViewProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isClubMember, setIsClubMember] = useState(false);
+  const langConfig = getLanguageConfig(lang);
 
   // Step navigation: 'packages' or 'pensions'
   const [viewStep, setViewStep] = useState<'packages' | 'pensions'>('packages');
@@ -144,10 +147,6 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
     setViewStep('packages');
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("he-IL").format(Math.ceil(price));
-  };
-
   const getDisplayPrice = (price: FattalPackagePrice) => {
     // Explicit null check (not truthiness) to handle clubTotalPrice = 0
     if (isClubMember && price.clubTotalPrice !== null) {
@@ -170,6 +169,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
+      dir={langConfig.dir}
       className="bg-white rounded-xl shadow-lg overflow-hidden border border-fattalNavy/10"
     >
       {/* Header with Back Button */}
@@ -179,10 +179,10 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
           onClick={onBack}
           className="flex items-center gap-1 text-white/80 hover:text-white transition-colors text-sm"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          חזרה לרשימת החדרים
+          {t(lang, 'backToRoomList')}
         </button>
       </div>
 
@@ -232,7 +232,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
                 />
               ))}
               {images.length > 5 && (
-                <span className="text-white text-xs ml-1">+{images.length - 5}</span>
+                <span className="text-white text-xs ms-1">+{images.length - 5}</span>
               )}
             </div>
           </>
@@ -293,7 +293,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
             <svg className="w-5 h-5 text-fattalGold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
             </svg>
-            <span className="text-sm font-medium text-fattalNavy">חבר מועדון</span>
+            <span className="text-sm font-medium text-fattalNavy">{t(lang, 'clubMember')}</span>
           </div>
           <label className="relative inline-flex items-center cursor-pointer" dir="ltr">
             <input
@@ -301,7 +301,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
               checked={isClubMember}
               onChange={(e) => setIsClubMember(e.target.checked)}
               className="sr-only peer"
-              aria-label="חבר מועדון"
+              aria-label={t(lang, 'clubMember')}
             />
             <div className="w-11 h-6 bg-fattalNavy/20 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-fattalGold/30 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-fattalNavy/20 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-fattalGold"></div>
           </label>
@@ -320,7 +320,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
             >
               {filteredGroupedPackages.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-fattalNavy mb-3">בחר חבילה</h3>
+                  <h3 className="text-sm font-semibold text-fattalNavy mb-3">{t(lang, 'selectPackage')}</h3>
                   <div className="space-y-2">
                     {filteredGroupedPackages.map((groupedPkg) => {
                       // Calculate min price across all pensions for this grouped package
@@ -339,7 +339,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
                           key={groupedPkg.packageName}
                           type="button"
                           onClick={() => handleGroupedPackageSelect(groupedPkg.packageName)}
-                          className="w-full p-3 rounded-lg border border-fattalNavy/10 bg-white hover:border-fattalGold hover:bg-fattalLightGold text-right transition-all"
+                          className="w-full p-3 rounded-lg border border-fattalNavy/10 bg-white hover:border-fattalGold hover:bg-fattalLightGold text-start transition-all"
                         >
                           <div className="flex justify-between items-center">
                             <div className="flex-1">
@@ -350,18 +350,18 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
                                 <p className="text-xs text-fattalNavy/50 mt-0.5">{groupedPkg.policyName}</p>
                               )}
                             </div>
-                            <div className="text-left ml-3 flex items-center gap-2">
+                            <div className="text-end me-3 flex items-center gap-2">
                               <div>
                                 {hasDiscount && (
                                   <p className="text-xs text-fattalNavy/40 line-through">
-                                    {formatPrice(minBasePrice)} ₪
+                                    {formatPrice(minBasePrice, lang)} ₪
                                   </p>
                                 )}
                                 <p className="text-sm font-bold text-fattalNavy">
-                                  החל מ-{formatPrice(minPrice)} ₪
+                                  {t(lang, 'startingFrom')}{formatPrice(minPrice, lang)} ₪
                                 </p>
                               </div>
-                              <svg className="w-4 h-4 text-fattalNavy/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-4 h-4 text-fattalNavy/40 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                               </svg>
                             </div>
@@ -390,20 +390,20 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
                     onClick={handleBackToPackages}
                     className="flex items-center gap-1 text-fattalGold hover:text-fattalGold/80 transition-colors text-sm mb-3 font-medium"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    חזרה לרשימת החבילות
+                    {t(lang, 'backToPackageList')}
                   </button>
 
                   {/* Selected package name */}
                   <div className="bg-fattalLightGold border border-fattalGold/20 rounded-lg p-3 mb-4">
-                    <p className="text-xs text-fattalGold mb-1">חבילה נבחרת:</p>
+                    <p className="text-xs text-fattalGold mb-1">{t(lang, 'selectedPackage')}</p>
                     <p className="text-sm font-semibold text-fattalNavy">{selectedGroupedPackage.packageName}</p>
                   </div>
 
                   {/* Pensions list */}
-                  <h3 className="text-sm font-semibold text-fattalNavy mb-3">בחר סוג פנסיון</h3>
+                  <h3 className="text-sm font-semibold text-fattalNavy mb-3">{t(lang, 'selectPensionType')}</h3>
                   <div className="space-y-2">
                     {selectedGroupedPackage.prices.map((price) => {
                       const displayPrice = getDisplayPrice(price);
@@ -417,7 +417,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
                           key={`${price.originalPackageId}-${price.hostingBase}`}
                           type="button"
                           onClick={() => setSelectedPriceId({ packageId: price.originalPackageId, hostingBase: price.hostingBase })}
-                          className={`w-full p-3 rounded-lg border-2 text-right transition-all ${
+                          className={`w-full p-3 rounded-lg border-2 text-start transition-all ${
                             isSelected
                               ? "border-fattalGold bg-fattalLightGold"
                               : "border-fattalNavy/10 bg-white hover:border-fattalGold/50"
@@ -428,21 +428,21 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
                               <p className="text-sm font-medium text-fattalNavy">{price.hostingBase}</p>
                               {price.availableRooms <= 3 && (
                                 <p className="text-xs text-orange-600 mt-0.5">
-                                  נותרו {price.availableRooms} חדרים!
+                                  {t(lang, 'roomsLeft', { count: price.availableRooms })}
                                 </p>
                               )}
                             </div>
-                            <div className="text-left ml-3">
+                            <div className="text-end me-3">
                               {(hasDiscount || hasClubDiscount) && (
                                 <p className="text-xs text-fattalNavy/40 line-through">
-                                  {formatPrice(price.totalBasePrice || price.totalPrice)} ₪
+                                  {formatPrice(price.totalBasePrice || price.totalPrice, lang)} ₪
                                 </p>
                               )}
                               <p className="text-lg font-bold text-fattalNavy">
-                                {formatPrice(displayPrice)} ₪
+                                {formatPrice(displayPrice, lang)} ₪
                               </p>
                               {hasClubDiscount && (
-                                <p className="text-xs text-fattalGold font-medium">מחיר מועדון</p>
+                                <p className="text-xs text-fattalGold font-medium">{t(lang, 'clubPrice')}</p>
                               )}
                             </div>
                           </div>
@@ -471,8 +471,8 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack }: Fattal
                 className="w-full bg-fattalNavy hover:bg-fattalNavyLight text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-md"
               >
                 <span className="flex items-center justify-center gap-2">
-                  <span>המשך להזמנה</span>
-                  <span className="font-bold">{formatPrice(getDisplayPrice(selectedPrice))} ₪</span>
+                  <span>{t(lang, 'continueToBooking')}</span>
+                  <span className="font-bold">{formatPrice(getDisplayPrice(selectedPrice), lang)} ₪</span>
                 </span>
               </button>
             </motion.div>

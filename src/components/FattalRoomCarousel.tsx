@@ -4,13 +4,16 @@ import { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import FattalRoomCard from "./FattalRoomCard";
 import { FattalRoom } from "@/types/message-types";
+import { Language, t, getLanguageConfig } from "@/utils/i18n";
 
 interface FattalRoomCarouselProps {
   rooms: FattalRoom[];
   onSelectRoom: (room: FattalRoom) => void;
+  lang?: Language;
 }
 
-export default function FattalRoomCarousel({ rooms, onSelectRoom }: FattalRoomCarouselProps) {
+export default function FattalRoomCarousel({ rooms, onSelectRoom, lang = 'HE' }: FattalRoomCarouselProps) {
+  const langConfig = getLanguageConfig(lang);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -60,12 +63,13 @@ export default function FattalRoomCarousel({ rooms, onSelectRoom }: FattalRoomCa
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
+      dir={langConfig.dir}
       className="relative w-full mb-4"
     >
       {/* Carousel Header */}
       <div className="mb-3 px-1">
         <h3 className="text-sm font-semibold text-gray-700">
-          חדרים זמינים ({rooms.length})
+          {t(lang, 'availableRooms')} ({rooms.length})
         </h3>
       </div>
 
@@ -94,7 +98,7 @@ export default function FattalRoomCarousel({ rooms, onSelectRoom }: FattalRoomCa
           }}
         >
           {rooms.map((room) => (
-            <FattalRoomCard key={room.roomCode} room={room} onSelect={onSelectRoom} />
+            <FattalRoomCard key={room.roomCode} room={room} onSelect={onSelectRoom} lang={lang} />
           ))}
         </div>
 

@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const { companyId, conversationId, message, timestamp, error, hotelOptions, roomSearchResults } = body;
+    const { companyId, conversationId, message, timestamp, error, hotelOptions, roomSearchResults, languageCode } = body;
 
     // Prepare data for server action
     const responseData: WidgetResponseData = {
@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
       error,
       hotelOptions,
       roomSearchResults,
+      languageCode,
     };
 
     // Process the response using server action
