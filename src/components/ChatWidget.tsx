@@ -11,6 +11,7 @@ import HotelCarousel from "./HotelCarousel";
 import FattalRoomCarousel from "./FattalRoomCarousel";
 import FattalRoomDetailView from "./FattalRoomDetailView";
 import { validatePhone, formatPhoneForStorage } from "@/utils/phone";
+import { Language, t, formatPrice as formatPriceI18n, parseLanguageCode } from "@/utils/i18n";
 
 // ============================================
 // WIDGET CONFIGURATION - Quick settings
@@ -61,6 +62,7 @@ interface Message {
   direction: "ltr" | "rtl";
   hotelOptions?: FattalHotel[];
   roomSearchResults?: FattalRoom[];
+  languageCode?: string;
 }
 
 // Hebrew character detection regex
@@ -98,6 +100,7 @@ export default function ChatWidget() {
   const [inputDirection, setInputDirection] = useState<"ltr" | "rtl">("ltr");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedFattalRoom, setSelectedFattalRoom] = useState<FattalRoom | null>(null);
+  const [currentLang, setCurrentLang] = useState<Language>('HE');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -126,7 +129,13 @@ export default function ChatWidget() {
           direction: detectTextDirection(event.data.message),
           hotelOptions: event.data.hotelOptions,
           roomSearchResults: event.data.roomSearchResults,
+          languageCode: event.data.languageCode,
         };
+
+        // Update current language if provided in message
+        if (event.data.languageCode) {
+          setCurrentLang(parseLanguageCode(event.data.languageCode));
+        }
 
         setMessages((prev) => [...prev, agentMessage]);
       }
@@ -369,24 +378,23 @@ export default function ChatWidget() {
   ) => {
     if (isLoading) return;
 
-    const formatPrice = (amount: number) => new Intl.NumberFormat('he-IL').format(Math.ceil(amount));
     const displayPrice = isClubMember && selectedPrice.clubTotalPrice
       ? selectedPrice.clubTotalPrice
       : selectedPrice.totalPrice;
 
-    const selectionMessage = `אני מעוניין להזמין:\n` +
-      `חדר: ${room.name}\n` +
-      `חבילה: ${selectedPackage.packageName}\n` +
-      `סוג אירוח: ${selectedPrice.hostingBase}\n` +
-      `${isClubMember ? 'חבר מועדון: כן\n' : ''}` +
-      `מחיר: ${formatPrice(displayPrice)} ₪`;
+    const selectionMessage = `${t(currentLang, 'bookingIntro')}\n` +
+      `${t(currentLang, 'roomLabel')}: ${room.name}\n` +
+      `${t(currentLang, 'packageLabel')}: ${selectedPackage.packageName}\n` +
+      `${t(currentLang, 'hostingTypeLabel')}: ${selectedPrice.hostingBase}\n` +
+      `${isClubMember ? t(currentLang, 'clubMemberYes') + '\n' : ''}` +
+      `${t(currentLang, 'priceLabel')}: ${formatPriceI18n(displayPrice, currentLang)} ₪`;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       text: selectionMessage,
       sender: "user",
       timestamp: new Date(),
-      direction: "rtl",
+      direction: currentLang === 'HE' ? "rtl" : "ltr",
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -547,7 +555,7 @@ export default function ChatWidget() {
             <div key={message.id}>
               {/* Hotel Carousel (Fattal) */}
               {message.hotelOptions && message.hotelOptions.length > 0 && (
-                <HotelCarousel hotels={message.hotelOptions} onSelectHotel={handleSelectHotel} />
+                <HotelCarousel hotels={message.hotelOptions} onSelectHotel={handleSelectHotel} lang={currentLang} />
               )}
 
               {/* Fattal Room Carousel or Detail View */}
@@ -558,9 +566,10 @@ export default function ChatWidget() {
                       room={selectedFattalRoom}
                       onConfirm={handleConfirmFattalRoom}
                       onBack={handleBackFromFattalRoom}
+                      lang={currentLang}
                     />
                   ) : (
-                    <FattalRoomCarousel rooms={message.roomSearchResults} onSelectRoom={handleSelectFattalRoom} />
+                    <FattalRoomCarousel rooms={message.roomSearchResults} onSelectRoom={handleSelectFattalRoom} lang={currentLang} />
                   )}
                 </>
               )}

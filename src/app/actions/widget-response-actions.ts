@@ -12,10 +12,11 @@ export interface WidgetResponseData {
   error?: string;
   hotelOptions?: FattalHotel[];
   roomSearchResults?: FattalRoom[];
+  languageCode?: string;
 }
 
 export async function processWidgetResponse(data: WidgetResponseData): Promise<WidgetActionResult> {
-  const { companyId, conversationId, message, timestamp, error, hotelOptions, roomSearchResults } = data;
+  const { companyId, conversationId, message, timestamp, error, hotelOptions, roomSearchResults, languageCode } = data;
 
   if (!companyId || !conversationId) {
     return {
@@ -38,7 +39,7 @@ export async function processWidgetResponse(data: WidgetResponseData): Promise<W
   }
 
   try {
-    await sendPusherMessage(companyId, conversationId, responseMessage, timestamp, hotelOptions, roomSearchResults);
+    await sendPusherMessage(companyId, conversationId, responseMessage, timestamp, hotelOptions, roomSearchResults, languageCode);
 
     return {
       success: true,
