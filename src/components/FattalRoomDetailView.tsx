@@ -179,7 +179,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
           onClick={onBack}
           className="flex items-center gap-1 text-white/80 hover:text-white transition-colors text-sm"
         >
-          <svg className="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className={`w-4 h-4 ${langConfig.dir === 'rtl' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           {t(lang, 'backToRoomList')}
@@ -295,16 +295,23 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
             </svg>
             <span className="text-sm font-medium text-fattalNavy">{t(lang, 'clubMember')}</span>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer" dir="ltr">
-            <input
-              type="checkbox"
-              checked={isClubMember}
-              onChange={(e) => setIsClubMember(e.target.checked)}
-              className="sr-only peer"
-              aria-label={t(lang, 'clubMember')}
+          <button
+            type="button"
+            role="switch"
+            dir="ltr"
+            aria-checked={isClubMember}
+            aria-label={t(lang, 'clubMember')}
+            onClick={() => setIsClubMember(!isClubMember)}
+            className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-fattalGold/30 ${
+              isClubMember ? 'bg-fattalGold' : 'bg-fattalNavy/20'
+            }`}
+          >
+            <span
+              className={`absolute h-5 w-5 rounded-full bg-white shadow-md transition-all duration-200 ease-in-out ${
+                isClubMember ? 'left-6' : 'left-1'
+              }`}
             />
-            <div className="w-11 h-6 bg-fattalNavy/20 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-fattalGold/30 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-fattalNavy/20 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-fattalGold"></div>
-          </label>
+          </button>
         </div>
 
         {/* Step-based content */}
@@ -361,7 +368,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
                                   {t(lang, 'startingFrom')}{formatPrice(minPrice, lang)} ₪
                                 </p>
                               </div>
-                              <svg className="w-4 h-4 text-fattalNavy/40 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className={`w-4 h-4 text-fattalNavy/40 ${langConfig.dir === 'rtl' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                               </svg>
                             </div>
@@ -390,7 +397,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
                     onClick={handleBackToPackages}
                     className="flex items-center gap-1 text-fattalGold hover:text-fattalGold/80 transition-colors text-sm mb-3 font-medium"
                   >
-                    <svg className="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className={`w-4 h-4 ${langConfig.dir === 'rtl' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                     {t(lang, 'backToPackageList')}
