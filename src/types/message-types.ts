@@ -3,10 +3,6 @@ export enum ChatWidgetMessageType {
   SEND_MESSAGE = 'CHAT_WIDGET_SEND_MESSAGE',
 }
 
-export enum PusherEventType {
-  AGENT_MESSAGE = 'agent.message',
-}
-
 /**
  * Gallery image for Fattal display
  */
