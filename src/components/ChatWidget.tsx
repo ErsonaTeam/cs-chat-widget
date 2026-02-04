@@ -97,7 +97,7 @@ export default function ChatWidget() {
   const [countryCode, setCountryCode] = useState<string>("972");
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState<string>("");
-  const [inputDirection, setInputDirection] = useState<"ltr" | "rtl">("ltr");
+  const [inputDirection, setInputDirection] = useState<"ltr" | "rtl">("rtl");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedFattalRoom, setSelectedFattalRoom] = useState<FattalRoom | null>(null);
   const [currentLang, setCurrentLang] = useState<Language>('HE');
@@ -203,9 +203,9 @@ export default function ChatWidget() {
     // Add first welcome message when user first enters their name
     const firstWelcomeMessage: Message = {
       id: Date.now().toString() + "-welcome-1",
-      text: `שלום ${
+      text: `היי ${
         nameInput.trim().charAt(0).toUpperCase() + nameInput.trim().slice(1)
-      }! 👋 ברוכים הבאים לבת שלמה!`,
+      } ברוכים הבאים!\n אני כאן כדי לעזור בביצוע הזמנה ולענות כל כל שאלה.`,
       sender: "bot",
       timestamp: new Date(),
       direction: "rtl",
@@ -217,10 +217,10 @@ export default function ChatWidget() {
     setTimeout(() => {
       const secondWelcomeMessage: Message = {
         id: Date.now().toString() + "-welcome-2",
-        text: "אני כאן כדי לעזור לך בכל שאלה. אל תהסס לשאול!",
+        text: "Just for you to know, we can serve you in your preferred language or any language of your choice.",
         sender: "bot",
         timestamp: new Date(),
-        direction: "rtl",
+        direction: "ltr",
       };
 
       setMessages((prev) => [...prev, secondWelcomeMessage]);
@@ -287,7 +287,7 @@ export default function ChatWidget() {
     setMessages((prev) => [...prev, userMessage]);
     const messageText = inputMessage.trim();
     setInputMessage("");
-    setInputDirection("ltr");
+    setInputDirection("rtl");
     setIsLoading(true);
 
     // Send message to API and get bot response
@@ -312,7 +312,7 @@ export default function ChatWidget() {
     if (value.length > 0) {
       setInputDirection(detectTextDirection(value));
     } else {
-      setInputDirection("ltr");
+      setInputDirection("rtl");
     }
   };
 
@@ -553,27 +553,6 @@ export default function ChatWidget() {
         <AnimatePresence>
           {messages.map((message) => (
             <div key={message.id}>
-              {/* Hotel Carousel (Fattal) */}
-              {message.hotelOptions && message.hotelOptions.length > 0 && (
-                <HotelCarousel hotels={message.hotelOptions} onSelectHotel={handleSelectHotel} lang={currentLang} />
-              )}
-
-              {/* Fattal Room Carousel or Detail View */}
-              {message.roomSearchResults && message.roomSearchResults.length > 0 && (
-                <>
-                  {selectedFattalRoom ? (
-                    <FattalRoomDetailView
-                      room={selectedFattalRoom}
-                      onConfirm={handleConfirmFattalRoom}
-                      onBack={handleBackFromFattalRoom}
-                      lang={currentLang}
-                    />
-                  ) : (
-                    <FattalRoomCarousel rooms={message.roomSearchResults} onSelectRoom={handleSelectFattalRoom} lang={currentLang} />
-                  )}
-                </>
-              )}
-
               {/* Message Bubble */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -616,6 +595,27 @@ export default function ChatWidget() {
                   </p>
                 </div>
               </motion.div>
+
+              {/* Hotel Carousel (Fattal) */}
+              {message.hotelOptions && message.hotelOptions.length > 0 && (
+                <HotelCarousel hotels={message.hotelOptions} onSelectHotel={handleSelectHotel} lang={currentLang} />
+              )}
+
+              {/* Fattal Room Carousel or Detail View */}
+              {message.roomSearchResults && message.roomSearchResults.length > 0 && (
+                <>
+                  {selectedFattalRoom ? (
+                    <FattalRoomDetailView
+                      room={selectedFattalRoom}
+                      onConfirm={handleConfirmFattalRoom}
+                      onBack={handleBackFromFattalRoom}
+                      lang={currentLang}
+                    />
+                  ) : (
+                    <FattalRoomCarousel rooms={message.roomSearchResults} onSelectRoom={handleSelectFattalRoom} lang={currentLang} />
+                  )}
+                </>
+              )}
             </div>
           ))}
           {/* Loading indicator */}
@@ -632,7 +632,7 @@ export default function ChatWidget() {
 
       {/* Input - White background */}
       <div className="p-4 bg-white border-t border-fattalNavy/10">
-        <form onSubmit={handleMessageSubmit} className="flex gap-2">
+        <form onSubmit={handleMessageSubmit} dir={inputDirection} className="flex gap-2">
           <input
             ref={inputRef}
             type="text"
@@ -658,7 +658,7 @@ export default function ChatWidget() {
                      rounded-xl transition-colors flex items-center justify-center
                      disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
           >
-            <LuSendHorizontal className="w-5 h-5" />
+            <LuSendHorizontal className={`w-5 h-5 transition-transform ${inputDirection === "rtl" ? "rotate-180" : ""}`} />
           </motion.button>
         </form>
       </div>
