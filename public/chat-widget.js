@@ -88,6 +88,7 @@
   // const widgetServiceBaseUrl = "http://localhost:3000";
   const widgetServiceBaseUrl = "https://dev-widget.ersona.co";
   // const widgetServiceBaseUrl = "https://47c1e0c701c0.ngrok-free.app";
+  
 
   // Clear session on every load to ensure fresh sessions
   clearSessionOnLoad();
