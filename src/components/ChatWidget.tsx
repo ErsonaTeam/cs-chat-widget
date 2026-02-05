@@ -22,8 +22,8 @@ const WIDGET_CONFIG = {
 
   // UI Text (Hebrew)
   text: {
-    welcomeTitle: "ברוכים הבאים לבת שלמה",
-    headerTitle: "The Farmhouse",
+    welcomeTitle: "ברוכים הבאים לפתאל",
+    headerTitle: "רשת מלונות פתאל",
     nameLabel: "נא להזין את שמך:",
     namePlaceholder: "השם שלך...",
     phoneLabel: "מספר טלפון (אופציונלי):",
@@ -50,7 +50,7 @@ const WIDGET_CONFIG = {
   ],
 
   // Logo URL
-  logoUrl: "https://cdn.sbcdn.it/fu/newbooking_tmpl/3407191_IMG_ALG.png",
+  logoUrl: "https://d2nyvxq412w7ra.cloudfront.net/fattal_heart_color_addfa324af.svg",
 };
 // ============================================
 
