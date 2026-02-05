@@ -666,7 +666,7 @@ export default function ChatWidget() {
       {/* Footer */}
       <div className="py-2 px-4 bg-white text-center">
         <p className="text-xs text-fattalNavy/50">
-          Powered by{" "}
+          Powered by:{" "}
           <a
             href="https://ersona.co"
             target="_blank"

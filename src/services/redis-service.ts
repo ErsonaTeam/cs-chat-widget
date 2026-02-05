@@ -83,3 +83,49 @@ export async function deleteMessageData(key: string): Promise<void> {
   const redis = await getRedisClient();
   await redis.del(key);
 }
+
+// ============================================
+// Message Queue Functions (for polling)
+// ============================================
+
+const PENDING_KEY_PREFIX = 'pending:';
+const MESSAGE_TTL = 300; // 5 minutes
+
+/**
+ * Push message to conversation queue
+ * @param conversationId - The conversation identifier
+ * @param data - Message data to queue
+ */
+export async function pushPendingMessage(
+  conversationId: string,
+  data: Record<string, unknown>
+): Promise<void> {
+  const redis = await getRedisClient();
+  const key = `${PENDING_KEY_PREFIX}${conversationId}`;
+  await redis.lpush(key, JSON.stringify(data));
+  await redis.expire(key, MESSAGE_TTL);
+}
+
+/**
+ * Pop message from conversation queue (FIFO - oldest first)
+ * Returns null if queue is empty
+ * @param conversationId - The conversation identifier
+ */
+export async function popPendingMessage(
+  conversationId: string
+): Promise<Record<string, unknown> | null> {
+  const redis = await getRedisClient();
+  const key = `${PENDING_KEY_PREFIX}${conversationId}`;
+  const data = await redis.rpop(key);
+
+  if (!data) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Failed to parse pending message from Redis:', error);
+    return null;
+  }
+}

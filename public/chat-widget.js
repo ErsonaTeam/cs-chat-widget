@@ -30,7 +30,7 @@
     // Always clear session storage on page load to ensure fresh sessions
     sessionStorage.removeItem('chatWidget_conversationId');
     conversationId = null;
-    isMessagingInitialized = false;
+    stopPolling();
   };
 
   // Generate UUID for conversationId
@@ -42,41 +42,19 @@
     });
   };
 
-  // Cleanup Pusher connection - unsubscribe from channel
-  const cleanupPusher = () => {
-    try {
-      if (currentChannel) {
-        currentChannel.unbind(PUSHER_EVENTS.AGENT_MESSAGE, handleAgentMessage);
-        if (pusherClient) {
-          pusherClient.unsubscribe(currentChannel.name);
-        }
-        currentChannel = null;
-      }
-      isMessagingInitialized = false;
-    } catch (error) {
-      console.error('Chat Widget - Failed to cleanup Pusher:', error);
-    }
-  };
-
-  // Full Pusher disconnect - for page unload
-  const disconnectPusher = () => {
-    try {
-      cleanupPusher();
-      if (pusherClient) {
-        pusherClient.disconnect();
-        pusherClient = null;
-      }
-    } catch (error) {
-      console.error('Chat Widget - Failed to disconnect Pusher:', error);
-    }
-  };
-
-  // Messaging state
-  let pusherClient = null;
-  let currentChannel = null;
+  // Polling state
+  let pollingInterval = null;
   let conversationId = null;
-  let isMessagingInitialized = false;
   let inactivityTimer = null;
+  const POLLING_INTERVAL_MS = 2500; // 2.5 seconds
+
+  // Stop polling
+  const stopPolling = () => {
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      pollingInterval = null;
+    }
+  };
 
   // Inactivity cleanup (1 hour)
   const INACTIVITY_TIMEOUT = 60 * 60 * 1000;
@@ -88,8 +66,8 @@
     }
     
     inactivityTimer = setTimeout(() => {
-      console.log('Chat Widget - Cleaning up due to inactivity');
-      cleanupPusher();
+      console.log('Chat Widget - Stopping polling due to inactivity');
+      stopPolling();
     }, INACTIVITY_TIMEOUT);
   };
 
@@ -107,117 +85,47 @@
     RESIZE_WIDGET: 'CHAT_WIDGET_RESIZE'
   };
 
-  const PUSHER_EVENTS = {
-    AGENT_MESSAGE: 'agent.message'
-  };
-  
   // const widgetServiceBaseUrl = "http://localhost:3000";
   const widgetServiceBaseUrl = "https://dev-widget.ersona.co";
   // const widgetServiceBaseUrl = "https://47c1e0c701c0.ngrok-free.app";
-  const pusherAppKey = "a4c044bc7363a3352ac7";
-  const pusherCluster = "eu";
-  const pusherJsUrl = 'https://js.pusher.com/8.2.0/pusher.min.js';
+  
 
   // Clear session on every load to ensure fresh sessions
   clearSessionOnLoad();
 
-  // Initialize Pusher client (browser-safe options only)
-  const initializePusher = () => {
-    if (pusherClient || isMessagingInitialized) return;
+  // Start polling for messages
+  const startPolling = () => {
+    if (pollingInterval) return; // Already polling
 
-    try {
-      // Load Pusher dynamically
-      const script = document.createElement('script');
-      script.src = pusherJsUrl;
-      script.onload = () => {
-        pusherClient = new Pusher(pusherAppKey, {
-          cluster: pusherCluster,
-          forceTLS: true,
-          disableStats: true,
-          activityTimeout: 45000,
-        });
+    pollingInterval = setInterval(async () => {
+      if (!conversationId) return;
 
-        // Subscribe to conversation channel
-        const channelName = `c-${companyId}-${conversationId}`;
-        currentChannel = pusherClient.subscribe(channelName);
-
-        currentChannel.bind(PUSHER_EVENTS.AGENT_MESSAGE, handleAgentMessage);
-
-        isMessagingInitialized = true;
-      };
-      
-      document.head.appendChild(script);
-    } catch (error) {
-      console.error('Chat Widget - Failed to initialize Pusher:', error);
-    }
-  };
-
-  // Event handler for Pusher events
-  const handleAgentMessage = async (data) => {
-    // Check if we received a messageKey (new Redis-based approach)
-    if (data.messageKey) {
       try {
-        // Fetch the actual message data from the API using the key
-        const response = await fetch(`${widgetServiceBaseUrl}/api/widget/message?key=${data.messageKey}`);
+        const response = await fetch(
+          `${widgetServiceBaseUrl}/api/widget/poll?conversationId=${conversationId}`
+        );
 
-        if (!response.ok) {
-          console.error('Chat Widget - Failed to fetch message:', response.status);
-          return;
-        }
+        if (!response.ok) return;
 
         const result = await response.json();
 
-        if (!result.success || !result.data) {
-          console.error('Chat Widget - Invalid message data received');
-          return;
-        }
-
-        const messageData = result.data;
-
-        // Defensive guard - check conversationId if present
-        if (messageData.conversationId && messageData.conversationId !== conversationId) {
-          return;
-        }
-
-        // Forward the message data to the iframe
-        if (iframe && iframe.contentWindow) {
-          iframe.contentWindow.postMessage({
-            type: MESSAGE_TYPES.AGENT_MESSAGE,
-            message: messageData.message,
-            timestamp: messageData.timestamp,
-            roomOptions: messageData.roomOptions,
-            hotelOptions: messageData.hotelOptions,
-            roomSearchResults: messageData.roomSearchResults,
-            languageCode: messageData.languageCode
-          }, widgetServiceBaseUrl);
-        } else {
-          console.error('Chat Widget - No iframe or contentWindow available');
+        if (result.success && result.data) {
+          // Forward to iframe
+          if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage({
+              type: MESSAGE_TYPES.AGENT_MESSAGE,
+              message: result.data.message,
+              timestamp: result.data.timestamp,
+              hotelOptions: result.data.hotelOptions,
+              roomSearchResults: result.data.roomSearchResults,
+              languageCode: result.data.languageCode
+            }, widgetServiceBaseUrl);
+          }
         }
       } catch (error) {
-        console.error('Chat Widget - Error fetching message data:', error);
+        console.error('Chat Widget - Polling error:', error);
       }
-    } else {
-      // Fallback: handle old format (direct message in Pusher)
-      console.warn('Chat Widget - Received message in old format (without messageKey)');
-
-      if (data.conversationId && data.conversationId !== conversationId) {
-        return;
-      }
-
-      if (iframe && iframe.contentWindow) {
-        iframe.contentWindow.postMessage({
-          type: MESSAGE_TYPES.AGENT_MESSAGE,
-          message: data.message,
-          timestamp: data.timestamp,
-          roomOptions: data.roomOptions,
-          hotelOptions: data.hotelOptions,
-          roomSearchResults: data.roomSearchResults,
-          languageCode: data.languageCode
-        }, widgetServiceBaseUrl);
-      } else {
-        console.error('Chat Widget - No iframe or contentWindow available');
-      }
-    }
+    }, POLLING_INTERVAL_MS);
   };
 
   // Send message function
@@ -227,7 +135,7 @@
     if (!conversationId) {
       conversationId = generateUUID();
       sessionStorage.setItem('chatWidget_conversationId', conversationId);
-      initializePusher();
+      startPolling();
     }
 
     const postUrl = `${widgetServiceBaseUrl}/api/widget/messages`;
@@ -481,7 +389,7 @@
     if (inactivityTimer) {
       clearTimeout(inactivityTimer);
     }
-    disconnectPusher();
+    stopPolling();
   });
 
   // Expose public API
