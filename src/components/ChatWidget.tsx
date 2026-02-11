@@ -4,10 +4,55 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LuSendHorizontal } from "react-icons/lu";
 import Image from "next/image";
+import Markdown from "react-markdown";
 import LoadingSpinner from "./LoadingSpinner";
-import { ChatWidgetMessageType, RoomOption, RoomOptionDetail } from "@/types/message-types";
-import RoomCarousel from "./RoomCarousel";
-import RoomOptionsView from "./RoomOptionsView";
+import { ChatWidgetMessageType, FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice } from "@/types/message-types";
+import HotelCarousel from "./HotelCarousel";
+import FattalRoomCarousel from "./FattalRoomCarousel";
+import FattalRoomDetailView from "./FattalRoomDetailView";
+import { validatePhone, formatPhoneForStorage } from "@/utils/phone";
+import { Language, t, formatPrice as formatPriceI18n, parseLanguageCode } from "@/utils/i18n";
+
+// ============================================
+// WIDGET CONFIGURATION - Quick settings
+// ============================================
+const WIDGET_CONFIG = {
+  // UI Direction: "rtl" for Hebrew/Arabic, "ltr" for English
+  direction: "rtl" as "rtl" | "ltr",
+
+  // UI Text (Hebrew)
+  text: {
+    welcomeTitle: "ברוכים הבאים לפתאל",
+    headerTitle: "רשת מלונות פתאל",
+    nameLabel: "נא להזין את שמך:",
+    namePlaceholder: "השם שלך...",
+    phoneLabel: "מספר טלפון (אופציונלי):",
+    phonePlaceholder: "54-806-0982",
+    phoneError: "מספר טלפון לא תקין",
+    startChat: "התחל צ׳אט",
+    resetButton: "איפוס",
+    inputPlaceholder: "הקלד הודעה...",
+    loadingPlaceholder: "ממתין לתשובה...",
+  },
+
+  // Country codes for phone input
+  countryCodes: [
+    { code: "972", label: "🇮🇱 +972", country: "Israel" },
+    { code: "1", label: "🇺🇸 +1", country: "USA" },
+    { code: "44", label: "🇬🇧 +44", country: "UK" },
+    { code: "49", label: "🇩🇪 +49", country: "Germany" },
+    { code: "33", label: "🇫🇷 +33", country: "France" },
+    { code: "39", label: "🇮🇹 +39", country: "Italy" },
+    { code: "34", label: "🇪🇸 +34", country: "Spain" },
+    { code: "31", label: "🇳🇱 +31", country: "Netherlands" },
+    { code: "41", label: "🇨🇭 +41", country: "Switzerland" },
+    { code: "43", label: "🇦🇹 +43", country: "Austria" },
+  ],
+
+  // Logo URL
+  logoUrl: "https://d2nyvxq412w7ra.cloudfront.net/fattal_heart_color_addfa324af.svg",
+};
+// ============================================
 
 interface Message {
   id: string;
@@ -15,7 +60,9 @@ interface Message {
   sender: "user" | "bot";
   timestamp: Date;
   direction: "ltr" | "rtl";
-  roomOptions?: RoomOption[];
+  hotelOptions?: FattalHotel[];
+  roomSearchResults?: FattalRoom[];
+  languageCode?: string;
 }
 
 // Hebrew character detection regex
@@ -25,93 +72,47 @@ const detectTextDirection = (text: string): "ltr" | "rtl" => {
   return HEBREW_REGEX.test(text.charAt(0)) ? "rtl" : "ltr";
 };
 
-// Function to render text with clickable links
-const renderMessageWithLinks = (text: string, isUserMessage: boolean = false) => {
-  // Enhanced URL regex pattern that matches http/https URLs and www URLs
-  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
-  
-  // Split text by URLs while keeping the URLs in the result
-  const parts = text.split(urlRegex);
-  
-  return parts.map((part, index) => {
-    // Check if this part is a URL
-    if (urlRegex.test(part)) {
-      // Clean up the URL (remove trailing punctuation that might not be part of the URL)
-      const cleanUrl = part.replace(/[.,;!?]+$/, '');
-      const trailingPunctuation = part.slice(cleanUrl.length);
-      
-      // Add protocol if missing for www URLs
-      let href = cleanUrl;
-      if (cleanUrl.startsWith('www.')) {
-        href = `https://${cleanUrl}`;
-      }
-      
-      // Create a display text for very long URLs
-      const displayText = cleanUrl.length > 50 
-        ? `${cleanUrl.substring(0, 30)}...${cleanUrl.substring(cleanUrl.length - 15)}`
-        : cleanUrl;
-      
-      return (
-        <span key={index}>
-          <a
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`underline hover:no-underline transition-colors font-medium inline-flex items-center gap-1 ${
-              isUserMessage 
-                ? "text-blue-100 hover:text-white" 
-                : "text-blue-600 hover:text-blue-800"
-            }`}
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-            title={`Open ${cleanUrl} in new tab`}
-          >
-            {displayText}
-            <svg 
-              className="w-3 h-3 opacity-70" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" 
-              />
-            </svg>
-          </a>
-          {trailingPunctuation}
-        </span>
-      );
-    }
-    
-    // Regular text
-    return <span key={index}>{part}</span>;
-  });
-};
+// Custom link component for Markdown
+const MarkdownLink = ({ href, children, isUserMessage }: { href?: string; children: React.ReactNode; isUserMessage: boolean }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    className={`underline hover:no-underline transition-colors font-medium ${
+      isUserMessage
+        ? "text-fattalNavy/80 hover:text-fattalNavy"
+        : "text-fattalNavy font-semibold hover:text-fattalNavy/80"
+    }`}
+  >
+    {children}
+  </a>
+);
 
 export default function ChatWidget() {
   const [userName, setUserName] = useState<string>("");
+  const [userPhone, setUserPhone] = useState<string>("");
   const [nameInput, setNameInput] = useState<string>("");
+  const [phoneInput, setPhoneInput] = useState<string>("");
+  const [phoneError, setPhoneError] = useState<string>("");
+  const [countryCode, setCountryCode] = useState<string>("972");
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState<string>("");
-  const [inputDirection, setInputDirection] = useState<"ltr" | "rtl">("ltr");
+  const [inputDirection, setInputDirection] = useState<"ltr" | "rtl">("rtl");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [selectedRoomForOptions, setSelectedRoomForOptions] = useState<RoomOption | null>(null);
+  const [selectedFattalRoom, setSelectedFattalRoom] = useState<FattalRoom | null>(null);
+  const [currentLang, setCurrentLang] = useState<Language>('HE');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Listen for agent messages forwarded from parent via postMessage
   useEffect(() => {
     const handleParentMessage = (event: MessageEvent) => {
-      
+
       // For cross-origin embedding, accept messages with valid widget message types
       // from any origin (since we validate the message type and structure)
-      const hasValidMessageType = event.data?.type && 
+      const hasValidMessageType = event.data?.type &&
         Object.values(ChatWidgetMessageType).includes(event.data.type);
-      
+
       // Accept messages if they have valid message types (secure approach)
       if (!hasValidMessageType) {
         return;
@@ -126,15 +127,22 @@ export default function ChatWidget() {
           sender: "bot",
           timestamp: new Date(),
           direction: detectTextDirection(event.data.message),
-          roomOptions: event.data.roomOptions,
+          hotelOptions: event.data.hotelOptions,
+          roomSearchResults: event.data.roomSearchResults,
+          languageCode: event.data.languageCode,
         };
+
+        // Update current language if provided in message
+        if (event.data.languageCode) {
+          setCurrentLang(parseLanguageCode(event.data.languageCode));
+        }
 
         setMessages((prev) => [...prev, agentMessage]);
       }
     };
 
     window.addEventListener('message', handleParentMessage);
-    
+
     return () => {
       window.removeEventListener('message', handleParentMessage);
     };
@@ -145,22 +153,23 @@ export default function ChatWidget() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Adjust widget size when room options are displayed
+  // Adjust widget size when hotel options or room search results are displayed
   useEffect(() => {
-    const hasRoomOptions = messages.some(msg => msg.roomOptions && msg.roomOptions.length > 0);
-    const showingOptionsView = selectedRoomForOptions !== null;
+    const hasHotelOptions = messages.some(msg => msg.hotelOptions && msg.hotelOptions.length > 0);
+    const hasRoomSearchResults = messages.some(msg => msg.roomSearchResults && msg.roomSearchResults.length > 0);
+    const showingFattalRoomDetail = selectedFattalRoom !== null;
 
     // Send resize request to parent window
     if (window.parent && window.parent !== window) {
       let newHeight = 500;
       let newWidth = 350;
 
-      if (showingOptionsView) {
-        // Larger size for options view
+      if (showingFattalRoomDetail) {
+        // Larger size for detail view
         newHeight = 700;
         newWidth = 420;
-      } else if (hasRoomOptions) {
-        // Medium size for room carousel
+      } else if (hasHotelOptions || hasRoomSearchResults) {
+        // Medium size for hotel/room carousel
         newHeight = 650;
         newWidth = 420;
       }
@@ -171,58 +180,71 @@ export default function ChatWidget() {
         width: newWidth
       }, '*');
     }
-  }, [messages, selectedRoomForOptions]);
+  }, [messages, selectedFattalRoom]);
 
   // Handle name submission
   const handleNameSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (nameInput.trim()) {
-      setUserName(nameInput.trim());
+    if (!nameInput.trim()) return;
 
-      // Add first welcome message when user first enters their name
-      const firstWelcomeMessage: Message = {
-        id: Date.now().toString() + "-welcome-1",
-        text: `Hello ${
-          nameInput.trim().charAt(0).toUpperCase() + nameInput.trim().slice(1)
-        }! 👋 Welcome to Ersona Chat!`,
+    // Validate phone if provided
+    let formattedPhone = '';
+    if (phoneInput.trim()) {
+      if (!validatePhone(phoneInput, countryCode)) {
+        setPhoneError(WIDGET_CONFIG.text.phoneError);
+        return;
+      }
+      formattedPhone = formatPhoneForStorage(phoneInput, countryCode);
+    }
+
+    setUserName(nameInput.trim());
+    setUserPhone(formattedPhone);
+
+    // Add first welcome message when user first enters their name
+    const firstWelcomeMessage: Message = {
+      id: Date.now().toString() + "-welcome-1",
+      text: `היי ${
+        nameInput.trim().charAt(0).toUpperCase() + nameInput.trim().slice(1)
+      } ברוכים הבאים!\n אני כאן כדי לעזור בביצוע הזמנה ולענות כל כל שאלה.`,
+      sender: "bot",
+      timestamp: new Date(),
+      direction: "rtl",
+    };
+
+    setMessages([firstWelcomeMessage]);
+
+    // Add second welcome message with a delay
+    setTimeout(() => {
+      const secondWelcomeMessage: Message = {
+        id: Date.now().toString() + "-welcome-2",
+        text: "Just for you to know, we can serve you in your preferred language or any language of your choice.",
         sender: "bot",
         timestamp: new Date(),
         direction: "ltr",
       };
 
-      setMessages([firstWelcomeMessage]);
-
-      // Add second welcome message with a delay
-      setTimeout(() => {
-        const secondWelcomeMessage: Message = {
-          id: Date.now().toString() + "-welcome-2",
-          text: "I'm here to help you with any questions you might have. Feel free to ask me anything!",
-          sender: "bot",
-          timestamp: new Date(),
-          direction: "ltr",
-        };
-
-        setMessages((prev) => [...prev, secondWelcomeMessage]);
-      }, 1500);
-    }
+      setMessages((prev) => [...prev, secondWelcomeMessage]);
+    }, 1500);
   };
 
   // Send message to API and get bot response
   const sendMessageToAPI = async (
     message: string,
-    userName: string
+    userName: string,
+    userPhone: string
   ): Promise<Message | null> => {
     try {
       // Use the widget messaging system for iframe communication
       if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
-        
+
         // Use postMessage for iframe-to-parent communication
         window.parent.postMessage({
           type: ChatWidgetMessageType.SEND_MESSAGE,
           message: message,
-          userName: userName
+          userName: userName,
+          userPhone: userPhone,
         }, '*');
-        
+
         // Don't return a placeholder message - real response will come via Pusher
         return null; // Signal that we handled this via widget system
       }
@@ -265,11 +287,11 @@ export default function ChatWidget() {
     setMessages((prev) => [...prev, userMessage]);
     const messageText = inputMessage.trim();
     setInputMessage("");
-    setInputDirection("ltr");
+    setInputDirection("rtl");
     setIsLoading(true);
 
     // Send message to API and get bot response
-    const botReply = await sendMessageToAPI(messageText, userName);
+    const botReply = await sendMessageToAPI(messageText, userName, userPhone);
     if (botReply) {
       // Only add bot reply if it's not null (null means handled via widget system)
       setMessages((prev) => [...prev, botReply]);
@@ -290,7 +312,7 @@ export default function ChatWidget() {
     if (value.length > 0) {
       setInputDirection(detectTextDirection(value));
     } else {
-      setInputDirection("ltr");
+      setInputDirection("rtl");
     }
   };
 
@@ -305,215 +327,232 @@ export default function ChatWidget() {
   // Reset chat
   const resetChat = () => {
     setUserName("");
+    setUserPhone("");
     setMessages([]);
     setNameInput("");
+    setPhoneInput("");
+    setPhoneError("");
+    setCountryCode("972");
     setIsLoading(false);
   };
 
-  // Handle viewing room options
-  const handleViewRoomOptions = (room: RoomOption) => {
-    setSelectedRoomForOptions(room);
-  };
-
-  // Handle back from options view
-  const handleBackFromOptions = () => {
-    setSelectedRoomForOptions(null);
-  };
-
-  // Handle room option confirmation with quantity
-  const handleConfirmRoomOption = async (room: RoomOption, option: RoomOptionDetail, quantity: number) => {
+  // Handle hotel selection (send hotel name as message)
+  const handleSelectHotel = async (hotel: FattalHotel) => {
     if (isLoading) return;
 
-    const formatPrice = (amount: number) => new Intl.NumberFormat('en-US').format(amount);
-    const totalPrice = formatPrice(option.offer.price.amount * quantity);
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text: hotel.hotelName,
+      sender: "user",
+      timestamp: new Date(),
+      direction: detectTextDirection(hotel.hotelName),
+    };
 
-    const selectionMessage = `I would like to book:\n` +
-      `${room.name}\n` +
-      `${option.offer.name || 'Standard Rate'}\n` +
-      `Quantity: ${quantity} room${quantity > 1 ? 's' : ''}\n` +
-      `Total: ₪${totalPrice} ${option.offer.price.currencyCode}`;
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+
+    // Send message to API
+    const botReply = await sendMessageToAPI(hotel.hotelName, userName, userPhone);
+    if (botReply) {
+      setMessages((prev) => [...prev, botReply]);
+    }
+    setIsLoading(false);
+  };
+
+  // Handle Fattal room selection - open detail view
+  const handleSelectFattalRoom = (room: FattalRoom) => {
+    setSelectedFattalRoom(room);
+  };
+
+  // Handle back from Fattal room detail view
+  const handleBackFromFattalRoom = () => {
+    setSelectedFattalRoom(null);
+  };
+
+  // Handle Fattal room booking confirmation
+  const handleConfirmFattalRoom = async (
+    room: FattalRoom,
+    selectedPackage: FattalRoomPackage,
+    selectedPrice: FattalPackagePrice,
+    isClubMember: boolean
+  ) => {
+    if (isLoading) return;
+
+    const displayPrice = isClubMember && selectedPrice.clubTotalPrice
+      ? selectedPrice.clubTotalPrice
+      : selectedPrice.totalPrice;
+
+    const selectionMessage = `${t(currentLang, 'bookingIntro')}\n` +
+      `${t(currentLang, 'roomLabel')}: ${room.name}\n` +
+      `${t(currentLang, 'packageLabel')}: ${selectedPackage.packageName}\n` +
+      `${t(currentLang, 'hostingTypeLabel')}: ${selectedPrice.hostingBase}\n` +
+      `${isClubMember ? t(currentLang, 'clubMemberYes') + '\n' : ''}` +
+      `${t(currentLang, 'priceLabel')}: ${formatPriceI18n(displayPrice, currentLang)} ₪`;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       text: selectionMessage,
       sender: "user",
       timestamp: new Date(),
-      direction: "ltr",
+      direction: currentLang === 'HE' ? "rtl" : "ltr",
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setSelectedRoomForOptions(null); // Close options view
+    setSelectedFattalRoom(null);
     setIsLoading(true);
 
-    try {
-      // Get companyId and conversationId from parent window
-      const parentWindow = window.parent as Window & {
-        __CHATWIDGET__?: {
-          getConversationId?: () => string | null;
-        };
-      };
-
-      const conversationId = parentWindow.__CHATWIDGET__?.getConversationId?.();
-
-      if (!conversationId) {
-        throw new Error('Conversation ID not available');
-      }
-
-      // Extract companyId from script element (same logic as chat-widget.js)
-      const getCompanyId = () => {
-        const widgetScript = parentWindow.document?.getElementById('ersona-chat-widget') as HTMLScriptElement | null;
-        if (widgetScript?.dataset?.companyId) {
-          return widgetScript.dataset.companyId;
-        }
-
-        const anyWidgetScript = parentWindow.document?.querySelector('script[data-company-id]') as HTMLScriptElement | null;
-        if (anyWidgetScript?.dataset?.companyId) {
-          return anyWidgetScript.dataset.companyId;
-        }
-
-        return 'default';
-      };
-
-      const companyId = getCompanyId();
-
-      // Call checkout endpoint
-      const checkoutResponse = await fetch('/api/widget/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          companyId,
-          conversationId,
-          signature: option.signature,
-          quantity,
-        }),
-      });
-
-      if (!checkoutResponse.ok) {
-        const errorData = await checkoutResponse.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to create checkout');
-      }
-
-      const { checkoutLink } = await checkoutResponse.json();
-
-      // Display checkout link as a bot message
-      const checkoutMessage: Message = {
-        id: Date.now().toString() + "-checkout",
-        text: `Great! Your booking is ready. Click the link below to complete your reservation:\n\n${checkoutLink}`,
-        sender: "bot",
-        timestamp: new Date(),
-        direction: "ltr",
-      };
-
-      setMessages((prev) => [...prev, checkoutMessage]);
-
-    } catch (error) {
-      console.error('Checkout error:', error);
-
-      // Display error message to user
-      const errorMessage: Message = {
-        id: Date.now().toString() + "-checkout-error",
-        text: "I'm sorry, there was an error creating your checkout link. Please try again or contact support.",
-        sender: "bot",
-        timestamp: new Date(),
-        direction: "ltr",
-      };
-
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
+    // Send message to API
+    const botReply = await sendMessageToAPI(selectionMessage, userName, userPhone);
+    if (botReply) {
+      setMessages((prev) => [...prev, botReply]);
     }
+    setIsLoading(false);
   };
 
-
-  // Name input screen
+  // Name input screen - Fattal branded
   if (!userName) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-6 bg-transparent text-gray-900 rounded-2xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md"
-        >
-          <h2 className="text-2xl font-bold text-center mb-6">
-            Welcome to Chat!
+      <div dir={WIDGET_CONFIG.direction} className="flex flex-col h-full rounded-2xl overflow-hidden shadow-xl">
+        {/* Header - thin with logo */}
+        <div className="bg-fattalNavy py-2 px-4 flex items-center justify-center gap-2">
+          <Image
+            src={WIDGET_CONFIG.logoUrl}
+            priority={true}
+            alt="Fattal Logo"
+            width={24}
+            height={24}
+            className="object-contain"
+          />
+          <h2 className="text-lg font-bold text-white">
+            {WIDGET_CONFIG.text.welcomeTitle}
           </h2>
-          <form onSubmit={handleNameSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium mb-2">
-                Please enter your name:
-              </label>
-              <input
-                id="name"
-                type="text"
-                value={nameInput}
-                onChange={(e) => setNameInput(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl 
-                         bg-white text-gray-900 focus:outline-none focus:ring-0"
-                placeholder="Your name..."
-                autoFocus
-              />
-            </div>
-            <motion.button
-              type="submit"
-              className="w-full bg-ersonaBlue hover:bg-blue-600 text-slate-900 font-medium py-2 px-4 border border-gray-300
-                        rounded-xl transition-colors"
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 flex flex-col items-center justify-center p-6 bg-fattalCream">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full max-w-md"
+          >
+            <form onSubmit={handleNameSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium mb-2 text-fattalNavy">
+                  {WIDGET_CONFIG.text.nameLabel}
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-fattalNavy/20 rounded-xl
+                           bg-white text-fattalNavy focus:outline-none focus:border-fattalGold
+                           placeholder:text-fattalNavy/50"
+                  placeholder={WIDGET_CONFIG.text.namePlaceholder}
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium mb-2 text-fattalNavy">
+                  {WIDGET_CONFIG.text.phoneLabel}
+                </label>
+                <div className="flex gap-2" dir="ltr">
+                  <select
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    className="px-2 py-3 bg-fattalNavy/10 border-2 border-fattalNavy/20 rounded-xl
+                             text-fattalNavy font-medium text-sm focus:outline-none focus:border-fattalGold
+                             cursor-pointer appearance-none bg-no-repeat bg-right pr-6"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%231e3a5f'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                      backgroundSize: '16px',
+                      backgroundPosition: 'right 4px center',
+                    }}
+                  >
+                    {WIDGET_CONFIG.countryCodes.map((cc) => (
+                      <option key={cc.code} value={cc.code}>
+                        {cc.label}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    id="phone"
+                    type="tel"
+                    value={phoneInput}
+                    onChange={(e) => {
+                      setPhoneInput(e.target.value);
+                      setPhoneError("");
+                    }}
+                    className="flex-1 px-4 py-3 border-2 border-fattalNavy/20 rounded-xl
+                             bg-white text-fattalNavy focus:outline-none focus:border-fattalGold
+                             placeholder:text-fattalNavy/50"
+                    placeholder={WIDGET_CONFIG.text.phonePlaceholder}
+                  />
+                </div>
+                {phoneError && (
+                  <p className="text-red-500 text-xs mt-1 text-right">{phoneError}</p>
+                )}
+              </div>
+              <motion.button
+                type="submit"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full bg-fattalGold hover:bg-fattalGold/90 text-white font-semibold py-3 px-4
+                          rounded-xl transition-colors shadow-md"
+              >
+                {WIDGET_CONFIG.text.startChat}
+              </motion.button>
+            </form>
+          </motion.div>
+        </div>
+
+        {/* Footer */}
+        <div className="bg-white py-2 px-4 text-center border-t border-fattalNavy/10">
+          <p className="text-xs text-fattalNavy/60">
+            Powered by{" "}
+            <a
+              href="https://ersona.co"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-fattalGold hover:text-fattalGold/80 transition-colors font-medium"
             >
-              Start Chat
-            </motion.button>
-          </form>
-        </motion.div>
+              Ersona
+            </a>
+          </p>
+        </div>
       </div>
     );
   }
 
-  // Chat interface
+  // Chat interface - Fattal branded
   return (
-    <div className="flex flex-col h-full text-gray-900 bg-transparent rounded-2xl">
-      {/* Header */}
-      <div className="flex items-center justify-between py-2 px-4 bg-white/40 rounded-t-2xl chat-header shadow-lg shadow-black/10">
-        <h3 className="font-medium flex items-center gap-1 text-gray-800 text-sm">
-          <div className="rounded-full bg-gray-100 p-1 flex items-end justify-end">
-            <Image
-              src="/ersona-logo.svg"
-              priority={true}
-              alt="Ersona Logo"
-              width={20}
-              height={20}
-              className="object-bottom w-5 h-5"
-            />
-          </div>
-          <span className="mb-0.5">Ersona Agent</span>
+    <div dir={WIDGET_CONFIG.direction} className="flex flex-col h-full rounded-2xl overflow-hidden shadow-xl">
+      {/* Header - Navy background, thin */}
+      <div className="flex items-center justify-between py-2 px-4 bg-fattalNavy">
+        <h3 className="font-semibold flex items-center gap-2 text-white text-sm">
+          <Image
+            src={WIDGET_CONFIG.logoUrl}
+            priority={true}
+            alt="Fattal Logo"
+            width={24}
+            height={24}
+            className="object-contain"
+          />
+          <span>{WIDGET_CONFIG.text.headerTitle}</span>
         </h3>
         <button
           onClick={resetChat}
-          className="text-sm text-gray-600 hover:text-gray-700 transition-colors"
+          className="text-sm text-white/80 hover:text-white transition-colors"
         >
-          Reset
+          {WIDGET_CONFIG.text.resetButton}
         </button>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white/50">
+      {/* Messages - Cream background */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-fattalCream">
         <AnimatePresence>
           {messages.map((message) => (
             <div key={message.id}>
-              {/* Room Carousel or Options View */}
-              {message.roomOptions && message.roomOptions.length > 0 && (
-                <>
-                  {selectedRoomForOptions ? (
-                    <RoomOptionsView
-                      room={selectedRoomForOptions}
-                      onConfirm={handleConfirmRoomOption}
-                      onBack={handleBackFromOptions}
-                    />
-                  ) : (
-                    <RoomCarousel rooms={message.roomOptions} onViewRoomOptions={handleViewRoomOptions} />
-                  )}
-                </>
-              )}
-
               {/* Message Bubble */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -525,16 +564,30 @@ export default function ChatWidget() {
               >
                 <div
                   dir={message.direction}
-                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-xl ${
+                  className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl shadow-sm ${
                     message.sender === "user"
-                      ? "bg-ersonaBlue text-white chat-message-user shadow-sm"
-                      : "bg-white text-gray-900 shadow-sm border border-gray-200 chat-message-bot"
+                      ? "bg-fattalGold text-fattalNavy"
+                      : "bg-white text-fattalNavy border border-fattalNavy/10"
                   }`}
                 >
-                  <div className="text-sm">
-                    {renderMessageWithLinks(message.text, message.sender === "user")}
+                  <div className="text-sm prose prose-sm max-w-none [&>p]:m-0 [&>ul]:m-0 [&>ol]:m-0 [&>p+p]:mt-2 whitespace-pre-wrap">
+                    <Markdown
+                      components={{
+                        a: ({ href, children }) => (
+                          <MarkdownLink href={href} isUserMessage={message.sender === "user"}>
+                            {children}
+                          </MarkdownLink>
+                        ),
+                        strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                        em: ({ children }) => <em className="italic">{children}</em>,
+                      }}
+                    >
+                      {message.text}
+                    </Markdown>
                   </div>
-                  <p className="text-xs opacity-70 mt-1">
+                  <p className={`text-xs mt-2 ${
+                    message.sender === "user" ? "text-fattalNavy/60" : "text-fattalNavy/50"
+                  }`}>
                     {message.timestamp.toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
@@ -542,13 +595,32 @@ export default function ChatWidget() {
                   </p>
                 </div>
               </motion.div>
+
+              {/* Hotel Carousel (Fattal) */}
+              {message.hotelOptions && message.hotelOptions.length > 0 && (
+                <HotelCarousel hotels={message.hotelOptions} onSelectHotel={handleSelectHotel} lang={currentLang} />
+              )}
+
+              {/* Fattal Room Carousel or Detail View */}
+              {message.roomSearchResults && message.roomSearchResults.length > 0 && (
+                <>
+                  {selectedFattalRoom ? (
+                    <FattalRoomDetailView
+                      room={selectedFattalRoom}
+                      onConfirm={handleConfirmFattalRoom}
+                      onBack={handleBackFromFattalRoom}
+                      lang={currentLang}
+                    />
+                  ) : (
+                    <FattalRoomCarousel rooms={message.roomSearchResults} onSelectRoom={handleSelectFattalRoom} lang={currentLang} />
+                  )}
+                </>
+              )}
             </div>
           ))}
           {/* Loading indicator */}
           {isLoading && (
             <motion.div
-              // initial={{ opacity: 0, y: 20 }}
-              // animate={{ opacity: 1, y: 0 }}
               className="flex justify-start"
             >
               <LoadingSpinner />
@@ -558,9 +630,9 @@ export default function ChatWidget() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="pt-4 px-4 pb-1 bg-white/80">
-        <form onSubmit={handleMessageSubmit} className="flex">
+      {/* Input - White background */}
+      <div className="p-4 bg-white border-t border-fattalNavy/10">
+        <form onSubmit={handleMessageSubmit} dir={inputDirection} className="flex gap-2">
           <input
             ref={inputRef}
             type="text"
@@ -569,33 +641,37 @@ export default function ChatWidget() {
             onKeyDown={handleKeyDown}
             dir={inputDirection}
             disabled={isLoading}
-            className="flex-1 px-2 py-2 border border-r-0 border-gray-300 rounded-l-xl 
-                     bg-white/80 text-gray-900 focus:outline-none focus:ring-0 
-                     text-sm placeholder:text-gray-500 placeholder:text-sm chat-input
+            className="flex-1 px-4 py-3 border-2 border-fattalNavy/20 rounded-xl
+                     bg-white text-fattalNavy focus:outline-none focus:border-fattalGold
+                     text-sm placeholder:text-fattalNavy/40
                      disabled:opacity-50 disabled:cursor-not-allowed"
             placeholder={
-              isLoading ? "Waiting for response..." : "Ask me anything..."
+              isLoading ? WIDGET_CONFIG.text.loadingPlaceholder : WIDGET_CONFIG.text.inputPlaceholder
             }
           />
           <motion.button
             type="submit"
             disabled={isLoading || !inputMessage.trim()}
-            className="bg-ersonaBlue hover:bg-blue-500 text-white font-medium py-2 px-4 
-                     rounded-r-xl transition-colors text-sm flex items-center justify-center chat-button-send border border-gray-300
-                     disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-ersonaBlue"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="bg-fattalGold hover:bg-fattalGold/90 text-white font-medium p-3
+                     rounded-xl transition-colors flex items-center justify-center
+                     disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
           >
-            <LuSendHorizontal className="w-5 h-5" />
+            <LuSendHorizontal className={`w-5 h-5 transition-transform ${inputDirection === "rtl" ? "rotate-180" : ""}`} />
           </motion.button>
         </form>
       </div>
-      <div className="pb-1 px-2 bg-white/80 text-center rounded-b-2xl">
-        <p className="text-[12px] text-gray-500">
-          Powered by{" "}
-          <a 
-            href="https://ersona.co" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-blue-500 hover:text-blue-600 transition-colors"
+
+      {/* Footer */}
+      <div className="py-2 px-4 bg-white text-center">
+        <p className="text-xs text-fattalNavy/50">
+          Powered by:{" "}
+          <a
+            href="https://ersona.co"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-fattalGold hover:text-fattalGold/80 transition-colors font-medium"
           >
             Ersona
           </a>

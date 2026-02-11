@@ -55,6 +55,10 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
+    - name: Configure npm for CodeArtifact
+      run: |
+        aws codeartifact login --tool npm --domain ersona --repository ersona-npm-repo --region ${{ env.AWS_REGION }}
+
     - name: Get AWS Parameter Store parameters
       id: get-parameters
       run: |
@@ -81,10 +85,9 @@ jobs:
     - name: Build, tag, and push image to Amazon ECR
       id: build-image
       run: |
-        npm i
+        npm ci
         npm run build
-        
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        DOCKER_BUILDKIT=1 docker build --secret id=npmrc,src=$HOME/.npmrc -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest

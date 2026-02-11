@@ -1,8 +1,8 @@
 'use server';
 
-import { sendPusherMessage } from '@/services/pusher-service';
+import { queueAgentMessage } from '@/services/message-queue-service';
 import { type WidgetActionResult } from './widget-actions';
-import { RoomOption } from '@/types/message-types';
+import { FattalHotel, FattalRoom } from '@/types/message-types';
 
 export interface WidgetResponseData {
   companyId: string;
@@ -10,11 +10,13 @@ export interface WidgetResponseData {
   message?: string;
   timestamp?: string;
   error?: string;
-  roomOptions?: RoomOption[];
+  hotelOptions?: FattalHotel[];
+  roomSearchResults?: FattalRoom[];
+  languageCode?: string;
 }
 
 export async function processWidgetResponse(data: WidgetResponseData): Promise<WidgetActionResult> {
-  const { companyId, conversationId, message, timestamp, error, roomOptions } = data;
+  const { companyId, conversationId, message, timestamp, error, hotelOptions, roomSearchResults, languageCode } = data;
 
   if (!companyId || !conversationId) {
     return {
@@ -37,18 +39,18 @@ export async function processWidgetResponse(data: WidgetResponseData): Promise<W
   }
 
   try {
-    await sendPusherMessage(companyId, conversationId, responseMessage, timestamp, roomOptions);
+    await queueAgentMessage(companyId, conversationId, responseMessage, timestamp, hotelOptions, roomSearchResults, languageCode);
 
     return {
       success: true,
-      message: 'Response delivered to client',
+      message: 'Response queued for client',
       timestamp: new Date().toISOString(),
     };
   } catch (error) {
-    console.error('Widget Response Actions - Pusher error:', error);
+    console.error('Widget Response Actions - Queue error:', error);
     return {
       success: false,
-      error: 'Failed to send response to client',
+      error: 'Failed to queue response for client',
       timestamp: new Date().toISOString(),
     };
   }

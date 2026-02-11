@@ -1,4 +1,3 @@
-'use server';
 import { NextRequest, NextResponse } from 'next/server';
 import { StatusCodes } from 'http-status-codes';
 import { corsHeaders } from '@/utils/cors';
@@ -8,7 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const { companyId, conversationId, message, timestamp, error, roomOptions } = body;
+    const { companyId, conversationId, message, timestamp, error, hotelOptions, roomSearchResults, languageCode } = body;
 
     // Prepare data for server action
     const responseData: WidgetResponseData = {
@@ -17,7 +16,9 @@ export async function POST(request: NextRequest) {
       message,
       timestamp,
       error,
-      roomOptions,
+      hotelOptions,
+      roomSearchResults,
+      languageCode,
     };
 
     // Process the response using server action

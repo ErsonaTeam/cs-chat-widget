@@ -1,12 +1,13 @@
 'use server';
 
-import { sendPusherFallbackMessage } from '@/services/pusher-service';
+import { queueFallbackMessage } from '@/services/message-queue-service';
 
 export interface WidgetMessageData {
   companyId: string;
   conversationId: string;
   message: string;
   userName: string;
+  userPhone?: string;
   timestamp: string;
   meta?: {
     userAgent?: string;
@@ -40,6 +41,7 @@ export async function sendToEmbeddingsService(data: WidgetMessageData): Promise<
         conversationId: data.conversationId,
         message: data.message,
         userName: data.userName,
+        phone: data.userPhone,
         timestamp: data.timestamp,
         meta: data.meta,
       }),
@@ -81,13 +83,13 @@ export async function processWidgetMessage(data: WidgetMessageData): Promise<Wid
   // Send to embeddings service
   const embeddingsResult = await sendToEmbeddingsService(data);
   
-  // If embeddings service fails, send fallback message
+  // If embeddings service fails, queue fallback message
   if (!embeddingsResult.success) {
     try {
-      await sendPusherFallbackMessage(companyId, conversationId);
+      await queueFallbackMessage(companyId, conversationId);
       return {
         success: true,
-        message: 'Message processing failed, but fallback message sent',
+        message: 'Message processing failed, but fallback message queued',
         timestamp: new Date().toISOString(),
       };
     } catch (error) {

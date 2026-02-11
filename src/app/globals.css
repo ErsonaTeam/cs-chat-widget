@@ -1,13 +1,24 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Fattal Brand Colors */
+  --fattal-navy: #1d2b4d;
+  --fattal-gold: #f0c14b;
+  --fattal-cream: #faf8f5;
+  --fattal-light-gold: #fff8e1;
+  --fattal-navy-light: #2d3f66;
 }
 
 @theme {
-  --color-lightTurquoise: #00d2ff;
-  --color-ersonaBlue: #2686cb;
+  --color-fattalNavy: #1d2b4d;
+  --color-fattalGold: #f0c14b;
+  --color-fattalCream: #faf8f5;
+  --color-fattalLightGold: #fff8e1;
+  --color-fattalNavyLight: #2d3f66;
 }
 
 @theme inline {
@@ -25,40 +36,7 @@ body {
 }
 
 body {
-  background: var(--background);
+  background: var(--fattal-cream);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-}
-
-/* Transparent background for embed chat iframe */
-body.embed-transparent,
-html.embed-transparent {
-  background: transparent !important;
-  color-scheme: light;
-}
-
-/* Force transparency for all root elements in embed mode */
-body.embed-transparent * {
-  background-color: transparent !important;
-}
-
-/* Override only specific elements that need backgrounds */
-body.embed-transparent .chat-message-user {
-  background-color: #2686cbbc !important;
-}
-
-body.embed-transparent .chat-message-bot {
-  background-color: rgba(255, 255, 255, 0.6) !important;
-}
-
-body.embed-transparent .chat-input {
-  background-color: rgba(255, 255, 255, 0.8) !important;
-}
-
-body.embed-transparent .chat-header {
-  background-color: rgba(167, 167, 167, 0.25) !important;
-}
-
-body.embed-transparent .chat-button-send {
-  background-color: rgba(167, 167, 167, 0.3) !important;
 }
