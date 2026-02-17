@@ -4,6 +4,24 @@ export enum ChatWidgetMessageType {
 }
 
 /**
+ * A single field in a contact form
+ */
+export interface ContactFormField {
+  type: 'email' | 'phone' | 'checkbox';
+  name: string;
+  required: boolean;
+  label?: Record<string, string>;
+  message?: Record<string, string>;
+}
+
+/**
+ * Contact form configuration sent by the agent
+ */
+export interface ContactFormConfig {
+  fields: ContactFormField[];
+}
+
+/**
  * Gallery image for Fattal display
  */
 export interface FattalGalleryImage {

@@ -13,6 +13,7 @@ export interface WidgetMessageData {
     userAgent?: string;
     referrer?: string;
   };
+  formData?: Record<string, string | boolean>;
 }
 
 export interface WidgetActionResult {
@@ -44,6 +45,7 @@ export async function sendToEmbeddingsService(data: WidgetMessageData): Promise<
         phone: data.userPhone,
         timestamp: data.timestamp,
         meta: data.meta,
+        ...(data.formData ? { formData: data.formData } : {}),
       }),
     });
 

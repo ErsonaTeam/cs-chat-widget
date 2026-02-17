@@ -50,6 +50,16 @@ export const translations = {
     hostingTypeLabel: 'סוג אירוח',
     clubMemberYes: 'חבר מועדון: כן',
     priceLabel: 'מחיר',
+
+    // Contact Form
+    contactFormEmail: 'אימייל',
+    contactFormEmailPlaceholder: 'your@email.com',
+    contactFormPhone: 'טלפון',
+    contactFormPhonePlaceholder: '054-806-0982',
+    contactFormSubmit: 'שליחה',
+    contactFormInvalidEmail: 'כתובת אימייל לא תקינה',
+    contactFormInvalidPhone: 'מספר טלפון לא תקין',
+    contactFormSubmitted: 'שלחתי את הפרטים שלי.',
   },
   EN: {
     // Common
@@ -81,6 +91,16 @@ export const translations = {
     hostingTypeLabel: 'Hosting type',
     clubMemberYes: 'Club member: Yes',
     priceLabel: 'Price',
+
+    // Contact Form
+    contactFormEmail: 'Email',
+    contactFormEmailPlaceholder: 'your@email.com',
+    contactFormPhone: 'Phone',
+    contactFormPhonePlaceholder: '054-806-0982',
+    contactFormSubmit: 'Submit',
+    contactFormInvalidEmail: 'Invalid email address',
+    contactFormInvalidPhone: 'Invalid phone number',
+    contactFormSubmitted: "I've submitted my contact details.",
   },
 } as const;
 

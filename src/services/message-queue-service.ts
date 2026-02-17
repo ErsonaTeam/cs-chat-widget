@@ -1,6 +1,6 @@
 'use server';
 
-import { FattalHotel, FattalRoom } from '@/types/message-types';
+import { FattalHotel, FattalRoom, ContactFormConfig } from '@/types/message-types';
 import { pushPendingMessage } from './redis-service';
 
 /**
@@ -14,6 +14,7 @@ export async function queueAgentMessage(
   timestamp?: string,
   hotelOptions?: FattalHotel[],
   roomSearchResults?: FattalRoom[],
+  contactForm?: ContactFormConfig,
   languageCode?: string
 ): Promise<void> {
   const messageData = {
@@ -22,6 +23,7 @@ export async function queueAgentMessage(
     timestamp: timestamp || new Date().toISOString(),
     hotelOptions: hotelOptions || null,
     roomSearchResults: roomSearchResults || null,
+    contactForm: contactForm || null,
     languageCode: languageCode || null,
   };
 

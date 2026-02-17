@@ -85,10 +85,10 @@
     RESIZE_WIDGET: 'CHAT_WIDGET_RESIZE'
   };
 
-  // const widgetServiceBaseUrl = "http://localhost:3000";
-  const widgetServiceBaseUrl = "https://dev-widget.ersona.co";
+  const widgetServiceBaseUrl = "http://localhost:3000";
+  // const widgetServiceBaseUrl = "https://dev-widget.ersona.co";
   // const widgetServiceBaseUrl = "https://47c1e0c701c0.ngrok-free.app";
-  
+
 
   // Clear session on every load to ensure fresh sessions
   clearSessionOnLoad();
@@ -118,6 +118,7 @@
               timestamp: result.data.timestamp,
               hotelOptions: result.data.hotelOptions,
               roomSearchResults: result.data.roomSearchResults,
+              contactForm: result.data.contactForm,
               languageCode: result.data.languageCode
             }, widgetServiceBaseUrl);
           }
@@ -129,7 +130,7 @@
   };
 
   // Send message function
-  const sendMessage = async (message, userName, userPhone) => {
+  const sendMessage = async (message, userName, userPhone, formData) => {
     trackActivity();
 
     if (!conversationId) {
@@ -150,6 +151,7 @@
         userAgent: navigator.userAgent,
         referrer: document.referrer,
       },
+      ...(formData ? { formData } : {}),
     };
 
     try {
@@ -190,9 +192,9 @@
     // }
 
     if (event.data && event.data.type === MESSAGE_TYPES.SEND_MESSAGE) {
-      const { message, userName, userPhone } = event.data;
+      const { message, userName, userPhone, formData } = event.data;
       if (message && typeof message === 'string') {
-        sendMessage(message, userName, userPhone).catch(error => {
+        sendMessage(message, userName, userPhone, formData).catch(error => {
           console.error('Chat Widget - Failed to send message via postMessage:', error);
         });
       }

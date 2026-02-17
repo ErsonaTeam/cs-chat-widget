@@ -6,10 +6,11 @@ import { LuSendHorizontal } from "react-icons/lu";
 import Image from "next/image";
 import Markdown from "react-markdown";
 import LoadingSpinner from "./LoadingSpinner";
-import { ChatWidgetMessageType, FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice } from "@/types/message-types";
+import { ChatWidgetMessageType, FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice, ContactFormConfig } from "@/types/message-types";
 import HotelCarousel from "./HotelCarousel";
 import FattalRoomCarousel from "./FattalRoomCarousel";
 import FattalRoomDetailView from "./FattalRoomDetailView";
+import ContactForm from "./ContactForm";
 import { validatePhone, formatPhoneForStorage } from "@/utils/phone";
 import { Language, t, formatPrice as formatPriceI18n, parseLanguageCode } from "@/utils/i18n";
 
@@ -62,6 +63,7 @@ interface Message {
   direction: "ltr" | "rtl";
   hotelOptions?: FattalHotel[];
   roomSearchResults?: FattalRoom[];
+  contactForm?: ContactFormConfig;
   languageCode?: string;
 }
 
@@ -129,6 +131,7 @@ export default function ChatWidget() {
           direction: detectTextDirection(event.data.message),
           hotelOptions: event.data.hotelOptions,
           roomSearchResults: event.data.roomSearchResults,
+          contactForm: event.data.contactForm,
           languageCode: event.data.languageCode,
         };
 
@@ -231,7 +234,8 @@ export default function ChatWidget() {
   const sendMessageToAPI = async (
     message: string,
     userName: string,
-    userPhone: string
+    userPhone: string,
+    formData?: Record<string, string | boolean>,
   ): Promise<Message | null> => {
     try {
       // Use the widget messaging system for iframe communication
@@ -243,6 +247,7 @@ export default function ChatWidget() {
           message: message,
           userName: userName,
           userPhone: userPhone,
+          ...(formData ? { formData } : {}),
         }, '*');
 
         // Don't return a placeholder message - real response will come via Pusher
@@ -333,6 +338,29 @@ export default function ChatWidget() {
     setPhoneInput("");
     setPhoneError("");
     setCountryCode("972");
+    setIsLoading(false);
+  };
+
+  // Handle contact form submission
+  const handleContactFormSubmit = async (formData: Record<string, string | boolean>) => {
+    if (isLoading) return;
+
+    const submittedMessage = t(currentLang, 'contactFormSubmitted');
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text: submittedMessage,
+      sender: "user",
+      timestamp: new Date(),
+      direction: detectTextDirection(submittedMessage),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+
+    const botReply = await sendMessageToAPI(submittedMessage, userName, userPhone, formData);
+    if (botReply) {
+      setMessages((prev) => [...prev, botReply]);
+    }
     setIsLoading(false);
   };
 
@@ -595,6 +623,16 @@ export default function ChatWidget() {
                   </p>
                 </div>
               </motion.div>
+
+              {/* Contact Form */}
+              {message.contactForm && (
+                <ContactForm
+                  config={message.contactForm}
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit}
+                  disabled={isLoading}
+                />
+              )}
 
               {/* Hotel Carousel (Fattal) */}
               {message.hotelOptions && message.hotelOptions.length > 0 && (
