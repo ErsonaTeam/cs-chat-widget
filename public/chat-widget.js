@@ -85,8 +85,8 @@
     RESIZE_WIDGET: 'CHAT_WIDGET_RESIZE'
   };
 
-  const widgetServiceBaseUrl = "http://localhost:3000";
-  // const widgetServiceBaseUrl = "https://dev-widget.ersona.co";
+  // const widgetServiceBaseUrl = "http://localhost:3000";
+  const widgetServiceBaseUrl = "https://dev-widget.ersona.co";
   // const widgetServiceBaseUrl = "https://47c1e0c701c0.ngrok-free.app";
 
 
@@ -118,6 +118,7 @@
               timestamp: result.data.timestamp,
               hotelOptions: result.data.hotelOptions,
               roomSearchResults: result.data.roomSearchResults,
+              listingOptions: result.data.listingOptions,
               contactForm: result.data.contactForm,
               languageCode: result.data.languageCode
             }, widgetServiceBaseUrl);

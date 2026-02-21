@@ -92,3 +92,22 @@ export interface FattalRoom {
   composition?: string | null;
   packages?: FattalRoomPackage[];
 }
+
+/**
+ * Listing data for display in carousel (Hostaway listings)
+ */
+export interface WidgetListing {
+  listingMapId: string;
+  name: string;
+  city: string;
+  personCapacity: number;
+  bedroomsNumber: number;
+  bathroomsNumber: number;
+  averageNightlyPrice: number;
+  totalPrice: number;
+  currency: string;
+  averageReviewRating: number | null;
+  description: string;
+  imageUrl: string;
+  gallery?: FattalGalleryImage[];
+}

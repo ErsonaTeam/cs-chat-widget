@@ -6,10 +6,12 @@ import { LuSendHorizontal } from "react-icons/lu";
 import Image from "next/image";
 import Markdown from "react-markdown";
 import LoadingSpinner from "./LoadingSpinner";
-import { ChatWidgetMessageType, FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice, ContactFormConfig } from "@/types/message-types";
+import { ChatWidgetMessageType, FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice, WidgetListing, ContactFormConfig } from "@/types/message-types";
 import HotelCarousel from "./HotelCarousel";
 import FattalRoomCarousel from "./FattalRoomCarousel";
 import FattalRoomDetailView from "./FattalRoomDetailView";
+import ListingCarousel from "./ListingCarousel";
+import ListingDetailView from "./ListingDetailView";
 import ContactForm from "./ContactForm";
 import { validatePhone, formatPhoneForStorage } from "@/utils/phone";
 import { Language, t, formatPrice as formatPriceI18n, parseLanguageCode } from "@/utils/i18n";
@@ -63,6 +65,7 @@ interface Message {
   direction: "ltr" | "rtl";
   hotelOptions?: FattalHotel[];
   roomSearchResults?: FattalRoom[];
+  listingOptions?: WidgetListing[];
   contactForm?: ContactFormConfig;
   languageCode?: string;
 }
@@ -102,6 +105,7 @@ export default function ChatWidget() {
   const [inputDirection, setInputDirection] = useState<"ltr" | "rtl">("rtl");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedFattalRoom, setSelectedFattalRoom] = useState<FattalRoom | null>(null);
+  const [selectedListing, setSelectedListing] = useState<WidgetListing | null>(null);
   const [currentLang, setCurrentLang] = useState<Language>('HE');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -131,6 +135,7 @@ export default function ChatWidget() {
           direction: detectTextDirection(event.data.message),
           hotelOptions: event.data.hotelOptions,
           roomSearchResults: event.data.roomSearchResults,
+          listingOptions: event.data.listingOptions,
           contactForm: event.data.contactForm,
           languageCode: event.data.languageCode,
         };
@@ -160,19 +165,21 @@ export default function ChatWidget() {
   useEffect(() => {
     const hasHotelOptions = messages.some(msg => msg.hotelOptions && msg.hotelOptions.length > 0);
     const hasRoomSearchResults = messages.some(msg => msg.roomSearchResults && msg.roomSearchResults.length > 0);
+    const hasListingOptions = messages.some(msg => msg.listingOptions && msg.listingOptions.length > 0);
     const showingFattalRoomDetail = selectedFattalRoom !== null;
+    const showingListingDetail = selectedListing !== null;
 
     // Send resize request to parent window
     if (window.parent && window.parent !== window) {
       let newHeight = 500;
       let newWidth = 350;
 
-      if (showingFattalRoomDetail) {
+      if (showingFattalRoomDetail || showingListingDetail) {
         // Larger size for detail view
         newHeight = 700;
         newWidth = 420;
-      } else if (hasHotelOptions || hasRoomSearchResults) {
-        // Medium size for hotel/room carousel
+      } else if (hasHotelOptions || hasRoomSearchResults || hasListingOptions) {
+        // Medium size for carousel
         newHeight = 650;
         newWidth = 420;
       }
@@ -183,7 +190,7 @@ export default function ChatWidget() {
         width: newWidth
       }, '*');
     }
-  }, [messages, selectedFattalRoom]);
+  }, [messages, selectedFattalRoom, selectedListing]);
 
   // Handle name submission
   const handleNameSubmit = (e: React.FormEvent) => {
@@ -437,6 +444,39 @@ export default function ChatWidget() {
     setIsLoading(false);
   };
 
+  // Handle listing detail view
+  const handleViewListingDetails = (listing: WidgetListing) => {
+    setSelectedListing(listing);
+  };
+
+  // Handle back from listing detail view
+  const handleBackFromListingDetail = () => {
+    setSelectedListing(null);
+  };
+
+  // Handle listing selection (send listing name as message)
+  const handleSelectListing = async (listing: WidgetListing) => {
+    if (isLoading) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text: listing.name,
+      sender: "user",
+      timestamp: new Date(),
+      direction: detectTextDirection(listing.name),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setSelectedListing(null);
+    setIsLoading(true);
+
+    const botReply = await sendMessageToAPI(listing.name, userName, userPhone);
+    if (botReply) {
+      setMessages((prev) => [...prev, botReply]);
+    }
+    setIsLoading(false);
+  };
+
   // Name input screen - Fattal branded
   if (!userName) {
     return (
@@ -651,6 +691,22 @@ export default function ChatWidget() {
                     />
                   ) : (
                     <FattalRoomCarousel rooms={message.roomSearchResults} onSelectRoom={handleSelectFattalRoom} lang={currentLang} />
+                  )}
+                </>
+              )}
+
+              {/* Listing Carousel or Detail View */}
+              {message.listingOptions && message.listingOptions.length > 0 && (
+                <>
+                  {selectedListing ? (
+                    <ListingDetailView
+                      listing={selectedListing}
+                      onSelect={handleSelectListing}
+                      onBack={handleBackFromListingDetail}
+                      lang={currentLang}
+                    />
+                  ) : (
+                    <ListingCarousel listings={message.listingOptions} onViewDetails={handleViewListingDetails} lang={currentLang} />
                   )}
                 </>
               )}
