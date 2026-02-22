@@ -1,13 +1,16 @@
 "use client";
 
 import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import ChatWidget from "@/components/ChatWidget";
 
 function EmbedChatContent() {
+  const searchParams = useSearchParams();
+  const theme = searchParams.get("theme");
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-transparent">
-      <ChatWidget/>
+      <ChatWidget theme={theme} />
     </div>
   );
 }

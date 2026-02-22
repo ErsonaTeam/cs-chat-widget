@@ -22,7 +22,21 @@
       return anyWidgetScript.dataset.companyId;
     }
     
-    return 'default'; // fallback
+    return 'default';
+  };
+
+  const getTheme = () => {
+    const widgetScript = document.getElementById('ersona-chat-widget');
+    if (widgetScript && widgetScript.dataset.theme) {
+      return widgetScript.dataset.theme;
+    }
+
+    const anyWidgetScript = document.querySelector('script[data-theme]');
+    if (anyWidgetScript) {
+      return anyWidgetScript.dataset.theme;
+    }
+
+    return null;
   };
 
   // Session management - always start fresh
@@ -77,7 +91,8 @@
   };
 
   const companyId = getCompanyId();
-  
+  const widgetTheme = getTheme();
+
   // Message type constants
   const MESSAGE_TYPES = {
     AGENT_MESSAGE: 'CHAT_WIDGET_AGENT_MESSAGE',
@@ -85,9 +100,9 @@
     RESIZE_WIDGET: 'CHAT_WIDGET_RESIZE'
   };
 
-  // const widgetServiceBaseUrl = "http://localhost:3000";
-  const widgetServiceBaseUrl = "https://dev-widget.ersona.co";
-  // const widgetServiceBaseUrl = "https://47c1e0c701c0.ngrok-free.app";
+  const widgetServiceBaseUrl = "__WIDGET_SERVICE_URL__" !== "__WIDGET_" + "SERVICE_URL__"
+    ? "__WIDGET_SERVICE_URL__"
+    : "http://localhost:3000";
 
 
   // Clear session on every load to ensure fresh sessions
@@ -342,7 +357,7 @@
   iframe.setAttribute("frameBorder", "0");
   iframe.style.colorScheme = "light";
   iframe.style.background = "transparent";
-  iframe.src = widgetServiceBaseUrl + "/embed-chat";
+  iframe.src = widgetServiceBaseUrl + "/embed-chat" + (widgetTheme ? "?theme=" + encodeURIComponent(widgetTheme) : "");
 
   // State management
   let isOpen = false;
