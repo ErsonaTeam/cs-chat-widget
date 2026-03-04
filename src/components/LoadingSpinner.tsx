@@ -26,9 +26,9 @@ export default function LoadingSpinner() {
         width: "50px",
         aspectRatio: "5",
         background: `
-          radial-gradient(circle closest-side, #1d2b4d 90%, transparent) 10% 50%,
-          radial-gradient(circle closest-side, #1d2b4d 90%, transparent) 50% 50%,
-          radial-gradient(circle closest-side, #1d2b4d 90%, transparent) 90% 50%
+          radial-gradient(circle closest-side, var(--theme-primary, #1d2b4d) 90%, transparent) 10% 50%,
+          radial-gradient(circle closest-side, var(--theme-primary, #1d2b4d) 90%, transparent) 50% 50%,
+          radial-gradient(circle closest-side, var(--theme-primary, #1d2b4d) 90%, transparent) 90% 50%
         `,
         backgroundSize: "calc(100%/5) 100%",
         backgroundRepeat: "no-repeat",
