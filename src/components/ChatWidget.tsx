@@ -346,6 +346,10 @@ export default function ChatWidget() {
     setPhoneError("");
     setCountryCode("972");
     setIsLoading(false);
+    setSelectedFattalRoom(null);
+    setSelectedListing(null);
+    // Notify parent page to clear conversationId and stop polling
+    window.parent.postMessage({ type: ChatWidgetMessageType.RESET_CHAT }, '*');
   };
 
   // Handle contact form submission

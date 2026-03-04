@@ -82,7 +82,8 @@
   const MESSAGE_TYPES = {
     AGENT_MESSAGE: 'CHAT_WIDGET_AGENT_MESSAGE',
     SEND_MESSAGE: 'CHAT_WIDGET_SEND_MESSAGE',
-    RESIZE_WIDGET: 'CHAT_WIDGET_RESIZE'
+    RESIZE_WIDGET: 'CHAT_WIDGET_RESIZE',
+    RESET_CHAT: 'CHAT_WIDGET_RESET_CHAT'
   };
 
   // const widgetServiceBaseUrl = "http://localhost:3000";
@@ -199,6 +200,11 @@
           console.error('Chat Widget - Failed to send message via postMessage:', error);
         });
       }
+    }
+
+    // Handle chat reset from iframe
+    if (event.data && event.data.type === MESSAGE_TYPES.RESET_CHAT) {
+      clearSessionOnLoad();
     }
 
     // Handle widget resize requests from iframe
