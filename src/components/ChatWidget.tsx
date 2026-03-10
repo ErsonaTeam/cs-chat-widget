@@ -6,53 +6,16 @@ import { LuSendHorizontal } from "react-icons/lu";
 import Image from "next/image";
 import Markdown from "react-markdown";
 import LoadingSpinner from "./LoadingSpinner";
-import { ChatWidgetMessageType, FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice } from "@/types/message-types";
+import { ChatWidgetMessageType, FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice, WidgetListing, ContactFormConfig } from "@/types/message-types";
 import HotelCarousel from "./HotelCarousel";
 import FattalRoomCarousel from "./FattalRoomCarousel";
 import FattalRoomDetailView from "./FattalRoomDetailView";
+import ListingCarousel from "./ListingCarousel";
+import ListingDetailView from "./ListingDetailView";
+import ContactForm from "./ContactForm";
 import { validatePhone, formatPhoneForStorage } from "@/utils/phone";
 import { Language, t, formatPrice as formatPriceI18n, parseLanguageCode } from "@/utils/i18n";
-
-// ============================================
-// WIDGET CONFIGURATION - Quick settings
-// ============================================
-const WIDGET_CONFIG = {
-  // UI Direction: "rtl" for Hebrew/Arabic, "ltr" for English
-  direction: "rtl" as "rtl" | "ltr",
-
-  // UI Text (Hebrew)
-  text: {
-    welcomeTitle: "ברוכים הבאים לפתאל",
-    headerTitle: "רשת מלונות פתאל",
-    nameLabel: "נא להזין את שמך:",
-    namePlaceholder: "השם שלך...",
-    phoneLabel: "מספר טלפון (אופציונלי):",
-    phonePlaceholder: "54-806-0982",
-    phoneError: "מספר טלפון לא תקין",
-    startChat: "התחל צ׳אט",
-    resetButton: "איפוס",
-    inputPlaceholder: "הקלד הודעה...",
-    loadingPlaceholder: "ממתין לתשובה...",
-  },
-
-  // Country codes for phone input
-  countryCodes: [
-    { code: "972", label: "🇮🇱 +972", country: "Israel" },
-    { code: "1", label: "🇺🇸 +1", country: "USA" },
-    { code: "44", label: "🇬🇧 +44", country: "UK" },
-    { code: "49", label: "🇩🇪 +49", country: "Germany" },
-    { code: "33", label: "🇫🇷 +33", country: "France" },
-    { code: "39", label: "🇮🇹 +39", country: "Italy" },
-    { code: "34", label: "🇪🇸 +34", country: "Spain" },
-    { code: "31", label: "🇳🇱 +31", country: "Netherlands" },
-    { code: "41", label: "🇨🇭 +41", country: "Switzerland" },
-    { code: "43", label: "🇦🇹 +43", country: "Austria" },
-  ],
-
-  // Logo URL
-  logoUrl: "https://d2nyvxq412w7ra.cloudfront.net/fattal_heart_color_addfa324af.svg",
-};
-// ============================================
+import { getTheme } from "@/config/theme-config";
 
 interface Message {
   id: string;
@@ -62,6 +25,8 @@ interface Message {
   direction: "ltr" | "rtl";
   hotelOptions?: FattalHotel[];
   roomSearchResults?: FattalRoom[];
+  listingOptions?: WidgetListing[];
+  contactForm?: ContactFormConfig;
   languageCode?: string;
 }
 
@@ -88,7 +53,13 @@ const MarkdownLink = ({ href, children, isUserMessage }: { href?: string; childr
   </a>
 );
 
-export default function ChatWidget() {
+interface ChatWidgetProps {
+  theme?: string | null;
+}
+
+export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
+  const widgetTheme = getTheme(themeId);
+
   const [userName, setUserName] = useState<string>("");
   const [userPhone, setUserPhone] = useState<string>("");
   const [nameInput, setNameInput] = useState<string>("");
@@ -97,12 +68,23 @@ export default function ChatWidget() {
   const [countryCode, setCountryCode] = useState<string>("972");
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState<string>("");
-  const [inputDirection, setInputDirection] = useState<"ltr" | "rtl">("rtl");
+  const [inputDirection, setInputDirection] = useState<"ltr" | "rtl">(widgetTheme.direction);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedFattalRoom, setSelectedFattalRoom] = useState<FattalRoom | null>(null);
-  const [currentLang, setCurrentLang] = useState<Language>('HE');
+  const [selectedListing, setSelectedListing] = useState<WidgetListing | null>(null);
+  const [currentLang, setCurrentLang] = useState<Language>(widgetTheme.direction === 'rtl' ? 'HE' : 'EN');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Apply theme CSS custom properties
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty('--theme-primary', widgetTheme.colors.primary);
+    root.style.setProperty('--theme-primary-light', widgetTheme.colors.primaryLight);
+    root.style.setProperty('--theme-accent', widgetTheme.colors.accent);
+    root.style.setProperty('--theme-background', widgetTheme.colors.background);
+    root.style.setProperty('--theme-accent-light', widgetTheme.colors.accentLight);
+  }, [widgetTheme]);
 
   // Listen for agent messages forwarded from parent via postMessage
   useEffect(() => {
@@ -129,6 +111,8 @@ export default function ChatWidget() {
           direction: detectTextDirection(event.data.message),
           hotelOptions: event.data.hotelOptions,
           roomSearchResults: event.data.roomSearchResults,
+          listingOptions: event.data.listingOptions,
+          contactForm: event.data.contactForm,
           languageCode: event.data.languageCode,
         };
 
@@ -157,19 +141,21 @@ export default function ChatWidget() {
   useEffect(() => {
     const hasHotelOptions = messages.some(msg => msg.hotelOptions && msg.hotelOptions.length > 0);
     const hasRoomSearchResults = messages.some(msg => msg.roomSearchResults && msg.roomSearchResults.length > 0);
+    const hasListingOptions = messages.some(msg => msg.listingOptions && msg.listingOptions.length > 0);
     const showingFattalRoomDetail = selectedFattalRoom !== null;
+    const showingListingDetail = selectedListing !== null;
 
     // Send resize request to parent window
     if (window.parent && window.parent !== window) {
       let newHeight = 500;
       let newWidth = 350;
 
-      if (showingFattalRoomDetail) {
+      if (showingFattalRoomDetail || showingListingDetail) {
         // Larger size for detail view
         newHeight = 700;
         newWidth = 420;
-      } else if (hasHotelOptions || hasRoomSearchResults) {
-        // Medium size for hotel/room carousel
+      } else if (hasHotelOptions || hasRoomSearchResults || hasListingOptions) {
+        // Medium size for carousel
         newHeight = 650;
         newWidth = 420;
       }
@@ -180,7 +166,7 @@ export default function ChatWidget() {
         width: newWidth
       }, '*');
     }
-  }, [messages, selectedFattalRoom]);
+  }, [messages, selectedFattalRoom, selectedListing]);
 
   // Handle name submission
   const handleNameSubmit = (e: React.FormEvent) => {
@@ -191,7 +177,7 @@ export default function ChatWidget() {
     let formattedPhone = '';
     if (phoneInput.trim()) {
       if (!validatePhone(phoneInput, countryCode)) {
-        setPhoneError(WIDGET_CONFIG.text.phoneError);
+        setPhoneError(widgetTheme.text.phoneError);
         return;
       }
       formattedPhone = formatPhoneForStorage(phoneInput, countryCode);
@@ -200,27 +186,23 @@ export default function ChatWidget() {
     setUserName(nameInput.trim());
     setUserPhone(formattedPhone);
 
-    // Add first welcome message when user first enters their name
     const firstWelcomeMessage: Message = {
       id: Date.now().toString() + "-welcome-1",
-      text: `היי ${
-        nameInput.trim().charAt(0).toUpperCase() + nameInput.trim().slice(1)
-      } ברוכים הבאים!\n אני כאן כדי לעזור בביצוע הזמנה ולענות כל כל שאלה.`,
+      text: widgetTheme.welcomeMessages.first(nameInput.trim()),
       sender: "bot",
       timestamp: new Date(),
-      direction: "rtl",
+      direction: widgetTheme.welcomeMessages.firstDirection,
     };
 
     setMessages([firstWelcomeMessage]);
 
-    // Add second welcome message with a delay
     setTimeout(() => {
       const secondWelcomeMessage: Message = {
         id: Date.now().toString() + "-welcome-2",
-        text: "Just for you to know, we can serve you in your preferred language or any language of your choice.",
+        text: widgetTheme.welcomeMessages.second,
         sender: "bot",
         timestamp: new Date(),
-        direction: "ltr",
+        direction: widgetTheme.welcomeMessages.secondDirection,
       };
 
       setMessages((prev) => [...prev, secondWelcomeMessage]);
@@ -231,7 +213,8 @@ export default function ChatWidget() {
   const sendMessageToAPI = async (
     message: string,
     userName: string,
-    userPhone: string
+    userPhone: string,
+    formData?: Record<string, string | boolean>,
   ): Promise<Message | null> => {
     try {
       // Use the widget messaging system for iframe communication
@@ -243,6 +226,7 @@ export default function ChatWidget() {
           message: message,
           userName: userName,
           userPhone: userPhone,
+          ...(formData ? { formData } : {}),
         }, '*');
 
         // Don't return a placeholder message - real response will come via Pusher
@@ -287,10 +271,9 @@ export default function ChatWidget() {
     setMessages((prev) => [...prev, userMessage]);
     const messageText = inputMessage.trim();
     setInputMessage("");
-    setInputDirection("rtl");
+    setInputDirection(widgetTheme.direction);
     setIsLoading(true);
 
-    // Send message to API and get bot response
     const botReply = await sendMessageToAPI(messageText, userName, userPhone);
     if (botReply) {
       // Only add bot reply if it's not null (null means handled via widget system)
@@ -312,7 +295,7 @@ export default function ChatWidget() {
     if (value.length > 0) {
       setInputDirection(detectTextDirection(value));
     } else {
-      setInputDirection("rtl");
+      setInputDirection(widgetTheme.direction);
     }
   };
 
@@ -333,6 +316,33 @@ export default function ChatWidget() {
     setPhoneInput("");
     setPhoneError("");
     setCountryCode("972");
+    setIsLoading(false);
+    setSelectedFattalRoom(null);
+    setSelectedListing(null);
+    // Notify parent page to clear conversationId and stop polling
+    window.parent.postMessage({ type: ChatWidgetMessageType.RESET_CHAT }, '*');
+  };
+
+  // Handle contact form submission
+  const handleContactFormSubmit = async (formData: Record<string, string | boolean>) => {
+    if (isLoading) return;
+
+    const submittedMessage = t(currentLang, 'contactFormSubmitted');
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text: submittedMessage,
+      sender: "user",
+      timestamp: new Date(),
+      direction: detectTextDirection(submittedMessage),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+
+    const botReply = await sendMessageToAPI(submittedMessage, userName, userPhone, formData);
+    if (botReply) {
+      setMessages((prev) => [...prev, botReply]);
+    }
     setIsLoading(false);
   };
 
@@ -409,26 +419,56 @@ export default function ChatWidget() {
     setIsLoading(false);
   };
 
-  // Name input screen - Fattal branded
+  // Handle listing detail view
+  const handleViewListingDetails = (listing: WidgetListing) => {
+    setSelectedListing(listing);
+  };
+
+  // Handle back from listing detail view
+  const handleBackFromListingDetail = () => {
+    setSelectedListing(null);
+  };
+
+  // Handle listing selection (send listing name as message)
+  const handleSelectListing = async (listing: WidgetListing) => {
+    if (isLoading) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text: listing.name,
+      sender: "user",
+      timestamp: new Date(),
+      direction: detectTextDirection(listing.name),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setSelectedListing(null);
+    setIsLoading(true);
+
+    const botReply = await sendMessageToAPI(listing.name, userName, userPhone);
+    if (botReply) {
+      setMessages((prev) => [...prev, botReply]);
+    }
+    setIsLoading(false);
+  };
+
   if (!userName) {
     return (
-      <div dir={WIDGET_CONFIG.direction} className="flex flex-col h-full rounded-2xl overflow-hidden shadow-xl">
-        {/* Header - thin with logo */}
-        <div className="bg-fattalNavy py-2 px-4 flex items-center justify-center gap-2">
+      <div dir={widgetTheme.direction} className="flex flex-col h-full rounded-2xl overflow-hidden shadow-xl">
+        <div className="bg-fattalNavy py-2 px-4 flex items-center gap-3">
           <Image
-            src={WIDGET_CONFIG.logoUrl}
+            src={widgetTheme.logoUrl}
             priority={true}
-            alt="Fattal Logo"
-            width={24}
-            height={24}
+            alt="Logo"
+            width={widgetTheme.logoSize.width}
+            height={widgetTheme.logoSize.height}
             className="object-contain"
           />
           <h2 className="text-lg font-bold text-white">
-            {WIDGET_CONFIG.text.welcomeTitle}
+            {widgetTheme.text.welcomeTitle}
           </h2>
         </div>
 
-        {/* Content */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 bg-fattalCream">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -438,7 +478,7 @@ export default function ChatWidget() {
             <form onSubmit={handleNameSubmit} className="space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium mb-2 text-fattalNavy">
-                  {WIDGET_CONFIG.text.nameLabel}
+                  {widgetTheme.text.nameLabel}
                 </label>
                 <input
                   id="name"
@@ -448,13 +488,13 @@ export default function ChatWidget() {
                   className="w-full px-4 py-3 border-2 border-fattalNavy/20 rounded-xl
                            bg-white text-fattalNavy focus:outline-none focus:border-fattalGold
                            placeholder:text-fattalNavy/50"
-                  placeholder={WIDGET_CONFIG.text.namePlaceholder}
+                  placeholder={widgetTheme.text.namePlaceholder}
                   autoFocus
                 />
               </div>
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium mb-2 text-fattalNavy">
-                  {WIDGET_CONFIG.text.phoneLabel}
+                  {widgetTheme.text.phoneLabel}
                 </label>
                 <div className="flex gap-2" dir="ltr">
                   <select
@@ -469,7 +509,7 @@ export default function ChatWidget() {
                       backgroundPosition: 'right 4px center',
                     }}
                   >
-                    {WIDGET_CONFIG.countryCodes.map((cc) => (
+                    {widgetTheme.countryCodes.map((cc) => (
                       <option key={cc.code} value={cc.code}>
                         {cc.label}
                       </option>
@@ -486,7 +526,7 @@ export default function ChatWidget() {
                     className="flex-1 px-4 py-3 border-2 border-fattalNavy/20 rounded-xl
                              bg-white text-fattalNavy focus:outline-none focus:border-fattalGold
                              placeholder:text-fattalNavy/50"
-                    placeholder={WIDGET_CONFIG.text.phonePlaceholder}
+                    placeholder={widgetTheme.text.phonePlaceholder}
                   />
                 </div>
                 {phoneError && (
@@ -500,13 +540,12 @@ export default function ChatWidget() {
                 className="w-full bg-fattalGold hover:bg-fattalGold/90 text-white font-semibold py-3 px-4
                           rounded-xl transition-colors shadow-md"
               >
-                {WIDGET_CONFIG.text.startChat}
+                {widgetTheme.text.startChat}
               </motion.button>
             </form>
           </motion.div>
         </div>
 
-        {/* Footer */}
         <div className="bg-white py-2 px-4 text-center border-t border-fattalNavy/10">
           <p className="text-xs text-fattalNavy/60">
             Powered by{" "}
@@ -524,27 +563,25 @@ export default function ChatWidget() {
     );
   }
 
-  // Chat interface - Fattal branded
   return (
-    <div dir={WIDGET_CONFIG.direction} className="flex flex-col h-full rounded-2xl overflow-hidden shadow-xl">
-      {/* Header - Navy background, thin */}
+    <div dir={widgetTheme.direction} className="flex flex-col h-full rounded-2xl overflow-hidden shadow-xl">
       <div className="flex items-center justify-between py-2 px-4 bg-fattalNavy">
         <h3 className="font-semibold flex items-center gap-2 text-white text-sm">
           <Image
-            src={WIDGET_CONFIG.logoUrl}
+            src={widgetTheme.logoUrl}
             priority={true}
-            alt="Fattal Logo"
+            alt="Logo"
             width={24}
             height={24}
             className="object-contain"
           />
-          <span>{WIDGET_CONFIG.text.headerTitle}</span>
+          <span>{widgetTheme.text.headerTitle}</span>
         </h3>
         <button
           onClick={resetChat}
           className="text-sm text-white/80 hover:text-white transition-colors"
         >
-          {WIDGET_CONFIG.text.resetButton}
+          {widgetTheme.text.resetButton}
         </button>
       </div>
 
@@ -596,6 +633,16 @@ export default function ChatWidget() {
                 </div>
               </motion.div>
 
+              {/* Contact Form */}
+              {message.contactForm && (
+                <ContactForm
+                  config={message.contactForm}
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit}
+                  disabled={isLoading}
+                />
+              )}
+
               {/* Hotel Carousel (Fattal) */}
               {message.hotelOptions && message.hotelOptions.length > 0 && (
                 <HotelCarousel hotels={message.hotelOptions} onSelectHotel={handleSelectHotel} lang={currentLang} />
@@ -613,6 +660,22 @@ export default function ChatWidget() {
                     />
                   ) : (
                     <FattalRoomCarousel rooms={message.roomSearchResults} onSelectRoom={handleSelectFattalRoom} lang={currentLang} />
+                  )}
+                </>
+              )}
+
+              {/* Listing Carousel or Detail View */}
+              {message.listingOptions && message.listingOptions.length > 0 && (
+                <>
+                  {selectedListing ? (
+                    <ListingDetailView
+                      listing={selectedListing}
+                      onSelect={handleSelectListing}
+                      onBack={handleBackFromListingDetail}
+                      lang={currentLang}
+                    />
+                  ) : (
+                    <ListingCarousel listings={message.listingOptions} onViewDetails={handleViewListingDetails} lang={currentLang} />
                   )}
                 </>
               )}
@@ -646,7 +709,7 @@ export default function ChatWidget() {
                      text-sm placeholder:text-fattalNavy/40
                      disabled:opacity-50 disabled:cursor-not-allowed"
             placeholder={
-              isLoading ? WIDGET_CONFIG.text.loadingPlaceholder : WIDGET_CONFIG.text.inputPlaceholder
+              isLoading ? widgetTheme.text.loadingPlaceholder : widgetTheme.text.inputPlaceholder
             }
           />
           <motion.button

@@ -104,50 +104,57 @@ export default function FattalRoomCarousel({ rooms, onSelectRoom, lang = 'HE' }:
         </h3>
       </div>
 
-      {/* Carousel Container */}
-      <div className="relative group/carousel">
-        {/* Scrollable Container */}
-        <div
-          ref={scrollContainerRef}
-          className={`flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth pb-2 ${
-            langConfig.dir === 'rtl' ? 'pr-3 pl-8' : 'pl-3 pr-8'
-          }`}
-          style={{
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-          }}
-        >
-          {rooms.map((room) => (
-            <FattalRoomCard key={room.roomCode} room={room} onSelect={onSelectRoom} lang={lang} />
-          ))}
+      {rooms.length === 1 ? (
+        /* Single room - render directly without scroll container */
+        <div className="px-3">
+          <FattalRoomCard key={rooms[0].roomCode} room={rooms[0]} onSelect={onSelectRoom} lang={lang} />
         </div>
-
-        {/* Left Scroll Button - hidden when hovering over cards, visible on button hover */}
-        {canScrollLeft && (
-          <button
-            onClick={() => scroll("left")}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-fattalNavy shadow-lg rounded-full p-2.5 transition-all duration-200 opacity-70 group-hover/carousel:opacity-0 hover:!opacity-100 hover:bg-fattalNavy/90"
-            aria-label="Scroll left"
+      ) : (
+        /* Carousel Container */
+        <div className="relative group/carousel">
+          {/* Scrollable Container */}
+          <div
+            ref={scrollContainerRef}
+            className={`flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth pb-2 ${
+              langConfig.dir === 'rtl' ? 'pr-3 pl-8' : 'pl-3 pr-8'
+            }`}
+            style={{
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+            }}
           >
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-        )}
+            {rooms.map((room) => (
+              <FattalRoomCard key={room.roomCode} room={room} onSelect={onSelectRoom} lang={lang} />
+            ))}
+          </div>
 
-        {/* Right Scroll Button - hidden when hovering over cards, visible on button hover */}
-        {canScrollRight && (
-          <button
-            onClick={() => scroll("right")}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-fattalNavy shadow-lg rounded-full p-2.5 transition-all duration-200 opacity-70 group-hover/carousel:opacity-0 hover:!opacity-100 hover:bg-fattalNavy/90"
-            aria-label="Scroll right"
-          >
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        )}
-      </div>
+          {/* Left Scroll Button - hidden when hovering over cards, visible on button hover */}
+          {canScrollLeft && (
+            <button
+              onClick={() => scroll("left")}
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-fattalNavy shadow-lg rounded-full p-2.5 transition-all duration-200 opacity-70 group-hover/carousel:opacity-0 hover:!opacity-100 hover:bg-fattalNavy/90"
+              aria-label="Scroll left"
+            >
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
+
+          {/* Right Scroll Button - hidden when hovering over cards, visible on button hover */}
+          {canScrollRight && (
+            <button
+              onClick={() => scroll("right")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-fattalNavy shadow-lg rounded-full p-2.5 transition-all duration-200 opacity-70 group-hover/carousel:opacity-0 hover:!opacity-100 hover:bg-fattalNavy/90"
+              aria-label="Scroll right"
+            >
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
+        </div>
+      )}
 
       <style jsx>{`
         .scrollbar-hide::-webkit-scrollbar {

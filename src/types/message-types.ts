@@ -1,6 +1,25 @@
 export enum ChatWidgetMessageType {
   AGENT_MESSAGE = 'CHAT_WIDGET_AGENT_MESSAGE',
   SEND_MESSAGE = 'CHAT_WIDGET_SEND_MESSAGE',
+  RESET_CHAT = 'CHAT_WIDGET_RESET_CHAT',
+}
+
+/**
+ * A single field in a contact form
+ */
+export interface ContactFormField {
+  type: 'email' | 'phone' | 'checkbox';
+  name: string;
+  required: boolean;
+  label?: Record<string, string>;
+  message?: Record<string, string>;
+}
+
+/**
+ * Contact form configuration sent by the agent
+ */
+export interface ContactFormConfig {
+  fields: ContactFormField[];
 }
 
 /**
@@ -73,4 +92,23 @@ export interface FattalRoom {
   features?: FattalRoomFeature[];
   composition?: string | null;
   packages?: FattalRoomPackage[];
+}
+
+/**
+ * Listing data for display in carousel (Hostaway listings)
+ */
+export interface WidgetListing {
+  listingMapId: string;
+  name: string;
+  city: string;
+  personCapacity: number;
+  bedroomsNumber: number;
+  bathroomsNumber: number;
+  averageNightlyPrice: number;
+  totalPrice: number;
+  currency: string;
+  averageReviewRating: number | null;
+  description: string;
+  imageUrl: string;
+  gallery?: FattalGalleryImage[];
 }

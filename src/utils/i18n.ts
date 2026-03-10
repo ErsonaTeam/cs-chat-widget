@@ -50,6 +50,29 @@ export const translations = {
     hostingTypeLabel: 'סוג אירוח',
     clubMemberYes: 'חבר מועדון: כן',
     priceLabel: 'מחיר',
+
+    // Listing Carousel
+    availableListings: 'דירות זמינות',
+    moreDetails: 'פרטים נוספים',
+    bedrooms: 'חד׳ שינה',
+    bathrooms: 'חדרי רחצה',
+    guests: 'אורחים',
+    perNight: '/לילה',
+    total: 'סה״כ',
+    backToListings: 'חזרה לרשימת הדירות',
+    selectListing: 'בחר דירה זו',
+    showMore: 'הצג עוד',
+    showLess: 'הצג פחות',
+
+    // Contact Form
+    contactFormEmail: 'אימייל',
+    contactFormEmailPlaceholder: 'your@email.com',
+    contactFormPhone: 'טלפון',
+    contactFormPhonePlaceholder: '054-806-0982',
+    contactFormSubmit: 'שליחה',
+    contactFormInvalidEmail: 'כתובת אימייל לא תקינה',
+    contactFormInvalidPhone: 'מספר טלפון לא תקין',
+    contactFormSubmitted: 'שלחתי את הפרטים שלי.',
   },
   EN: {
     // Common
@@ -81,6 +104,29 @@ export const translations = {
     hostingTypeLabel: 'Hosting type',
     clubMemberYes: 'Club member: Yes',
     priceLabel: 'Price',
+
+    // Listing Carousel
+    availableListings: 'Available Listings',
+    moreDetails: 'More Details',
+    bedrooms: 'Bedrooms',
+    bathrooms: 'Bathrooms',
+    guests: 'Guests',
+    perNight: '/night',
+    total: 'total',
+    backToListings: 'Back to listings',
+    selectListing: 'Select This Listing',
+    showMore: 'Show more',
+    showLess: 'Show less',
+
+    // Contact Form
+    contactFormEmail: 'Email',
+    contactFormEmailPlaceholder: 'your@email.com',
+    contactFormPhone: 'Phone',
+    contactFormPhonePlaceholder: '054-806-0982',
+    contactFormSubmit: 'Submit',
+    contactFormInvalidEmail: 'Invalid email address',
+    contactFormInvalidPhone: 'Invalid phone number',
+    contactFormSubmitted: "I've submitted my contact details.",
   },
 } as const;
 

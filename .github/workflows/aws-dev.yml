@@ -82,6 +82,10 @@ jobs:
         
         cat configmap-values.env | grep -v -i "password\|key\|token\|secret" || true
 
+    - name: Inject widget service URL into static assets
+      run: |
+        sed -i "s|__WIDGET_SERVICE_URL__|${NEXT_PUBLIC_BASE_URL}|g" ./public/chat-widget.js
+
     - name: Build, tag, and push image to Amazon ECR
       id: build-image
       run: |

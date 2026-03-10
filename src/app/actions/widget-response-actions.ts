@@ -2,7 +2,7 @@
 
 import { queueAgentMessage } from '@/services/message-queue-service';
 import { type WidgetActionResult } from './widget-actions';
-import { FattalHotel, FattalRoom } from '@/types/message-types';
+import { FattalHotel, FattalRoom, WidgetListing, ContactFormConfig } from '@/types/message-types';
 
 export interface WidgetResponseData {
   companyId: string;
@@ -12,11 +12,13 @@ export interface WidgetResponseData {
   error?: string;
   hotelOptions?: FattalHotel[];
   roomSearchResults?: FattalRoom[];
+  listingOptions?: WidgetListing[];
+  contactForm?: ContactFormConfig;
   languageCode?: string;
 }
 
 export async function processWidgetResponse(data: WidgetResponseData): Promise<WidgetActionResult> {
-  const { companyId, conversationId, message, timestamp, error, hotelOptions, roomSearchResults, languageCode } = data;
+  const { companyId, conversationId, message, timestamp, error, hotelOptions, roomSearchResults, listingOptions, contactForm, languageCode } = data;
 
   if (!companyId || !conversationId) {
     return {
@@ -39,7 +41,7 @@ export async function processWidgetResponse(data: WidgetResponseData): Promise<W
   }
 
   try {
-    await queueAgentMessage(companyId, conversationId, responseMessage, timestamp, hotelOptions, roomSearchResults, languageCode);
+    await queueAgentMessage(companyId, conversationId, responseMessage, timestamp, hotelOptions, roomSearchResults, contactForm, languageCode, listingOptions);
 
     return {
       success: true,
