@@ -93,6 +93,14 @@
   const companyId = getCompanyId();
   const widgetTheme = getTheme();
 
+  // Theme color map for widget button styling (mirrors theme-config.ts)
+  const themeColors = {
+    default: { primary: '#1A3A5C', primaryLight: '#244E75' },
+    fattal:  { primary: '#1d2b4d', primaryLight: '#2d3f66' },
+    eztlv:   { primary: '#2D6DA4', primaryLight: '#3A85C4' },
+  };
+  const buttonColors = themeColors[widgetTheme] || themeColors.default;
+
   // Message type constants
   const MESSAGE_TYPES = {
     AGENT_MESSAGE: 'CHAT_WIDGET_AGENT_MESSAGE',
@@ -253,10 +261,8 @@
       right: 20px;
       width: 60px;
       height: 60px;
-      background: rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: ${buttonColors.primary};
+      border: none;
       border-radius: 50%;
       cursor: pointer;
       display: flex;
@@ -267,9 +273,11 @@
       z-index: 9999;
       transition: all 0.3s ease;
       transform: scale(1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
     #chat-widget-button:hover {
+      background: ${buttonColors.primaryLight};
       transform: scale(1.1);
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
     }
@@ -333,10 +341,6 @@
       #chat-widget-iframe {
         background: rgba(26, 26, 26, 0.95);
         border: 1px solid rgba(255, 255, 255, 0.2);
-      }
-      #chat-widget-button {
-        background: rgba(26, 26, 26, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.1);
       }
     }
   `;

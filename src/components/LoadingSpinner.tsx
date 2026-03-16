@@ -32,7 +32,7 @@ export default function LoadingSpinner() {
   }, []);
 
   return (
-    <div className="bg-white shadow-sm border border-fattalNavy/10 px-4 py-3 rounded-2xl inline-flex items-center gap-1">
+    <div className="bg-white shadow-sm border border-primary/10 px-4 py-3 rounded-2xl inline-flex items-center gap-1">
       {[0, 1, 2].map((i) => (
         <span
           key={i}
@@ -40,7 +40,7 @@ export default function LoadingSpinner() {
           style={{
             width: 7,
             height: 7,
-            backgroundColor: "var(--theme-primary, #1d2b4d)",
+            backgroundColor: "var(--theme-primary, #1A3A5C)",
             animation: `typing-dot 1.4s ease-in-out ${i * 0.2}s infinite`,
           }}
         />

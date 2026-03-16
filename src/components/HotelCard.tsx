@@ -34,10 +34,10 @@ export default function HotelCard({ hotel, onSelect, lang = 'HE' }: HotelCardPro
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       dir={langConfig.dir}
-      className="bg-white rounded-xl shadow-md overflow-hidden min-w-[280px] max-w-[320px] border border-fattalNavy/10"
+      className="bg-white rounded-xl shadow-md overflow-hidden min-w-[280px] max-w-[320px] border border-primary/10"
     >
       {/* Hotel Image Carousel */}
-      <div className="relative h-40 bg-fattalCream">
+      <div className="relative h-40 bg-surface">
         <Image
           src={images[currentImageIndex].url}
           alt={images[currentImageIndex].description || hotel.hotelName}
@@ -55,7 +55,7 @@ export default function HotelCard({ hotel, onSelect, lang = 'HE' }: HotelCardPro
           <>
             <button
               onClick={prevImage}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-fattalNavy/60 hover:bg-fattalNavy/80 text-white rounded-full p-1.5 transition-colors"
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-primary/60 hover:bg-primary/80 text-white rounded-full p-1.5 transition-colors"
               aria-label="Previous image"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,7 +64,7 @@ export default function HotelCard({ hotel, onSelect, lang = 'HE' }: HotelCardPro
             </button>
             <button
               onClick={nextImage}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-fattalNavy/60 hover:bg-fattalNavy/80 text-white rounded-full p-1.5 transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-primary/60 hover:bg-primary/80 text-white rounded-full p-1.5 transition-colors"
               aria-label="Next image"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,12 +94,12 @@ export default function HotelCard({ hotel, onSelect, lang = 'HE' }: HotelCardPro
 
       {/* Hotel Details */}
       <div className="p-4">
-        <h3 className="text-lg font-semibold text-fattalNavy mb-1 line-clamp-1">
+        <h3 className="text-lg font-semibold text-primary mb-1 line-clamp-1">
           {hotel.hotelName}
         </h3>
 
         {hotel.city && (
-          <div className="flex items-center gap-1 text-sm text-fattalNavy/60 mb-2">
+          <div className="flex items-center gap-1 text-sm text-primary/60 mb-2">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -109,27 +109,27 @@ export default function HotelCard({ hotel, onSelect, lang = 'HE' }: HotelCardPro
         )}
 
         {hotel.shortDescription && (
-          <p className="text-sm text-fattalNavy/70 mb-3 line-clamp-2">
+          <p className="text-sm text-primary/70 mb-3 line-clamp-2">
             {hotel.shortDescription}
           </p>
         )}
 
         {/* Price & Select Button */}
-        <div className="pt-3 border-t border-fattalNavy/10">
+        <div className="pt-3 border-t border-primary/10">
           {hotel.minPrice !== null && (
             <div className="flex items-baseline gap-2 mb-3">
-              <span className="text-xs text-fattalNavy/60">{t(lang, 'startingFrom')}</span>
-              <span className="text-xl font-bold text-fattalNavy">
+              <span className="text-xs text-primary/60">{t(lang, 'startingFrom')}</span>
+              <span className="text-xl font-bold text-primary">
                 {formatPrice(hotel.minPrice, lang)}
               </span>
-              <span className="text-sm text-fattalNavy/60">
+              <span className="text-sm text-primary/60">
                 {hotel.currency === 'ILS' ? '₪' : hotel.currency}
               </span>
             </div>
           )}
           <button
             onClick={() => onSelect(hotel)}
-            className="w-full bg-fattalGold hover:bg-fattalGold/90 text-white text-sm font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-sm"
+            className="w-full bg-accent hover:bg-accent/90 text-white text-sm font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-sm"
           >
             {t(lang, 'select')}
           </button>

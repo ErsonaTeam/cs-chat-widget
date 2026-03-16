@@ -170,10 +170,10 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       dir={langConfig.dir}
-      className="bg-white rounded-xl shadow-lg overflow-hidden border border-fattalNavy/10"
+      className="bg-white rounded-xl shadow-lg overflow-hidden border border-primary/10"
     >
       {/* Header with Back Button */}
-      <div className="flex items-center justify-between p-3 bg-fattalNavy">
+      <div className="flex items-center justify-between p-3 bg-primary">
         <button
           type="button"
           onClick={onBack}
@@ -187,7 +187,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
       </div>
 
       {/* Image Gallery */}
-      <div className="relative h-48 bg-fattalCream">
+      <div className="relative h-48 bg-surface">
         <Image
           src={images[currentImageIndex].url}
           alt={images[currentImageIndex].description || room.name}
@@ -205,7 +205,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
             <button
               type="button"
               onClick={prevImage}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-fattalNavy/60 hover:bg-fattalNavy/80 text-white rounded-full p-2 transition-colors"
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-primary/60 hover:bg-primary/80 text-white rounded-full p-2 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -214,7 +214,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
             <button
               type="button"
               onClick={nextImage}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-fattalNavy/60 hover:bg-fattalNavy/80 text-white rounded-full p-2 transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-primary/60 hover:bg-primary/80 text-white rounded-full p-2 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -241,10 +241,10 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
 
       {/* Room Details */}
       <div className="p-4">
-        <h2 className="text-xl font-bold text-fattalNavy mb-2">{room.name}</h2>
+        <h2 className="text-xl font-bold text-primary mb-2">{room.name}</h2>
 
         {/* Size & Composition */}
-        <div className="flex flex-wrap gap-3 text-sm text-fattalNavy/70 mb-3">
+        <div className="flex flex-wrap gap-3 text-sm text-primary/70 mb-3">
           {room.size && (
             <div className="flex items-center gap-1">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -264,7 +264,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
         </div>
 
         {room.description && (
-          <p className="text-sm text-fattalNavy/70 mb-3">{room.description}</p>
+          <p className="text-sm text-primary/70 mb-3">{room.description}</p>
         )}
 
         {/* Features */}
@@ -273,7 +273,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
             {room.features.map((feature, index) => (
               <span
                 key={index}
-                className="inline-flex items-center gap-1 text-xs bg-fattalCream text-fattalNavy/80 px-2 py-1 rounded"
+                className="inline-flex items-center gap-1 text-xs bg-surface text-primary/80 px-2 py-1 rounded"
               >
                 {feature.iconUrl && (
                   <Image src={feature.iconUrl} alt="" width={12} height={12} className="w-3 h-3" />
@@ -285,15 +285,15 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
         )}
 
         {/* Divider */}
-        <div className="border-t border-fattalNavy/10 my-4" />
+        <div className="border-t border-primary/10 my-4" />
 
         {/* Club Member Toggle - Always visible */}
-        <div className="flex items-center justify-between mb-4 p-3 bg-fattalLightGold rounded-lg">
+        <div className="flex items-center justify-between mb-4 p-3 bg-accentLight rounded-lg">
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-fattalGold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
             </svg>
-            <span className="text-sm font-medium text-fattalNavy">{t(lang, 'clubMember')}</span>
+            <span className="text-sm font-medium text-primary">{t(lang, 'clubMember')}</span>
           </div>
           <button
             type="button"
@@ -302,8 +302,8 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
             aria-checked={isClubMember}
             aria-label={t(lang, 'clubMember')}
             onClick={() => setIsClubMember(!isClubMember)}
-            className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-fattalGold/30 ${
-              isClubMember ? 'bg-fattalGold' : 'bg-fattalNavy/20'
+            className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent/30 ${
+              isClubMember ? 'bg-accent' : 'bg-primary/20'
             }`}
           >
             <span
@@ -327,7 +327,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
             >
               {filteredGroupedPackages.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-fattalNavy mb-3">{t(lang, 'selectPackage')}</h3>
+                  <h3 className="text-sm font-semibold text-primary mb-3">{t(lang, 'selectPackage')}</h3>
                   <div className="space-y-2">
                     {filteredGroupedPackages.map((groupedPkg) => {
                       // Calculate min price across all pensions for this grouped package
@@ -346,29 +346,29 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
                           key={groupedPkg.packageName}
                           type="button"
                           onClick={() => handleGroupedPackageSelect(groupedPkg.packageName)}
-                          className="w-full p-3 rounded-lg border border-fattalNavy/10 bg-white hover:border-fattalGold hover:bg-fattalLightGold text-start transition-all"
+                          className="w-full p-3 rounded-lg border border-primary/10 bg-white hover:border-accent hover:bg-accentLight text-start transition-all"
                         >
                           <div className="flex justify-between items-center">
                             <div className="flex-1">
-                              <p className="text-sm font-medium text-fattalNavy">
+                              <p className="text-sm font-medium text-primary">
                                 {groupedPkg.packageName}
                               </p>
                               {groupedPkg.policyName && (
-                                <p className="text-xs text-fattalNavy/50 mt-0.5">{groupedPkg.policyName}</p>
+                                <p className="text-xs text-primary/50 mt-0.5">{groupedPkg.policyName}</p>
                               )}
                             </div>
                             <div className="text-end me-3 flex items-center gap-2">
                               <div>
                                 {hasDiscount && (
-                                  <p className="text-xs text-fattalNavy/40 line-through">
+                                  <p className="text-xs text-primary/40 line-through">
                                     {formatPrice(minBasePrice, lang)} ₪
                                   </p>
                                 )}
-                                <p className="text-sm font-bold text-fattalNavy">
+                                <p className="text-sm font-bold text-primary">
                                   {t(lang, 'startingFrom')}{formatPrice(minPrice, lang)} ₪
                                 </p>
                               </div>
-                              <svg className={`w-4 h-4 text-fattalNavy/40 ${langConfig.dir === 'rtl' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className={`w-4 h-4 text-primary/40 ${langConfig.dir === 'rtl' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                               </svg>
                             </div>
@@ -395,7 +395,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
                   <button
                     type="button"
                     onClick={handleBackToPackages}
-                    className="flex items-center gap-1 text-fattalGold hover:text-fattalGold/80 transition-colors text-sm mb-3 font-medium"
+                    className="flex items-center gap-1 text-accent hover:text-accent/80 transition-colors text-sm mb-3 font-medium"
                   >
                     <svg className={`w-4 h-4 ${langConfig.dir === 'rtl' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -404,13 +404,13 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
                   </button>
 
                   {/* Selected package name */}
-                  <div className="bg-fattalLightGold border border-fattalGold/20 rounded-lg p-3 mb-4">
-                    <p className="text-xs text-fattalGold mb-1">{t(lang, 'selectedPackage')}</p>
-                    <p className="text-sm font-semibold text-fattalNavy">{selectedGroupedPackage.packageName}</p>
+                  <div className="bg-accentLight border border-accent/20 rounded-lg p-3 mb-4">
+                    <p className="text-xs text-accent mb-1">{t(lang, 'selectedPackage')}</p>
+                    <p className="text-sm font-semibold text-primary">{selectedGroupedPackage.packageName}</p>
                   </div>
 
                   {/* Pensions list */}
-                  <h3 className="text-sm font-semibold text-fattalNavy mb-3">{t(lang, 'selectPensionType')}</h3>
+                  <h3 className="text-sm font-semibold text-primary mb-3">{t(lang, 'selectPensionType')}</h3>
                   <div className="space-y-2">
                     {selectedGroupedPackage.prices.map((price) => {
                       const displayPrice = getDisplayPrice(price);
@@ -426,13 +426,13 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
                           onClick={() => setSelectedPriceId({ packageId: price.originalPackageId, hostingBase: price.hostingBase })}
                           className={`w-full p-3 rounded-lg border-2 text-start transition-all ${
                             isSelected
-                              ? "border-fattalGold bg-fattalLightGold"
-                              : "border-fattalNavy/10 bg-white hover:border-fattalGold/50"
+                              ? "border-accent bg-accentLight"
+                              : "border-primary/10 bg-white hover:border-accent/50"
                           }`}
                         >
                           <div className="flex justify-between items-center">
                             <div className="flex-1">
-                              <p className="text-sm font-medium text-fattalNavy">{price.hostingBase}</p>
+                              <p className="text-sm font-medium text-primary">{price.hostingBase}</p>
                               {price.availableRooms <= 3 && (
                                 <p className="text-xs text-orange-600 mt-0.5">
                                   {t(lang, 'roomsLeft', { count: price.availableRooms })}
@@ -441,15 +441,15 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
                             </div>
                             <div className="text-end me-3">
                               {(hasDiscount || hasClubDiscount) && (
-                                <p className="text-xs text-fattalNavy/40 line-through">
+                                <p className="text-xs text-primary/40 line-through">
                                   {formatPrice(price.totalBasePrice || price.totalPrice, lang)} ₪
                                 </p>
                               )}
-                              <p className="text-lg font-bold text-fattalNavy">
+                              <p className="text-lg font-bold text-primary">
                                 {formatPrice(displayPrice, lang)} ₪
                               </p>
                               {hasClubDiscount && (
-                                <p className="text-xs text-fattalGold font-medium">{t(lang, 'clubPrice')}</p>
+                                <p className="text-xs text-accent font-medium">{t(lang, 'clubPrice')}</p>
                               )}
                             </div>
                           </div>
@@ -475,7 +475,7 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
               <button
                 type="button"
                 onClick={handleConfirm}
-                className="w-full bg-fattalNavy hover:bg-fattalNavyLight text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-md"
+                className="w-full bg-primary hover:bg-primaryLight text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-md"
               >
                 <span className="flex items-center justify-center gap-2">
                   <span>{t(lang, 'continueToBooking')}</span>

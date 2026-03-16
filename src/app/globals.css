@@ -6,19 +6,19 @@
   --foreground: #171717;
 
   /* Theme color tokens (overridden at runtime per theme) */
-  --theme-primary: #1d2b4d;
-  --theme-primary-light: #2d3f66;
-  --theme-accent: #f0c14b;
-  --theme-background: #faf8f5;
-  --theme-accent-light: #fff8e1;
+  --theme-primary: #1A3A5C;
+  --theme-primary-light: #244E75;
+  --theme-accent: #2685CB;
+  --theme-background: #FFFFFF;
+  --theme-accent-light: #EBF5FF;
 }
 
 @theme inline {
-  --color-fattalNavy: var(--theme-primary);
-  --color-fattalGold: var(--theme-accent);
-  --color-fattalCream: var(--theme-background);
-  --color-fattalLightGold: var(--theme-accent-light);
-  --color-fattalNavyLight: var(--theme-primary-light);
+  --color-primary: var(--theme-primary);
+  --color-accent: var(--theme-accent);
+  --color-surface: var(--theme-background);
+  --color-accentLight: var(--theme-accent-light);
+  --color-primaryLight: var(--theme-primary-light);
 }
 
 @theme inline {

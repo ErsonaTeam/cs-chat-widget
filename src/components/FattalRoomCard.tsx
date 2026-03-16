@@ -34,10 +34,10 @@ export default function FattalRoomCard({ room, onSelect, lang = 'HE' }: FattalRo
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       dir={langConfig.dir}
-      className="bg-white rounded-xl shadow-md overflow-hidden min-w-[280px] max-w-[320px] border border-fattalNavy/10"
+      className="bg-white rounded-xl shadow-md overflow-hidden min-w-[280px] max-w-[320px] border border-primary/10"
     >
       {/* Room Image Carousel */}
-      <div className="relative h-40 bg-fattalCream">
+      <div className="relative h-40 bg-surface">
         <Image
           src={images[currentImageIndex].url}
           alt={images[currentImageIndex].description || room.name}
@@ -56,7 +56,7 @@ export default function FattalRoomCard({ room, onSelect, lang = 'HE' }: FattalRo
             <button
               type="button"
               onClick={prevImage}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-fattalNavy/60 hover:bg-fattalNavy/80 text-white rounded-full p-1.5 transition-colors"
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-primary/60 hover:bg-primary/80 text-white rounded-full p-1.5 transition-colors"
               aria-label="Previous image"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,7 +66,7 @@ export default function FattalRoomCard({ room, onSelect, lang = 'HE' }: FattalRo
             <button
               type="button"
               onClick={nextImage}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-fattalNavy/60 hover:bg-fattalNavy/80 text-white rounded-full p-1.5 transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-primary/60 hover:bg-primary/80 text-white rounded-full p-1.5 transition-colors"
               aria-label="Next image"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,12 +97,12 @@ export default function FattalRoomCard({ room, onSelect, lang = 'HE' }: FattalRo
 
       {/* Room Details */}
       <div className="p-4">
-        <h3 className="text-lg font-semibold text-fattalNavy mb-1 line-clamp-1">
+        <h3 className="text-lg font-semibold text-primary mb-1 line-clamp-1">
           {room.name}
         </h3>
 
         {/* Size and Composition */}
-        <div className="flex flex-wrap items-center gap-2 text-sm text-fattalNavy/60 mb-2">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-primary/60 mb-2">
           {room.size && (
             <div className="flex items-center gap-1">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,7 +127,7 @@ export default function FattalRoomCard({ room, onSelect, lang = 'HE' }: FattalRo
             {room.features.slice(0, 3).map((feature, index) => (
               <span
                 key={index}
-                className="inline-flex items-center gap-1 text-xs bg-fattalCream text-fattalNavy/80 px-2 py-0.5 rounded"
+                className="inline-flex items-center gap-1 text-xs bg-surface text-primary/80 px-2 py-0.5 rounded"
               >
                 {feature.iconUrl && (
                   <Image
@@ -142,26 +142,26 @@ export default function FattalRoomCard({ room, onSelect, lang = 'HE' }: FattalRo
               </span>
             ))}
             {room.features.length > 3 && (
-              <span className="text-xs text-fattalNavy/50">+{room.features.length - 3}</span>
+              <span className="text-xs text-primary/50">+{room.features.length - 3}</span>
             )}
           </div>
         )}
 
         {room.description && (
-          <p className="text-sm text-fattalNavy/70 mb-3 line-clamp-2">
+          <p className="text-sm text-primary/70 mb-3 line-clamp-2">
             {room.description}
           </p>
         )}
 
         {/* Price & Select Button */}
-        <div className="pt-3 border-t border-fattalNavy/10">
+        <div className="pt-3 border-t border-primary/10">
           {room.minPrice !== null && (
             <div className="flex items-baseline gap-2 mb-3">
-              <span className="text-xs text-fattalNavy/60">{t(lang, 'startingFrom')}</span>
-              <span className="text-xl font-bold text-fattalNavy">
+              <span className="text-xs text-primary/60">{t(lang, 'startingFrom')}</span>
+              <span className="text-xl font-bold text-primary">
                 {formatPrice(room.minPrice, lang)}
               </span>
-              <span className="text-sm text-fattalNavy/60">
+              <span className="text-sm text-primary/60">
                 {room.currency === 'ILS' ? '₪' : room.currency}
               </span>
             </div>
@@ -173,7 +173,7 @@ export default function FattalRoomCard({ room, onSelect, lang = 'HE' }: FattalRo
               e.preventDefault();
               onSelect(room);
             }}
-            className="w-full bg-fattalGold hover:bg-fattalGold/90 text-white text-sm font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-sm"
+            className="w-full bg-accent hover:bg-accent/90 text-white text-sm font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-sm"
           >
             {t(lang, 'select')}
           </button>

@@ -44,8 +44,8 @@ const MarkdownLink = ({ href, children, isUserMessage }: { href?: string; childr
     rel="noopener noreferrer"
     className={`underline hover:no-underline transition-colors font-medium ${
       isUserMessage
-        ? "text-fattalNavy/80 hover:text-fattalNavy"
-        : "text-fattalNavy font-semibold hover:text-fattalNavy/80"
+        ? "text-primary/80 hover:text-primary"
+        : "text-primary font-semibold hover:text-primary/80"
     }`}
   >
     {children}
@@ -63,7 +63,6 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
   const [nameInput, setNameInput] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState<string>("");
-  const [inputDirection, setInputDirection] = useState<"ltr" | "rtl">(widgetTheme.direction);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedFattalRoom, setSelectedFattalRoom] = useState<FattalRoom | null>(null);
   const [selectedListing, setSelectedListing] = useState<WidgetListing | null>(null);
@@ -186,17 +185,19 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
 
     setMessages([firstWelcomeMessage]);
 
-    setTimeout(() => {
-      const secondWelcomeMessage: Message = {
-        id: Date.now().toString() + "-welcome-2",
-        text: widgetTheme.welcomeMessages.second,
-        sender: "bot",
-        timestamp: new Date(),
-        direction: widgetTheme.welcomeMessages.secondDirection,
-      };
+    if (widgetTheme.welcomeMessages.second) {
+      setTimeout(() => {
+        const secondWelcomeMessage: Message = {
+          id: Date.now().toString() + "-welcome-2",
+          text: widgetTheme.welcomeMessages.second,
+          sender: "bot",
+          timestamp: new Date(),
+          direction: widgetTheme.welcomeMessages.secondDirection,
+        };
 
-      setMessages((prev) => [...prev, secondWelcomeMessage]);
-    }, 1500);
+        setMessages((prev) => [...prev, secondWelcomeMessage]);
+      }, 1500);
+    }
   };
 
   // Send message to API and get bot response
@@ -259,7 +260,6 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
     setMessages((prev) => [...prev, userMessage]);
     const messageText = inputMessage.trim();
     setInputMessage("");
-    setInputDirection(widgetTheme.direction);
     setIsLoading(true);
 
     // Keep focus on input for continued typing
@@ -274,16 +274,9 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
     // When botReply is null (iframe mode), isLoading stays true until AGENT_MESSAGE arrives
   };
 
-  // Handle input change with direction detection
+  // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setInputMessage(value);
-
-    if (value.length > 0) {
-      setInputDirection(detectTextDirection(value));
-    } else {
-      setInputDirection(widgetTheme.direction);
-    }
+    setInputMessage(e.target.value);
   };
 
   // Handle Enter key press
@@ -438,7 +431,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
   if (!userName) {
     return (
       <div dir={widgetTheme.direction} className="flex flex-col h-full rounded-2xl overflow-hidden shadow-xl">
-        <div className="bg-fattalNavy py-2 px-4 flex items-center gap-3">
+        <div className="bg-primary py-2 px-4 flex items-center gap-3">
           <Image
             src={widgetTheme.logoUrl}
             priority={true}
@@ -452,7 +445,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
           </h2>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center p-6 bg-fattalCream">
+        <div className="flex-1 flex flex-col items-center justify-center p-6 bg-surface">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -460,7 +453,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
           >
             <form onSubmit={handleNameSubmit} className="space-y-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium mb-2 text-fattalNavy">
+                <label htmlFor="name" className="block text-sm font-medium mb-2 text-primary">
                   {widgetTheme.text.nameLabel}
                 </label>
                 <input
@@ -468,9 +461,9 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
                   type="text"
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-fattalNavy/20 rounded-xl
-                           bg-white text-fattalNavy focus:outline-none focus:border-fattalGold
-                           placeholder:text-fattalNavy/50"
+                  className="w-full px-4 py-3 border-2 border-primary/20 rounded-xl
+                           bg-white text-primary focus:outline-none focus:border-accent
+                           placeholder:text-primary/50"
                   placeholder={widgetTheme.text.namePlaceholder}
                   autoFocus
                 />
@@ -479,7 +472,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
                 type="submit"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full bg-fattalGold hover:bg-fattalGold/90 text-white font-semibold py-3 px-4
+                className="w-full bg-accent hover:bg-accent/90 text-white font-semibold py-3 px-4
                           rounded-xl transition-colors shadow-md"
               >
                 {widgetTheme.text.startChat}
@@ -488,14 +481,14 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
           </motion.div>
         </div>
 
-        <div className="bg-white py-2 px-4 text-center border-t border-fattalNavy/10">
-          <p className="text-xs text-fattalNavy/60">
+        <div className="bg-white py-2 px-4 text-center border-t border-primary/10">
+          <p className="text-xs text-primary/60">
             Powered by{" "}
             <a
               href="https://ersona.co"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-fattalGold hover:text-fattalGold/80 transition-colors font-medium"
+              className="text-accent hover:text-accent/80 transition-colors font-medium"
             >
               Ersona
             </a>
@@ -507,7 +500,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
 
   return (
     <div dir={widgetTheme.direction} className="flex flex-col h-full rounded-2xl overflow-hidden shadow-xl">
-      <div className="flex items-center justify-between py-2 px-4 bg-fattalNavy">
+      <div className="flex items-center justify-between py-2 px-4 bg-primary">
         <h3 className="font-semibold flex items-center gap-2 text-white text-sm">
           <Image
             src={widgetTheme.logoUrl}
@@ -528,7 +521,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
       </div>
 
       {/* Messages - Cream background */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-fattalCream">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-surface">
         <AnimatePresence>
           {messages.map((message) => (
             <div key={message.id}>
@@ -545,8 +538,8 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
                   dir={message.direction}
                   className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl shadow-sm ${
                     message.sender === "user"
-                      ? "bg-fattalGold text-fattalNavy"
-                      : "bg-white text-fattalNavy border border-fattalNavy/10"
+                      ? "bg-accent text-primary"
+                      : "bg-white text-primary border border-primary/10"
                   }`}
                 >
                   <div className="text-sm prose prose-sm max-w-none [&>p]:m-0 [&>ul]:m-0 [&>ol]:m-0 [&>p+p]:mt-2 whitespace-pre-wrap">
@@ -565,7 +558,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
                     </Markdown>
                   </div>
                   <p className={`text-xs mt-2 ${
-                    message.sender === "user" ? "text-fattalNavy/60" : "text-fattalNavy/50"
+                    message.sender === "user" ? "text-primary/60" : "text-primary/50"
                   }`}>
                     {message.timestamp.toLocaleTimeString([], {
                       hour: "2-digit",
@@ -639,18 +632,18 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
       </div>
 
       {/* Input - White background */}
-      <div className="p-4 bg-white border-t border-fattalNavy/10">
-        <form onSubmit={handleMessageSubmit} dir={inputDirection} className="flex gap-2">
+      <div className="p-4 bg-white border-t border-primary/10">
+        <form onSubmit={handleMessageSubmit} className="flex gap-2">
           <input
             ref={inputRef}
             type="text"
             value={inputMessage}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            dir={inputDirection}
-            className="flex-1 px-4 py-3 border-2 border-fattalNavy/20 rounded-xl
-                     bg-white text-fattalNavy focus:outline-none focus:border-fattalGold
-                     text-sm placeholder:text-fattalNavy/40"
+            dir="auto"
+            className="flex-1 px-4 py-3 border-2 border-primary/20 rounded-xl
+                     bg-white text-primary focus:outline-none focus:border-accent
+                     text-sm placeholder:text-primary/40"
             placeholder={widgetTheme.text.inputPlaceholder}
           />
           <motion.button
@@ -658,24 +651,24 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
             disabled={!inputMessage.trim()}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="bg-fattalGold hover:bg-fattalGold/90 text-white font-medium p-3
+            className="bg-accent hover:bg-accent/90 text-white font-medium p-3
                      rounded-xl transition-colors flex items-center justify-center
                      disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
           >
-            <LuSendHorizontal className={`w-5 h-5 transition-transform ${inputDirection === "rtl" ? "rotate-180" : ""}`} />
+            <LuSendHorizontal className={`w-5 h-5 transition-transform ${widgetTheme.direction === "rtl" ? "rotate-180" : ""}`} />
           </motion.button>
         </form>
       </div>
 
       {/* Footer */}
       <div className="py-2 px-4 bg-white text-center">
-        <p className="text-xs text-fattalNavy/50">
+        <p className="text-xs text-primary/50">
           Powered by:{" "}
           <a
             href="https://ersona.co"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-fattalGold hover:text-fattalGold/80 transition-colors font-medium"
+            className="text-accent hover:text-accent/80 transition-colors font-medium"
           >
             Ersona
           </a>
