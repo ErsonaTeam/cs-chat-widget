@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { WidgetListing } from "@/types/message-types";
 import { Language, t, formatPrice, getLanguageConfig } from "@/utils/i18n";
+import { useImagePreloader } from "@/hooks/useImagePreloader";
 
 interface ListingDetailViewProps {
   listing: WidgetListing;
@@ -30,6 +31,8 @@ export default function ListingDetailView({ listing, onSelect, onBack, lang = 'H
   const images = listing.gallery?.length
     ? listing.gallery
     : [{ url: listing.imageUrl, description: null }];
+
+  useImagePreloader(images, currentImageIndex);
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
@@ -69,6 +72,8 @@ export default function ListingDetailView({ listing, onSelect, onBack, lang = 'H
           fill
           className="object-cover"
           sizes="100vw"
+          placeholder="blur"
+          blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = "https://via.placeholder.com/400x200?text=Apartment";

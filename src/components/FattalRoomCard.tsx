@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { FattalRoom } from "@/types/message-types";
 import { Language, t, formatPrice, getLanguageConfig } from "@/utils/i18n";
+import { useImagePreloader } from "@/hooks/useImagePreloader";
 
 interface FattalRoomCardProps {
   room: FattalRoom;
@@ -20,6 +21,8 @@ export default function FattalRoomCard({ room, onSelect, lang = 'HE' }: FattalRo
   const images = room.gallery?.length
     ? room.gallery
     : [{ url: room.imageUrl, description: null }];
+
+  useImagePreloader(images, currentImageIndex);
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => prev === images.length - 1 ? 0 : prev + 1);
@@ -44,6 +47,8 @@ export default function FattalRoomCard({ room, onSelect, lang = 'HE' }: FattalRo
           fill
           className="object-cover"
           sizes="320px"
+          placeholder="blur"
+          blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = 'https://via.placeholder.com/300x200?text=Room';
