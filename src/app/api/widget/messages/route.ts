@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log(JSON.stringify(body));
 
-    const { companyId, conversationId, message, userName, userPhone, timestamp, meta, formData } = body;
+    const { companyId, conversationId, message, userName, timestamp, meta, formData } = body;
 
     // Prepare data for server action
     const widgetData: WidgetMessageData = {
@@ -17,7 +17,6 @@ export async function POST(request: NextRequest) {
       conversationId,
       message,
       userName,
-      userPhone,
       timestamp: timestamp || new Date().toISOString(),
       meta,
       ...(formData ? { formData } : {}),

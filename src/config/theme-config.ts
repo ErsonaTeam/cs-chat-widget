@@ -15,15 +15,11 @@ export interface WidgetTheme {
     headerTitle: string;
     nameLabel: string;
     namePlaceholder: string;
-    phoneLabel: string;
-    phonePlaceholder: string;
-    phoneError: string;
     startChat: string;
     resetButton: string;
     inputPlaceholder: string;
     loadingPlaceholder: string;
   };
-  countryCodes: Array<{ code: string; label: string; country: string }>;
   welcomeMessages: {
     first: (name: string) => string;
     firstDirection: "ltr" | "rtl";
@@ -31,19 +27,6 @@ export interface WidgetTheme {
     secondDirection: "ltr" | "rtl";
   };
 }
-
-const sharedCountryCodes = [
-  { code: "972", label: "🇮🇱 +972", country: "Israel" },
-  { code: "1", label: "🇺🇸 +1", country: "USA" },
-  { code: "44", label: "🇬🇧 +44", country: "UK" },
-  { code: "49", label: "🇩🇪 +49", country: "Germany" },
-  { code: "33", label: "🇫🇷 +33", country: "France" },
-  { code: "39", label: "🇮🇹 +39", country: "Italy" },
-  { code: "34", label: "🇪🇸 +34", country: "Spain" },
-  { code: "31", label: "🇳🇱 +31", country: "Netherlands" },
-  { code: "41", label: "🇨🇭 +41", country: "Switzerland" },
-  { code: "43", label: "🇦🇹 +43", country: "Austria" },
-];
 
 const fattalTheme: WidgetTheme = {
   id: "fattal",
@@ -62,15 +45,11 @@ const fattalTheme: WidgetTheme = {
     headerTitle: "רשת מלונות פתאל",
     nameLabel: "נא להזין את שמך:",
     namePlaceholder: "השם שלך...",
-    phoneLabel: "מספר טלפון (אופציונלי):",
-    phonePlaceholder: "54-806-0982",
-    phoneError: "מספר טלפון לא תקין",
     startChat: "התחל צ׳אט",
     resetButton: "איפוס",
     inputPlaceholder: "הקלד הודעה...",
     loadingPlaceholder: "ממתין לתשובה...",
   },
-  countryCodes: sharedCountryCodes,
   welcomeMessages: {
     first: (name: string) =>
       `היי ${name.charAt(0).toUpperCase() + name.slice(1)} ברוכים הבאים!\n אני כאן כדי לעזור בביצוע הזמנה ולענות כל כל שאלה.`,
@@ -98,15 +77,11 @@ const eztlvTheme: WidgetTheme = {
     headerTitle: "EZ Group",
     nameLabel: "Please enter your name:",
     namePlaceholder: "Your name...",
-    phoneLabel: "Phone number (optional):",
-    phonePlaceholder: "054-806-0982",
-    phoneError: "Invalid phone number",
     startChat: "Start Chat",
     resetButton: "Reset",
     inputPlaceholder: "Type a message...",
     loadingPlaceholder: "Waiting for reply...",
   },
-  countryCodes: sharedCountryCodes,
   welcomeMessages: {
     first: (name: string) =>
       `Hi ${name.charAt(0).toUpperCase() + name.slice(1)}, welcome!\nI'm here to help you find the perfect apartment and answer any questions.`,

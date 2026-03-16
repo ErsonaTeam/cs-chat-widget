@@ -13,7 +13,6 @@ import FattalRoomDetailView from "./FattalRoomDetailView";
 import ListingCarousel from "./ListingCarousel";
 import ListingDetailView from "./ListingDetailView";
 import ContactForm from "./ContactForm";
-import { validatePhone, formatPhoneForStorage } from "@/utils/phone";
 import { Language, t, formatPrice as formatPriceI18n, parseLanguageCode } from "@/utils/i18n";
 import { getTheme } from "@/config/theme-config";
 
@@ -61,11 +60,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
   const widgetTheme = getTheme(themeId);
 
   const [userName, setUserName] = useState<string>("");
-  const [userPhone, setUserPhone] = useState<string>("");
   const [nameInput, setNameInput] = useState<string>("");
-  const [phoneInput, setPhoneInput] = useState<string>("");
-  const [phoneError, setPhoneError] = useState<string>("");
-  const [countryCode, setCountryCode] = useState<string>("972");
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState<string>("");
   const [inputDirection, setInputDirection] = useState<"ltr" | "rtl">(widgetTheme.direction);
@@ -122,6 +117,12 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
         }
 
         setMessages((prev) => [...prev, agentMessage]);
+        setIsLoading(false);
+
+        // Refocus input field after agent response
+        setTimeout(() => {
+          inputRef.current?.focus();
+        }, 0);
       }
     };
 
@@ -173,18 +174,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
     e.preventDefault();
     if (!nameInput.trim()) return;
 
-    // Validate phone if provided
-    let formattedPhone = '';
-    if (phoneInput.trim()) {
-      if (!validatePhone(phoneInput, countryCode)) {
-        setPhoneError(widgetTheme.text.phoneError);
-        return;
-      }
-      formattedPhone = formatPhoneForStorage(phoneInput, countryCode);
-    }
-
     setUserName(nameInput.trim());
-    setUserPhone(formattedPhone);
 
     const firstWelcomeMessage: Message = {
       id: Date.now().toString() + "-welcome-1",
@@ -213,7 +203,6 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
   const sendMessageToAPI = async (
     message: string,
     userName: string,
-    userPhone: string,
     formData?: Record<string, string | boolean>,
   ): Promise<Message | null> => {
     try {
@@ -225,7 +214,6 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
           type: ChatWidgetMessageType.SEND_MESSAGE,
           message: message,
           userName: userName,
-          userPhone: userPhone,
           ...(formData ? { formData } : {}),
         }, '*');
 
@@ -257,7 +245,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
   // Handle message submission
   const handleMessageSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputMessage.trim() || isLoading) return;
+    if (!inputMessage.trim()) return;
 
     const direction = detectTextDirection(inputMessage);
     const userMessage: Message = {
@@ -274,17 +262,16 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
     setInputDirection(widgetTheme.direction);
     setIsLoading(true);
 
-    const botReply = await sendMessageToAPI(messageText, userName, userPhone);
+    // Keep focus on input for continued typing
+    setTimeout(() => inputRef.current?.focus(), 0);
+
+    const botReply = await sendMessageToAPI(messageText, userName);
     if (botReply) {
       // Only add bot reply if it's not null (null means handled via widget system)
       setMessages((prev) => [...prev, botReply]);
+      setIsLoading(false);
     }
-    setIsLoading(false);
-
-    // Refocus input field after sending message
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 0);
+    // When botReply is null (iframe mode), isLoading stays true until AGENT_MESSAGE arrives
   };
 
   // Handle input change with direction detection
@@ -310,12 +297,8 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
   // Reset chat
   const resetChat = () => {
     setUserName("");
-    setUserPhone("");
     setMessages([]);
     setNameInput("");
-    setPhoneInput("");
-    setPhoneError("");
-    setCountryCode("972");
     setIsLoading(false);
     setSelectedFattalRoom(null);
     setSelectedListing(null);
@@ -339,11 +322,11 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
 
-    const botReply = await sendMessageToAPI(submittedMessage, userName, userPhone, formData);
+    const botReply = await sendMessageToAPI(submittedMessage, userName, formData);
     if (botReply) {
       setMessages((prev) => [...prev, botReply]);
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   // Handle hotel selection (send hotel name as message)
@@ -362,11 +345,11 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
     setIsLoading(true);
 
     // Send message to API
-    const botReply = await sendMessageToAPI(hotel.hotelName, userName, userPhone);
+    const botReply = await sendMessageToAPI(hotel.hotelName, userName);
     if (botReply) {
       setMessages((prev) => [...prev, botReply]);
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   // Handle Fattal room selection - open detail view
@@ -412,11 +395,11 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
     setIsLoading(true);
 
     // Send message to API
-    const botReply = await sendMessageToAPI(selectionMessage, userName, userPhone);
+    const botReply = await sendMessageToAPI(selectionMessage, userName);
     if (botReply) {
       setMessages((prev) => [...prev, botReply]);
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   // Handle listing detail view
@@ -445,11 +428,11 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
     setSelectedListing(null);
     setIsLoading(true);
 
-    const botReply = await sendMessageToAPI(listing.name, userName, userPhone);
+    const botReply = await sendMessageToAPI(listing.name, userName);
     if (botReply) {
       setMessages((prev) => [...prev, botReply]);
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   if (!userName) {
@@ -491,47 +474,6 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
                   placeholder={widgetTheme.text.namePlaceholder}
                   autoFocus
                 />
-              </div>
-              <div>
-                <label htmlFor="phone" className="block text-sm font-medium mb-2 text-fattalNavy">
-                  {widgetTheme.text.phoneLabel}
-                </label>
-                <div className="flex gap-2" dir="ltr">
-                  <select
-                    value={countryCode}
-                    onChange={(e) => setCountryCode(e.target.value)}
-                    className="px-2 py-3 bg-fattalNavy/10 border-2 border-fattalNavy/20 rounded-xl
-                             text-fattalNavy font-medium text-sm focus:outline-none focus:border-fattalGold
-                             cursor-pointer appearance-none bg-no-repeat bg-right pr-6"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%231e3a5f'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                      backgroundSize: '16px',
-                      backgroundPosition: 'right 4px center',
-                    }}
-                  >
-                    {widgetTheme.countryCodes.map((cc) => (
-                      <option key={cc.code} value={cc.code}>
-                        {cc.label}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    id="phone"
-                    type="tel"
-                    value={phoneInput}
-                    onChange={(e) => {
-                      setPhoneInput(e.target.value);
-                      setPhoneError("");
-                    }}
-                    className="flex-1 px-4 py-3 border-2 border-fattalNavy/20 rounded-xl
-                             bg-white text-fattalNavy focus:outline-none focus:border-fattalGold
-                             placeholder:text-fattalNavy/50"
-                    placeholder={widgetTheme.text.phonePlaceholder}
-                  />
-                </div>
-                {phoneError && (
-                  <p className="text-red-500 text-xs mt-1 text-right">{phoneError}</p>
-                )}
               </div>
               <motion.button
                 type="submit"
@@ -681,9 +623,12 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
               )}
             </div>
           ))}
-          {/* Loading indicator */}
+          {/* Typing indicator */}
           {isLoading && (
             <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
               className="flex justify-start"
             >
               <LoadingSpinner />
@@ -703,18 +648,14 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             dir={inputDirection}
-            disabled={isLoading}
             className="flex-1 px-4 py-3 border-2 border-fattalNavy/20 rounded-xl
                      bg-white text-fattalNavy focus:outline-none focus:border-fattalGold
-                     text-sm placeholder:text-fattalNavy/40
-                     disabled:opacity-50 disabled:cursor-not-allowed"
-            placeholder={
-              isLoading ? widgetTheme.text.loadingPlaceholder : widgetTheme.text.inputPlaceholder
-            }
+                     text-sm placeholder:text-fattalNavy/40"
+            placeholder={widgetTheme.text.inputPlaceholder}
           />
           <motion.button
             type="submit"
-            disabled={isLoading || !inputMessage.trim()}
+            disabled={!inputMessage.trim()}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="bg-fattalGold hover:bg-fattalGold/90 text-white font-medium p-3
