@@ -28,6 +28,38 @@ export interface WidgetTheme {
   };
 }
 
+const defaultTheme: WidgetTheme = {
+  id: "default",
+  colors: {
+    primary: "#1A3A5C",
+    primaryLight: "#244E75",
+    accent: "#2685CB",
+    background: "#FFFFFF",
+    accentLight: "#EBF5FF",
+  },
+  logoUrl: "/ersona-logo.svg",
+  logoSize: { width: 24, height: 24 },
+  direction: "ltr",
+  text: {
+    welcomeTitle: "Welcome",
+    headerTitle: "Chat with us",
+    nameLabel: "Please enter your name:",
+    namePlaceholder: "Your name...",
+    startChat: "Start Chat",
+    resetButton: "Reset",
+    inputPlaceholder: "Type a message...",
+    loadingPlaceholder: "Waiting for reply...",
+  },
+  welcomeMessages: {
+    first: (name: string) =>
+      `היי ${name.charAt(0).toUpperCase() + name.slice(1)}, ברוכים הבאים!\nאיך נוכל לעזור לך היום?`,
+    firstDirection: "rtl",
+    second:
+      "Feel free to ask in any language you prefer, we're happy to help!",
+    secondDirection: "ltr",
+  },
+};
+
 const fattalTheme: WidgetTheme = {
   id: "fattal",
   colors: {
@@ -93,11 +125,12 @@ const eztlvTheme: WidgetTheme = {
 };
 
 export const themes: Record<string, WidgetTheme> = {
+  default: defaultTheme,
   fattal: fattalTheme,
   eztlv: eztlvTheme,
 };
 
-export const DEFAULT_THEME_ID = "fattal";
+export const DEFAULT_THEME_ID = "default";
 
 export function getTheme(themeId?: string | null): WidgetTheme {
   if (themeId && themes[themeId]) {

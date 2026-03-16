@@ -127,7 +127,7 @@ export default function HotelCarousel({ hotels, onSelectHotel, lang = 'HE' }: Ho
         {canScrollLeft && (
           <button
             onClick={() => scroll("left")}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-fattalNavy shadow-lg rounded-full p-2.5 transition-all duration-200 opacity-70 group-hover/carousel:opacity-0 hover:!opacity-100 hover:bg-fattalNavy/90"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-primary shadow-lg rounded-full p-2.5 transition-all duration-200 opacity-70 group-hover/carousel:opacity-0 hover:!opacity-100 hover:bg-primary/90"
             aria-label="Scroll left"
           >
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -140,7 +140,7 @@ export default function HotelCarousel({ hotels, onSelectHotel, lang = 'HE' }: Ho
         {canScrollRight && (
           <button
             onClick={() => scroll("right")}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-fattalNavy shadow-lg rounded-full p-2.5 transition-all duration-200 opacity-70 group-hover/carousel:opacity-0 hover:!opacity-100 hover:bg-fattalNavy/90"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-primary shadow-lg rounded-full p-2.5 transition-all duration-200 opacity-70 group-hover/carousel:opacity-0 hover:!opacity-100 hover:bg-primary/90"
             aria-label="Scroll right"
           >
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -93,12 +93,12 @@ export default function ContactForm({
     >
       <form
         onSubmit={handleSubmit}
-        className="bg-white rounded-xl border border-fattalNavy/10 shadow-sm p-4 space-y-3"
+        className="bg-white rounded-xl border border-primary/10 shadow-sm p-4 space-y-3"
       >
         {/* Email field */}
         {hasField("email") && (
           <div>
-            <label className="block text-xs font-medium text-fattalNavy/70 mb-1">
+            <label className="block text-xs font-medium text-primary/70 mb-1">
               {t(lang, "contactFormEmail")}
             </label>
             <input
@@ -110,9 +110,9 @@ export default function ContactForm({
               }}
               disabled={disabled}
               dir="ltr"
-              className="w-full px-3 py-2 border-2 border-fattalNavy/20 rounded-lg
-                       bg-white text-fattalNavy text-sm focus:outline-none focus:border-fattalGold
-                       placeholder:text-fattalNavy/40 disabled:opacity-50"
+              className="w-full px-3 py-2 border-2 border-primary/20 rounded-lg
+                       bg-white text-primary text-sm focus:outline-none focus:border-accent
+                       placeholder:text-primary/40 disabled:opacity-50"
               placeholder={t(lang, "contactFormEmailPlaceholder")}
             />
             {errors.email && (
@@ -124,7 +124,7 @@ export default function ContactForm({
         {/* Phone field */}
         {hasField("phone") && (
           <div>
-            <label className="block text-xs font-medium text-fattalNavy/70 mb-1">
+            <label className="block text-xs font-medium text-primary/70 mb-1">
               {t(lang, "contactFormPhone")}
             </label>
             <div className="flex gap-2" dir="ltr">
@@ -132,8 +132,8 @@ export default function ContactForm({
                 value={countryCode}
                 onChange={(e) => setCountryCode(e.target.value)}
                 disabled={disabled}
-                className="px-2 py-2 bg-fattalNavy/5 border-2 border-fattalNavy/20 rounded-lg
-                         text-fattalNavy text-sm focus:outline-none focus:border-fattalGold
+                className="px-2 py-2 bg-primary/5 border-2 border-primary/20 rounded-lg
+                         text-primary text-sm focus:outline-none focus:border-accent
                          cursor-pointer"
               >
                 {countryCodes.map((cc) => (
@@ -150,9 +150,9 @@ export default function ContactForm({
                   setErrors((prev) => ({ ...prev, phone: "" }));
                 }}
                 disabled={disabled}
-                className="flex-1 px-3 py-2 border-2 border-fattalNavy/20 rounded-lg
-                         bg-white text-fattalNavy text-sm focus:outline-none focus:border-fattalGold
-                         placeholder:text-fattalNavy/40 disabled:opacity-50"
+                className="flex-1 px-3 py-2 border-2 border-primary/20 rounded-lg
+                         bg-white text-primary text-sm focus:outline-none focus:border-accent
+                         placeholder:text-primary/40 disabled:opacity-50"
                 placeholder={t(lang, "contactFormPhonePlaceholder")}
               />
             </div>
@@ -175,9 +175,9 @@ export default function ContactForm({
                 checked={marketingOptIn}
                 onChange={(e) => setMarketingOptIn(e.target.checked)}
                 disabled={disabled}
-                className="mt-0.5 accent-fattalGold"
+                className="mt-0.5 accent-accent"
               />
-              <span className="text-xs text-fattalNavy/70">
+              <span className="text-xs text-primary/70">
                 {field.message?.[lang] || field.message?.EN || ""}
               </span>
             </label>
@@ -189,7 +189,7 @@ export default function ContactForm({
           disabled={disabled || submitted}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="w-full bg-fattalGold hover:bg-fattalGold/90 text-white font-semibold py-2.5 px-4
+          className="w-full bg-accent hover:bg-accent/90 text-white font-semibold py-2.5 px-4
                    rounded-lg transition-colors shadow-sm text-sm
                    disabled:opacity-50 disabled:cursor-not-allowed"
         >
