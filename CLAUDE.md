@@ -354,6 +354,21 @@ const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
 const isRTL = /[\u0590-\u05FF]/.test(text);
 ```
 
+### Styling (CSS Variables — NOT hardcoded Tailwind)
+
+UI components use CSS custom property aliases set by the theme effect:
+- `bg-primary` / `text-primary` / `border-primary` — main brand color
+- `bg-accent` / `text-accent` — accent/button color
+- `bg-surface` — page/chat background
+
+Do NOT use `bg-fattalNavy`, `bg-fattalGold`, `bg-fattalCream` etc. in new components.
+
+### Theme Interface (`src/config/theme-config.ts`)
+
+`WidgetTheme` has NO `countryCodes`, `phoneLabel`, `phonePlaceholder`, or `phoneError`.
+The name form collects name only — no phone field.
+`sendMessageToAPI` signature: `(message, userName, formData?)` — no `userPhone`.
+
 ---
 
 ## Configuration
@@ -421,6 +436,23 @@ const nextConfig = {
 
 ---
 
+## Poll API & Full-Page Chat
+
+### Poll API Response Shape
+
+`GET /api/widget/poll?conversationId=xxx` returns `{ success: true, data: { message, hotelOptions, ... } }`
+Always unwrap: `const data = body.data` — checking `body.message` directly won't work.
+Returns `{ success: true, data: null }` when queue is empty.
+
+### Full-Page Booking Chat (`/booking`)
+
+`src/app/booking/page.tsx` + `src/components/FullPageChatWidget.tsx` — standalone full-page chat
+accessible at `widget.ersona.co/booking?widgetId=<companyId>&theme=<themeId>`.
+`FullPageChatWidget` calls APIs directly (no postMessage/iframe) and runs its own 2.5s poll loop.
+No infra changes needed — served by the same deployment as the embed widget.
+
+---
+
 ## Troubleshooting
 
 ### CORS Errors
@@ -457,6 +489,8 @@ const nextConfig = {
 |------|-------|
 | API Routes | `src/app/api/widget/*/route.ts` |
 | Embed Page | `src/app/embed-chat/page.tsx` |
+| Booking Page | `src/app/booking/page.tsx` |
+| Full-Page Widget | `src/components/FullPageChatWidget.tsx` |
 | Components | `src/components/*.tsx` |
 | Pusher Service | `src/services/pusher-service.ts` |
 | Redis Service | `src/services/redis-service.ts` |
