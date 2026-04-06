@@ -2,12 +2,10 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import type { ContactFormConfig } from "@/types/message-types";
 import { Language, t, getLanguageConfig } from "@/utils/i18n";
 import { validatePhone, formatPhoneForStorage } from "@/utils/phone";
 
 interface ContactFormProps {
-  config: ContactFormConfig;
   lang: Language;
   onSubmit: (formData: Record<string, string | boolean>) => void;
   disabled?: boolean;
@@ -16,7 +14,6 @@ interface ContactFormProps {
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function ContactForm({
-  config,
   lang,
   onSubmit,
   disabled = false,
@@ -40,9 +37,6 @@ export default function ContactForm({
     { code: "34", label: "+34" },
   ];
 
-  const hasField = (type: string) =>
-    config.fields.some((f) => f.type === type);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (disabled || submitted) return;
@@ -50,17 +44,13 @@ export default function ContactForm({
     const newErrors: Record<string, string> = {};
 
     // Validate email
-    if (hasField("email")) {
-      if (!email.trim() || !EMAIL_REGEX.test(email.trim())) {
-        newErrors.email = t(lang, "contactFormInvalidEmail");
-      }
+    if (!email.trim() || !EMAIL_REGEX.test(email.trim())) {
+      newErrors.email = t(lang, "contactFormInvalidEmail");
     }
 
     // Validate phone
-    if (hasField("phone")) {
-      if (!phone.trim() || !validatePhone(phone, countryCode)) {
-        newErrors.phone = t(lang, "contactFormInvalidPhone");
-      }
+    if (!phone.trim() || !validatePhone(phone, countryCode)) {
+      newErrors.phone = t(lang, "contactFormInvalidPhone");
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -71,13 +61,11 @@ export default function ContactForm({
     setErrors({});
     setSubmitted(true);
 
-    const formData: Record<string, string | boolean> = {};
-    if (hasField("email")) formData.email = email.trim();
-    if (hasField("phone"))
-      formData.phone = formatPhoneForStorage(phone, countryCode);
-    if (hasField("checkbox")) formData.marketingOptIn = marketingOptIn;
-
-    onSubmit(formData);
+    onSubmit({
+      email: email.trim(),
+      phone: formatPhoneForStorage(phone, countryCode),
+      marketingOptIn,
+    });
   };
 
   if (submitted) {
@@ -96,92 +84,81 @@ export default function ContactForm({
         className="bg-white rounded-xl border border-primary/10 shadow-sm p-4 space-y-3"
       >
         {/* Email field */}
-        {hasField("email") && (
-          <div>
-            <label className="block text-xs font-medium text-primary/70 mb-1">
-              {t(lang, "contactFormEmail")}
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setErrors((prev) => ({ ...prev, email: "" }));
-              }}
-              disabled={disabled}
-              dir="ltr"
-              className="w-full px-3 py-2 border-2 border-primary/20 rounded-lg
-                       bg-white text-primary text-sm focus:outline-none focus:border-accent
-                       placeholder:text-primary/40 disabled:opacity-50"
-              placeholder={t(lang, "contactFormEmailPlaceholder")}
-            />
-            {errors.email && (
-              <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-            )}
-          </div>
-        )}
+        <div>
+          <label className="block text-xs font-medium text-primary/70 mb-1">
+            {t(lang, "contactFormEmail")}
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setErrors((prev) => ({ ...prev, email: "" }));
+            }}
+            disabled={disabled}
+            dir="ltr"
+            className="w-full px-3 py-2 border-2 border-primary/20 rounded-lg
+                     bg-white text-primary text-sm focus:outline-none focus:border-accent
+                     placeholder:text-primary/40 disabled:opacity-50"
+            placeholder={t(lang, "contactFormEmailPlaceholder")}
+          />
+          {errors.email && (
+            <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+          )}
+        </div>
 
         {/* Phone field */}
-        {hasField("phone") && (
-          <div>
-            <label className="block text-xs font-medium text-primary/70 mb-1">
-              {t(lang, "contactFormPhone")}
-            </label>
-            <div className="flex gap-2" dir="ltr">
-              <select
-                value={countryCode}
-                onChange={(e) => setCountryCode(e.target.value)}
-                disabled={disabled}
-                className="px-2 py-2 bg-primary/5 border-2 border-primary/20 rounded-lg
-                         text-primary text-sm focus:outline-none focus:border-accent
-                         cursor-pointer"
-              >
-                {countryCodes.map((cc) => (
-                  <option key={cc.code} value={cc.code}>
-                    {cc.label}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => {
-                  setPhone(e.target.value);
-                  setErrors((prev) => ({ ...prev, phone: "" }));
-                }}
-                disabled={disabled}
-                className="flex-1 px-3 py-2 border-2 border-primary/20 rounded-lg
-                         bg-white text-primary text-sm focus:outline-none focus:border-accent
-                         placeholder:text-primary/40 disabled:opacity-50"
-                placeholder={t(lang, "contactFormPhonePlaceholder")}
-              />
-            </div>
-            {errors.phone && (
-              <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
-            )}
+        <div>
+          <label className="block text-xs font-medium text-primary/70 mb-1">
+            {t(lang, "contactFormPhone")}
+          </label>
+          <div className="flex gap-2" dir="ltr">
+            <select
+              value={countryCode}
+              onChange={(e) => setCountryCode(e.target.value)}
+              disabled={disabled}
+              className="px-2 py-2 bg-primary/5 border-2 border-primary/20 rounded-lg
+                       text-primary text-sm focus:outline-none focus:border-accent
+                       cursor-pointer"
+            >
+              {countryCodes.map((cc) => (
+                <option key={cc.code} value={cc.code}>
+                  {cc.label}
+                </option>
+              ))}
+            </select>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => {
+                setPhone(e.target.value);
+                setErrors((prev) => ({ ...prev, phone: "" }));
+              }}
+              disabled={disabled}
+              className="flex-1 px-3 py-2 border-2 border-primary/20 rounded-lg
+                       bg-white text-primary text-sm focus:outline-none focus:border-accent
+                       placeholder:text-primary/40 disabled:opacity-50"
+              placeholder={t(lang, "contactFormPhonePlaceholder")}
+            />
           </div>
-        )}
+          {errors.phone && (
+            <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+          )}
+        </div>
 
         {/* Marketing opt-in checkbox */}
-        {config.fields
-          .filter((f) => f.type === "checkbox")
-          .map((field) => (
-            <label
-              key={field.name}
-              className="flex items-start gap-2 cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                checked={marketingOptIn}
-                onChange={(e) => setMarketingOptIn(e.target.checked)}
-                disabled={disabled}
-                className="mt-0.5 accent-accent"
-              />
-              <span className="text-xs text-primary/70">
-                {field.message?.[lang] || field.message?.EN || ""}
-              </span>
-            </label>
-          ))}
+        <label className="flex items-start gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={marketingOptIn}
+            onChange={(e) => setMarketingOptIn(e.target.checked)}
+            disabled={disabled}
+            className="mt-0.5 accent-accent"
+          />
+          <span className="text-xs text-primary/70">
+            {t(lang, "marketingOptIn")}
+          </span>
+        </label>
 
         {/* Submit button */}
         <motion.button

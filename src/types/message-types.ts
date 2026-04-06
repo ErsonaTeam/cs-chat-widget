@@ -5,22 +5,10 @@ export enum ChatWidgetMessageType {
 }
 
 /**
- * A single field in a contact form
+ * Form IDs that can be sent from the backend.
+ * Each ID maps to a hardcoded form component in the widget.
  */
-export interface ContactFormField {
-  type: 'email' | 'phone' | 'checkbox';
-  name: string;
-  required: boolean;
-  label?: Record<string, string>;
-  message?: Record<string, string>;
-}
-
-/**
- * Contact form configuration sent by the agent
- */
-export interface ContactFormConfig {
-  fields: ContactFormField[];
-}
+export type WidgetFormId = 'contact_info' | 'fattal_id_collect' | 'fattal_otp_verify';
 
 /**
  * Gallery image for Fattal display

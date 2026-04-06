@@ -73,6 +73,20 @@ export const translations = {
     contactFormInvalidEmail: 'כתובת אימייל לא תקינה',
     contactFormInvalidPhone: 'מספר טלפון לא תקין',
     contactFormSubmitted: 'שלחתי את הפרטים שלי.',
+    marketingOptIn: 'אני מסכים/ה לקבל הודעות שיווקיות',
+
+    // Fattal ID Collect Form
+    fattalIdLabel: 'תעודת זהות',
+    fattalIdPlaceholder: 'הזן מספר תעודת זהות',
+    fattalDeliveryMethod: 'שלח קוד באמצעות',
+    fattalDeliverySms: 'SMS',
+    fattalDeliveryEmail: 'אימייל',
+    fattalSubmitId: 'אמת',
+
+    // Fattal OTP Verify Form
+    fattalOtpLabel: 'קוד אימות',
+    fattalOtpPlaceholder: 'הזן קוד אימות',
+    fattalSubmitOtp: 'שלח קוד',
   },
   EN: {
     // Common
@@ -127,6 +141,20 @@ export const translations = {
     contactFormInvalidEmail: 'Invalid email address',
     contactFormInvalidPhone: 'Invalid phone number',
     contactFormSubmitted: "I've submitted my contact details.",
+    marketingOptIn: 'I agree to receive marketing communications',
+
+    // Fattal ID Collect Form
+    fattalIdLabel: 'Israeli ID',
+    fattalIdPlaceholder: 'Enter your ID number',
+    fattalDeliveryMethod: 'Send code via',
+    fattalDeliverySms: 'SMS',
+    fattalDeliveryEmail: 'Email',
+    fattalSubmitId: 'Verify',
+
+    // Fattal OTP Verify Form
+    fattalOtpLabel: 'Verification Code',
+    fattalOtpPlaceholder: 'Enter verification code',
+    fattalSubmitOtp: 'Submit Code',
   },
 } as const;
 

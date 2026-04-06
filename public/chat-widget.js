@@ -109,9 +109,7 @@
     RESET_CHAT: 'CHAT_WIDGET_RESET_CHAT'
   };
 
-  const widgetServiceBaseUrl = "__WIDGET_SERVICE_URL__" !== "__WIDGET_" + "SERVICE_URL__"
-    ? "__WIDGET_SERVICE_URL__"
-    : "http://localhost:3000";
+  const widgetServiceBaseUrl =  "http://localhost:3000";
 
 
   // Clear session on every load to ensure fresh sessions
@@ -143,7 +141,7 @@
               hotelOptions: result.data.hotelOptions,
               roomSearchResults: result.data.roomSearchResults,
               listingOptions: result.data.listingOptions,
-              contactForm: result.data.contactForm,
+              formId: result.data.formId,
               languageCode: result.data.languageCode
             }, widgetServiceBaseUrl);
           }

@@ -6,13 +6,15 @@ import { LuSendHorizontal } from "react-icons/lu";
 import Image from "next/image";
 import Markdown from "react-markdown";
 import LoadingSpinner from "./LoadingSpinner";
-import { ChatWidgetMessageType, FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice, WidgetListing, ContactFormConfig } from "@/types/message-types";
+import { ChatWidgetMessageType, FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice, WidgetListing } from "@/types/message-types";
 import HotelCarousel from "./HotelCarousel";
 import FattalRoomCarousel from "./FattalRoomCarousel";
 import FattalRoomDetailView from "./FattalRoomDetailView";
 import ListingCarousel from "./ListingCarousel";
 import ListingDetailView from "./ListingDetailView";
 import ContactForm from "./ContactForm";
+import FattalIdCollectForm from "./FattalIdCollectForm";
+import FattalOtpVerifyForm from "./FattalOtpVerifyForm";
 import { Language, t, formatPrice as formatPriceI18n, parseLanguageCode } from "@/utils/i18n";
 import { getTheme } from "@/config/theme-config";
 
@@ -25,7 +27,7 @@ interface Message {
   hotelOptions?: FattalHotel[];
   roomSearchResults?: FattalRoom[];
   listingOptions?: WidgetListing[];
-  contactForm?: ContactFormConfig;
+  formId?: string;
   languageCode?: string;
 }
 
@@ -106,7 +108,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
           hotelOptions: event.data.hotelOptions,
           roomSearchResults: event.data.roomSearchResults,
           listingOptions: event.data.listingOptions,
-          contactForm: event.data.contactForm,
+          formId: event.data.formId,
           languageCode: event.data.languageCode,
         };
 
@@ -568,10 +570,23 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
                 </div>
               </motion.div>
 
-              {/* Contact Form */}
-              {message.contactForm && (
+              {/* Form rendering based on formId */}
+              {message.formId === 'contact_info' && (
                 <ContactForm
-                  config={message.contactForm}
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit}
+                  disabled={isLoading}
+                />
+              )}
+              {message.formId === 'fattal_id_collect' && (
+                <FattalIdCollectForm
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit}
+                  disabled={isLoading}
+                />
+              )}
+              {message.formId === 'fattal_otp_verify' && (
+                <FattalOtpVerifyForm
                   lang={currentLang}
                   onSubmit={handleContactFormSubmit}
                   disabled={isLoading}
