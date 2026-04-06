@@ -109,8 +109,9 @@
     RESET_CHAT: 'CHAT_WIDGET_RESET_CHAT'
   };
 
-  const widgetServiceBaseUrl =  "http://localhost:3000";
-
+  const widgetServiceBaseUrl = "__WIDGET_SERVICE_URL__" !== "__WIDGET_" + "SERVICE_URL__"
+      ? "__WIDGET_SERVICE_URL__"
+      : "http://localhost:3000";
 
   // Clear session on every load to ensure fresh sessions
   clearSessionOnLoad();
