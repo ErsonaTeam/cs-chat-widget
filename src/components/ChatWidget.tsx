@@ -15,6 +15,8 @@ import ListingDetailView from "./ListingDetailView";
 import ContactForm from "./ContactForm";
 import FattalIdCollectForm from "./FattalIdCollectForm";
 import FattalOtpVerifyForm from "./FattalOtpVerifyForm";
+import FattalCancellationForm from "./FattalCancellationForm";
+import FattalContactUpdateForm from "./FattalContactUpdateForm";
 import { Language, t, formatPrice as formatPriceI18n, parseLanguageCode } from "@/utils/i18n";
 import { getTheme } from "@/config/theme-config";
 
@@ -28,6 +30,7 @@ interface Message {
   roomSearchResults?: FattalRoom[];
   listingOptions?: WidgetListing[];
   formId?: string;
+  formData?: Record<string, unknown>;
   languageCode?: string;
 }
 
@@ -109,6 +112,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
           roomSearchResults: event.data.roomSearchResults,
           listingOptions: event.data.listingOptions,
           formId: event.data.formId,
+          formData: event.data.formData,
           languageCode: event.data.languageCode,
         };
 
@@ -301,11 +305,30 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
     window.parent.postMessage({ type: ChatWidgetMessageType.RESET_CHAT }, '*');
   };
 
+  // Resolve the user-visible message based on formType
+  const getFormSubmittedMessage = (formData: Record<string, string | boolean>): string => {
+    const formType = formData.formType as string | undefined;
+    switch (formType) {
+      case 'fattal_id_submit':
+        return t(currentLang, 'fattalIdSubmitted');
+      case 'fattal_otp_verify':
+        return t(currentLang, 'fattalOtpSubmitted');
+      case 'fattal_cancellation_confirm':
+        return formData.confirmed
+          ? t(currentLang, 'fattalCancelConfirmed')
+          : t(currentLang, 'fattalCancelDeclined');
+      case 'fattal_contact_update':
+        return t(currentLang, 'fattalContactUpdateSubmitted');
+      default:
+        return t(currentLang, 'contactFormSubmitted');
+    }
+  };
+
   // Handle contact form submission
   const handleContactFormSubmit = async (formData: Record<string, string | boolean>) => {
     if (isLoading) return;
 
-    const submittedMessage = t(currentLang, 'contactFormSubmitted');
+    const submittedMessage = getFormSubmittedMessage(formData);
     const userMessage: Message = {
       id: Date.now().toString(),
       text: submittedMessage,
@@ -590,6 +613,22 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
                   lang={currentLang}
                   onSubmit={handleContactFormSubmit}
                   disabled={isLoading}
+                />
+              )}
+              {message.formId === 'fattal_cancellation_confirm' && (
+                <FattalCancellationForm
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit}
+                  disabled={isLoading}
+                  formData={message.formData as any}
+                />
+              )}
+              {message.formId === 'fattal_contact_update' && (
+                <FattalContactUpdateForm
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit as any}
+                  disabled={isLoading}
+                  formData={message.formData as any}
                 />
               )}
 
