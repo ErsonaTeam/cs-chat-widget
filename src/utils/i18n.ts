@@ -82,11 +82,39 @@ export const translations = {
     fattalDeliverySms: 'SMS',
     fattalDeliveryEmail: 'אימייל',
     fattalSubmitId: 'אמת',
+    fattalIdSubmitted: 'שלחתי את הפרטים לאימות.',
 
     // Fattal OTP Verify Form
     fattalOtpLabel: 'קוד אימות',
     fattalOtpPlaceholder: 'הזן קוד אימות',
     fattalSubmitOtp: 'שלח קוד',
+    fattalOtpSubmitted: 'שלחתי את קוד האימות.',
+
+    // Fattal Cancellation Form
+    fattalCancelTitle: 'אישור ביטול הזמנה',
+    fattalCancelHotel: 'מלון',
+    fattalCancelDates: 'תאריכים',
+    fattalCancelNights: 'לילות',
+    fattalCancelGuests: 'אורחים',
+    fattalCancelPlan: 'בסיס אירוח',
+    fattalCancelTotal: 'סה״כ',
+    fattalCancelOrderId: 'מספר הזמנה',
+    fattalCancelConfirm: 'אשר ביטול',
+    fattalCancelDecline: 'חזור',
+    fattalCancelConfirmed: 'אישרתי את ביטול ההזמנה.',
+    fattalCancelDeclined: 'ביטלתי את בקשת הביטול.',
+
+    // Fattal Contact Update Form
+    fattalContactUpdateTitle: 'עדכון פרטי קשר',
+    fattalContactUpdatePhone: 'טלפון',
+    fattalContactUpdateEmail: 'אימייל',
+    fattalContactUpdateBirthDate: 'תאריך לידה',
+    fattalContactUpdateAnniversary: 'תאריך יום נישואין',
+    fattalContactUpdateSpouseBirthDate: 'תאריך לידת בן/בת הזוג',
+    fattalContactUpdatePreferredMonth: 'חודש עדיף לחופשה',
+    fattalContactUpdateSubmit: 'שמור שינויים',
+    fattalContactUpdateSubmitted: 'שלחתי את עדכון פרטי הקשר.',
+    fattalContactUpdateLockedTooltip: 'לא ניתן לעדכן ערך קיים. לשינוי יש לפנות לשירות הלקוחות.',
   },
   EN: {
     // Common
@@ -150,11 +178,39 @@ export const translations = {
     fattalDeliverySms: 'SMS',
     fattalDeliveryEmail: 'Email',
     fattalSubmitId: 'Verify',
+    fattalIdSubmitted: "I've submitted my details for verification.",
 
     // Fattal OTP Verify Form
     fattalOtpLabel: 'Verification Code',
     fattalOtpPlaceholder: 'Enter verification code',
     fattalSubmitOtp: 'Submit Code',
+    fattalOtpSubmitted: "I've submitted the verification code.",
+
+    // Fattal Cancellation Form
+    fattalCancelTitle: 'Confirm Cancellation',
+    fattalCancelHotel: 'Hotel',
+    fattalCancelDates: 'Dates',
+    fattalCancelNights: 'Nights',
+    fattalCancelGuests: 'Guests',
+    fattalCancelPlan: 'Meal Plan',
+    fattalCancelTotal: 'Total',
+    fattalCancelOrderId: 'Order ID',
+    fattalCancelConfirm: 'Confirm Cancellation',
+    fattalCancelDecline: 'Go Back',
+    fattalCancelConfirmed: "I've confirmed the cancellation.",
+    fattalCancelDeclined: "I've declined the cancellation.",
+
+    // Fattal Contact Update Form
+    fattalContactUpdateTitle: 'Update Contact Details',
+    fattalContactUpdatePhone: 'Phone',
+    fattalContactUpdateEmail: 'Email',
+    fattalContactUpdateBirthDate: 'Date of Birth',
+    fattalContactUpdateAnniversary: 'Anniversary Date',
+    fattalContactUpdateSpouseBirthDate: "Spouse's Date of Birth",
+    fattalContactUpdatePreferredMonth: 'Preferred Vacation Month',
+    fattalContactUpdateSubmit: 'Save Changes',
+    fattalContactUpdateSubmitted: "I've submitted my contact details update.",
+    fattalContactUpdateLockedTooltip: 'This value is on file and cannot be changed here. Contact customer service to update.',
   },
 } as const;
 

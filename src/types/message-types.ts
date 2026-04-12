@@ -8,7 +8,12 @@ export enum ChatWidgetMessageType {
  * Form IDs that can be sent from the backend.
  * Each ID maps to a hardcoded form component in the widget.
  */
-export type WidgetFormId = 'contact_info' | 'fattal_id_collect' | 'fattal_otp_verify';
+export type WidgetFormId =
+  | 'contact_info'
+  | 'fattal_id_collect'
+  | 'fattal_otp_verify'
+  | 'fattal_cancellation_confirm'
+  | 'fattal_contact_update';
 
 /**
  * Gallery image for Fattal display
