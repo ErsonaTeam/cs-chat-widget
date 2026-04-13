@@ -143,6 +143,7 @@
               roomSearchResults: result.data.roomSearchResults,
               listingOptions: result.data.listingOptions,
               formId: result.data.formId,
+              formData: result.data.formData,
               languageCode: result.data.languageCode
             }, widgetServiceBaseUrl);
           }

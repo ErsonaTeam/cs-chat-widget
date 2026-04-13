@@ -14,11 +14,12 @@ export interface WidgetResponseData {
   roomSearchResults?: FattalRoom[];
   listingOptions?: WidgetListing[];
   formId?: string;
+  formData?: Record<string, unknown>;
   languageCode?: string;
 }
 
 export async function processWidgetResponse(data: WidgetResponseData): Promise<WidgetActionResult> {
-  const { companyId, conversationId, message, timestamp, error, hotelOptions, roomSearchResults, listingOptions, formId, languageCode } = data;
+  const { companyId, conversationId, message, timestamp, error, hotelOptions, roomSearchResults, listingOptions, formId, formData, languageCode } = data;
 
   if (!companyId || !conversationId) {
     return {
@@ -41,7 +42,7 @@ export async function processWidgetResponse(data: WidgetResponseData): Promise<W
   }
 
   try {
-    await queueAgentMessage(companyId, conversationId, responseMessage, timestamp, hotelOptions, roomSearchResults, formId, languageCode, listingOptions);
+    await queueAgentMessage(companyId, conversationId, responseMessage, timestamp, hotelOptions, roomSearchResults, formId, formData, languageCode, listingOptions);
 
     return {
       success: true,

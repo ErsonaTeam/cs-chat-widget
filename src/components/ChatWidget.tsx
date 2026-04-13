@@ -6,7 +6,7 @@ import { LuSendHorizontal } from "react-icons/lu";
 import Image from "next/image";
 import Markdown from "react-markdown";
 import LoadingSpinner from "./LoadingSpinner";
-import { ChatWidgetMessageType, FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice, WidgetListing } from "@/types/message-types";
+import { ChatWidgetMessageType, FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice, WidgetListing, WidgetFormId } from "@/types/message-types";
 import HotelCarousel from "./HotelCarousel";
 import FattalRoomCarousel from "./FattalRoomCarousel";
 import FattalRoomDetailView from "./FattalRoomDetailView";
@@ -309,15 +309,15 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
   const getFormSubmittedMessage = (formData: Record<string, string | boolean>): string => {
     const formType = formData.formType as string | undefined;
     switch (formType) {
-      case 'fattal_id_submit':
+      case WidgetFormId.FATTAL_ID_COLLECT:
         return t(currentLang, 'fattalIdSubmitted');
-      case 'fattal_otp_verify':
+      case WidgetFormId.FATTAL_OTP_VERIFY:
         return t(currentLang, 'fattalOtpSubmitted');
-      case 'fattal_cancellation_confirm':
+      case WidgetFormId.FATTAL_CANCELLATION_CONFIRM:
         return formData.confirmed
           ? t(currentLang, 'fattalCancelConfirmed')
           : t(currentLang, 'fattalCancelDeclined');
-      case 'fattal_contact_update':
+      case WidgetFormId.FATTAL_CONTACT_UPDATE:
         return t(currentLang, 'fattalContactUpdateSubmitted');
       default:
         return t(currentLang, 'contactFormSubmitted');
@@ -594,28 +594,28 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
               </motion.div>
 
               {/* Form rendering based on formId */}
-              {message.formId === 'contact_info' && (
+              {message.formId === WidgetFormId.CONTACT_INFO && (
                 <ContactForm
                   lang={currentLang}
                   onSubmit={handleContactFormSubmit}
                   disabled={isLoading}
                 />
               )}
-              {message.formId === 'fattal_id_collect' && (
+              {message.formId === WidgetFormId.FATTAL_ID_COLLECT && (
                 <FattalIdCollectForm
                   lang={currentLang}
                   onSubmit={handleContactFormSubmit}
                   disabled={isLoading}
                 />
               )}
-              {message.formId === 'fattal_otp_verify' && (
+              {message.formId === WidgetFormId.FATTAL_OTP_VERIFY && (
                 <FattalOtpVerifyForm
                   lang={currentLang}
                   onSubmit={handleContactFormSubmit}
                   disabled={isLoading}
                 />
               )}
-              {message.formId === 'fattal_cancellation_confirm' && (
+              {message.formId === WidgetFormId.FATTAL_CANCELLATION_CONFIRM && (
                 <FattalCancellationForm
                   lang={currentLang}
                   onSubmit={handleContactFormSubmit}
@@ -623,7 +623,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
                   formData={message.formData as any}
                 />
               )}
-              {message.formId === 'fattal_contact_update' && (
+              {message.formId === WidgetFormId.FATTAL_CONTACT_UPDATE && (
                 <FattalContactUpdateForm
                   lang={currentLang}
                   onSubmit={handleContactFormSubmit as any}

@@ -15,6 +15,7 @@ export async function queueAgentMessage(
   hotelOptions?: FattalHotel[],
   roomSearchResults?: FattalRoom[],
   formId?: string,
+  formData?: Record<string, unknown>,
   languageCode?: string,
   listingOptions?: WidgetListing[],
 ): Promise<void> {
@@ -26,6 +27,7 @@ export async function queueAgentMessage(
     roomSearchResults: roomSearchResults || null,
     listingOptions: listingOptions || null,
     formId: formId || null,
+    formData: formData || null,
     languageCode: languageCode || null,
   };
 

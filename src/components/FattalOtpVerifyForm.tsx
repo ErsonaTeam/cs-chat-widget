@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Language, t, getLanguageConfig } from "@/utils/i18n";
+import { WidgetFormId } from "@/types/message-types";
 
 interface FattalOtpVerifyFormProps {
   lang: Language;
@@ -34,7 +35,7 @@ export default function FattalOtpVerifyForm({
     setSubmitted(true);
 
     onSubmit({
-      formType: "fattal_otp_verify",
+      formType: WidgetFormId.FATTAL_OTP_VERIFY,
       otp_code: otpCode.trim(),
     });
   };

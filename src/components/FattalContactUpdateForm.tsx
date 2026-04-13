@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { type Language, t, getLanguageConfig, parseLanguageCode } from "@/utils/i18n";
+import { WidgetFormId } from "@/types/message-types";
 
 const HEBREW_MONTHS = [
   '', // index 0 unused
@@ -110,7 +111,7 @@ export default function FattalContactUpdateForm({
     if (disabled || submitted) return;
     setSubmitted(true);
 
-    const payload: Record<string, string | number> = { formType: "fattal_contact_update" };
+    const payload: Record<string, string | number> = { formType: WidgetFormId.FATTAL_CONTACT_UPDATE };
 
     if (phone.trim()) payload.phone = phone.trim();
     if (email.trim()) payload.email = email.trim();

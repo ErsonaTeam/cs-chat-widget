@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Language, t, getLanguageConfig } from "@/utils/i18n";
+import { WidgetFormId } from "@/types/message-types";
 
 interface FattalIdCollectFormProps {
   lang: Language;
@@ -35,7 +36,7 @@ export default function FattalIdCollectForm({
     setSubmitted(true);
 
     onSubmit({
-      formType: "fattal_id_submit",
+      formType: WidgetFormId.FATTAL_ID_COLLECT,
       user_id: israeliId.trim(),
       method: deliveryMethod,
     });
