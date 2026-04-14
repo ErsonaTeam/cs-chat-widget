@@ -1,3 +1,8 @@
+export interface WelcomeMessage {
+  text: string;
+  direction: "ltr" | "rtl";
+}
+
 export interface WidgetTheme {
   id: string;
   colors: {
@@ -20,13 +25,12 @@ export interface WidgetTheme {
     inputPlaceholder: string;
     loadingPlaceholder: string;
   };
-  welcomeMessages: {
-    first: (name: string) => string;
-    firstDirection: "ltr" | "rtl";
-    second: string;
-    secondDirection: "ltr" | "rtl";
-  };
+  welcomeMessage: (name: string) => WelcomeMessage;
 }
+
+const HEBREW_RE = /[\u0590-\u05FF]/;
+const isHebrew = (s: string) => HEBREW_RE.test(s);
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 const defaultTheme: WidgetTheme = {
   id: "default",
@@ -50,14 +54,16 @@ const defaultTheme: WidgetTheme = {
     inputPlaceholder: "Type a message...",
     loadingPlaceholder: "Waiting for reply...",
   },
-  welcomeMessages: {
-    first: (name: string) =>
-      `היי ${name.charAt(0).toUpperCase() + name.slice(1)}, ברוכים הבאים!\nאיך נוכל לעזור לך היום?`,
-    firstDirection: "rtl",
-    second:
-      "Feel free to ask in any language you prefer, we're happy to help!",
-    secondDirection: "ltr",
-  },
+  welcomeMessage: (name) =>
+    isHebrew(name)
+      ? {
+          text: `היי ${name}, ברוכים הבאים!\nאיך נוכל לעזור לך היום?`,
+          direction: "rtl",
+        }
+      : {
+          text: `Hi ${capitalize(name)}, welcome!\nHow can we help you today?`,
+          direction: "ltr",
+        },
 };
 
 const fattalTheme: WidgetTheme = {
@@ -82,14 +88,16 @@ const fattalTheme: WidgetTheme = {
     inputPlaceholder: "הקלד הודעה...",
     loadingPlaceholder: "ממתין לתשובה...",
   },
-  welcomeMessages: {
-    first: (name: string) =>
-      `היי ${name.charAt(0).toUpperCase() + name.slice(1)} ברוכים הבאים!\n אני כאן כדי לעזור בביצוע הזמנה ולענות כל כל שאלה.`,
-    firstDirection: "rtl",
-    second:
-      "Just for you to know, we can serve you in your preferred language or any language of your choice.",
-    secondDirection: "ltr",
-  },
+  welcomeMessage: (name) =>
+    isHebrew(name)
+      ? {
+          text: `היי ${name}, ברוכים הבאים לפתאל!\nאני כאן כדי לעזור בביצוע הזמנה ולענות על כל שאלה.`,
+          direction: "rtl",
+        }
+      : {
+          text: `Hi ${capitalize(name)}, welcome to Fattal Hotels!\nI'm here to help with bookings and answer any questions.`,
+          direction: "ltr",
+        },
 };
 
 const eztlvTheme: WidgetTheme = {
@@ -114,14 +122,16 @@ const eztlvTheme: WidgetTheme = {
     inputPlaceholder: "Type a message...",
     loadingPlaceholder: "Waiting for reply...",
   },
-  welcomeMessages: {
-    first: (name: string) =>
-      `Hi ${name.charAt(0).toUpperCase() + name.slice(1)}, welcome!\nI'm here to help you find the perfect apartment and answer any questions.`,
-    firstDirection: "ltr",
-    second:
-      "Feel free to ask in any language you prefer — we're happy to help!",
-    secondDirection: "ltr",
-  },
+  welcomeMessage: (name) =>
+    isHebrew(name)
+      ? {
+          text: `היי ${name}, ברוכים הבאים ל-EZ Group!\nאני כאן כדי לעזור לך למצוא את הדירה המושלמת ולענות על כל שאלה.`,
+          direction: "rtl",
+        }
+      : {
+          text: `Hi ${capitalize(name)}, welcome to EZ Group!\nI'm here to help you find the perfect apartment and answer any questions.`,
+          direction: "ltr",
+        },
 };
 
 export const themes: Record<string, WidgetTheme> = {

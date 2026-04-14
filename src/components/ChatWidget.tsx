@@ -181,29 +181,16 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
 
     setUserName(nameInput.trim());
 
-    const firstWelcomeMessage: Message = {
-      id: Date.now().toString() + "-welcome-1",
-      text: widgetTheme.welcomeMessages.first(nameInput.trim()),
+    const welcome = widgetTheme.welcomeMessage(nameInput.trim());
+    const welcomeMessage: Message = {
+      id: Date.now().toString() + "-welcome",
+      text: welcome.text,
       sender: "bot",
       timestamp: new Date(),
-      direction: widgetTheme.welcomeMessages.firstDirection,
+      direction: welcome.direction,
     };
 
-    setMessages([firstWelcomeMessage]);
-
-    if (widgetTheme.welcomeMessages.second) {
-      setTimeout(() => {
-        const secondWelcomeMessage: Message = {
-          id: Date.now().toString() + "-welcome-2",
-          text: widgetTheme.welcomeMessages.second,
-          sender: "bot",
-          timestamp: new Date(),
-          direction: widgetTheme.welcomeMessages.secondDirection,
-        };
-
-        setMessages((prev) => [...prev, secondWelcomeMessage]);
-      }, 1500);
-    }
+    setMessages([welcomeMessage]);
   };
 
   // Send message to API and get bot response
