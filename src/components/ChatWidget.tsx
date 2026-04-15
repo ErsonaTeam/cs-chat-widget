@@ -6,13 +6,17 @@ import { LuSendHorizontal } from "react-icons/lu";
 import Image from "next/image";
 import Markdown from "react-markdown";
 import LoadingSpinner from "./LoadingSpinner";
-import { ChatWidgetMessageType, FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice, WidgetListing, ContactFormConfig } from "@/types/message-types";
+import { ChatWidgetMessageType, FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice, WidgetListing, WidgetFormId } from "@/types/message-types";
 import HotelCarousel from "./HotelCarousel";
 import FattalRoomCarousel from "./FattalRoomCarousel";
 import FattalRoomDetailView from "./FattalRoomDetailView";
 import ListingCarousel from "./ListingCarousel";
 import ListingDetailView from "./ListingDetailView";
 import ContactForm from "./ContactForm";
+import FattalIdCollectForm from "./FattalIdCollectForm";
+import FattalOtpVerifyForm from "./FattalOtpVerifyForm";
+import FattalCancellationForm from "./FattalCancellationForm";
+import FattalContactUpdateForm from "./FattalContactUpdateForm";
 import { Language, t, formatPrice as formatPriceI18n, parseLanguageCode } from "@/utils/i18n";
 import { getTheme } from "@/config/theme-config";
 
@@ -25,7 +29,8 @@ interface Message {
   hotelOptions?: FattalHotel[];
   roomSearchResults?: FattalRoom[];
   listingOptions?: WidgetListing[];
-  contactForm?: ContactFormConfig;
+  formId?: string;
+  formData?: Record<string, unknown>;
   languageCode?: string;
 }
 
@@ -106,7 +111,8 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
           hotelOptions: event.data.hotelOptions,
           roomSearchResults: event.data.roomSearchResults,
           listingOptions: event.data.listingOptions,
-          contactForm: event.data.contactForm,
+          formId: event.data.formId,
+          formData: event.data.formData,
           languageCode: event.data.languageCode,
         };
 
@@ -175,29 +181,16 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
 
     setUserName(nameInput.trim());
 
-    const firstWelcomeMessage: Message = {
-      id: Date.now().toString() + "-welcome-1",
-      text: widgetTheme.welcomeMessages.first(nameInput.trim()),
+    const welcome = widgetTheme.welcomeMessage(nameInput.trim());
+    const welcomeMessage: Message = {
+      id: Date.now().toString() + "-welcome",
+      text: welcome.text,
       sender: "bot",
       timestamp: new Date(),
-      direction: widgetTheme.welcomeMessages.firstDirection,
+      direction: welcome.direction,
     };
 
-    setMessages([firstWelcomeMessage]);
-
-    if (widgetTheme.welcomeMessages.second) {
-      setTimeout(() => {
-        const secondWelcomeMessage: Message = {
-          id: Date.now().toString() + "-welcome-2",
-          text: widgetTheme.welcomeMessages.second,
-          sender: "bot",
-          timestamp: new Date(),
-          direction: widgetTheme.welcomeMessages.secondDirection,
-        };
-
-        setMessages((prev) => [...prev, secondWelcomeMessage]);
-      }, 1500);
-    }
+    setMessages([welcomeMessage]);
   };
 
   // Send message to API and get bot response
@@ -299,11 +292,30 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
     window.parent.postMessage({ type: ChatWidgetMessageType.RESET_CHAT }, '*');
   };
 
+  // Resolve the user-visible message based on formType
+  const getFormSubmittedMessage = (formData: Record<string, string | boolean>): string => {
+    const formType = formData.formType as string | undefined;
+    switch (formType) {
+      case WidgetFormId.FATTAL_ID_COLLECT:
+        return t(currentLang, 'fattalIdSubmitted');
+      case WidgetFormId.FATTAL_OTP_VERIFY:
+        return t(currentLang, 'fattalOtpSubmitted');
+      case WidgetFormId.FATTAL_CANCELLATION_CONFIRM:
+        return formData.confirmed
+          ? t(currentLang, 'fattalCancelConfirmed')
+          : t(currentLang, 'fattalCancelDeclined');
+      case WidgetFormId.FATTAL_CONTACT_UPDATE:
+        return t(currentLang, 'fattalContactUpdateSubmitted');
+      default:
+        return t(currentLang, 'contactFormSubmitted');
+    }
+  };
+
   // Handle contact form submission
   const handleContactFormSubmit = async (formData: Record<string, string | boolean>) => {
     if (isLoading) return;
 
-    const submittedMessage = t(currentLang, 'contactFormSubmitted');
+    const submittedMessage = getFormSubmittedMessage(formData);
     const userMessage: Message = {
       id: Date.now().toString(),
       text: submittedMessage,
@@ -568,13 +580,42 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
                 </div>
               </motion.div>
 
-              {/* Contact Form */}
-              {message.contactForm && (
+              {/* Form rendering based on formId */}
+              {message.formId === WidgetFormId.CONTACT_INFO && (
                 <ContactForm
-                  config={message.contactForm}
                   lang={currentLang}
                   onSubmit={handleContactFormSubmit}
                   disabled={isLoading}
+                />
+              )}
+              {message.formId === WidgetFormId.FATTAL_ID_COLLECT && (
+                <FattalIdCollectForm
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit}
+                  disabled={isLoading}
+                />
+              )}
+              {message.formId === WidgetFormId.FATTAL_OTP_VERIFY && (
+                <FattalOtpVerifyForm
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit}
+                  disabled={isLoading}
+                />
+              )}
+              {message.formId === WidgetFormId.FATTAL_CANCELLATION_CONFIRM && (
+                <FattalCancellationForm
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit}
+                  disabled={isLoading}
+                  formData={message.formData as any}
+                />
+              )}
+              {message.formId === WidgetFormId.FATTAL_CONTACT_UPDATE && (
+                <FattalContactUpdateForm
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit as any}
+                  disabled={isLoading}
+                  formData={message.formData as any}
                 />
               )}
 

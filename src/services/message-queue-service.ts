@@ -1,6 +1,6 @@
 'use server';
 
-import { FattalHotel, FattalRoom, WidgetListing, ContactFormConfig } from '@/types/message-types';
+import { FattalHotel, FattalRoom, WidgetListing } from '@/types/message-types';
 import { pushPendingMessage } from './redis-service';
 
 /**
@@ -14,7 +14,8 @@ export async function queueAgentMessage(
   timestamp?: string,
   hotelOptions?: FattalHotel[],
   roomSearchResults?: FattalRoom[],
-  contactForm?: ContactFormConfig,
+  formId?: string,
+  formData?: Record<string, unknown>,
   languageCode?: string,
   listingOptions?: WidgetListing[],
 ): Promise<void> {
@@ -25,7 +26,8 @@ export async function queueAgentMessage(
     hotelOptions: hotelOptions || null,
     roomSearchResults: roomSearchResults || null,
     listingOptions: listingOptions || null,
-    contactForm: contactForm || null,
+    formId: formId || null,
+    formData: formData || null,
     languageCode: languageCode || null,
   };
 
