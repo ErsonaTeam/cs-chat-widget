@@ -607,15 +607,15 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
                   lang={currentLang}
                   onSubmit={handleContactFormSubmit}
                   disabled={isLoading}
-                  formData={message.formData as any}
+                  formData={message.formData as React.ComponentProps<typeof FattalCancellationForm>["formData"]}
                 />
               )}
               {message.formId === WidgetFormId.FATTAL_CONTACT_UPDATE && (
                 <FattalContactUpdateForm
                   lang={currentLang}
-                  onSubmit={handleContactFormSubmit as any}
+                  onSubmit={handleContactFormSubmit as React.ComponentProps<typeof FattalContactUpdateForm>["onSubmit"]}
                   disabled={isLoading}
-                  formData={message.formData as any}
+                  formData={message.formData as React.ComponentProps<typeof FattalContactUpdateForm>["formData"]}
                 />
               )}
 
