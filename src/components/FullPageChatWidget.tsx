@@ -203,7 +203,7 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
   // Handle message submission
   const handleMessageSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputMessage.trim() || isLoading) return;
+    if (!inputMessage.trim()) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -368,7 +368,7 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
 
   if (!userName) {
     return (
-      <div dir={widgetTheme.direction} className="flex flex-col h-screen w-screen overflow-hidden">
+      <div dir={widgetTheme.direction} className="flex flex-col h-dvh w-screen overflow-hidden">
         <div className="bg-primary py-2 px-4 flex items-center gap-3">
           <Image
             src={widgetTheme.logoUrl}
@@ -437,7 +437,7 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
   }
 
   return (
-    <div dir={widgetTheme.direction} className="flex flex-col h-screen w-screen overflow-hidden">
+    <div dir={widgetTheme.direction} className="flex flex-col h-dvh w-screen overflow-hidden">
       <div className="flex items-center justify-between py-2 px-4 bg-primary">
         <h3 className="font-semibold flex items-center gap-2 text-white text-sm">
           <Image
@@ -601,16 +601,14 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             dir="auto"
-            disabled={isLoading}
             className="flex-1 px-4 py-3 border-2 border-primary/20 rounded-xl
                      bg-white text-primary focus:outline-none focus:border-accent
-                     text-sm placeholder:text-primary/40
-                     disabled:opacity-50 disabled:cursor-not-allowed"
+                     text-sm placeholder:text-primary/40"
             placeholder={widgetTheme.text.inputPlaceholder}
           />
           <motion.button
             type="submit"
-            disabled={isLoading || !inputMessage.trim()}
+            disabled={!inputMessage.trim()}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="bg-accent hover:bg-accent/90 text-white font-medium p-3

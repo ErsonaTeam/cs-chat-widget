@@ -91,11 +91,11 @@ const fattalTheme: WidgetTheme = {
   welcomeMessage: (name) =>
     isHebrew(name)
       ? {
-          text: `היי ${name}, ברוכים הבאים לפתאל!\nאני כאן כדי לעזור בביצוע הזמנה ולענות על כל שאלה.`,
+          text: `שלום, ${name}.\nאני יכול לעזור לך לקבל מידע על המלון, לבדוק מחירים וחבילות, לבצע הזמנה חדשה, ולטפל בהזמנה קיימת - כולל ביטול או עדכון פרטים אישיים.`,
           direction: "rtl",
         }
       : {
-          text: `Hi ${capitalize(name)}, welcome to Fattal Hotels!\nI'm here to help with bookings and answer any questions.`,
+          text: `Welcome, ${capitalize(name)}.\nI can help you with hotel information, rates and packages, making a new reservation, and handling an existing booking - including cancellations or updating personal details.`,
           direction: "ltr",
         },
 };

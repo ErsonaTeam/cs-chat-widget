@@ -11,14 +11,14 @@ function BookingContent() {
 
   if (!widgetId) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-gray-50">
+      <div className="h-dvh w-screen flex items-center justify-center bg-gray-50">
         <p className="text-gray-500 text-sm">Missing widgetId parameter.</p>
       </div>
     );
   }
 
   return (
-    <div className="h-screen w-screen overflow-hidden">
+    <div className="h-dvh w-screen overflow-hidden">
       <FullPageChatWidget widgetId={widgetId} theme={theme} />
     </div>
   );
@@ -28,7 +28,7 @@ export default function BookingPage() {
   return (
     <Suspense
       fallback={
-        <div className="h-screen w-full flex items-center justify-center">
+        <div className="h-dvh w-full flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fattalNavy" />
         </div>
       }
