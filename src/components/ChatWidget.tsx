@@ -69,7 +69,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [selectedFattalRoom, setSelectedFattalRoom] = useState<FattalRoom | null>(null);
+  const [selectedFattalRooms, setSelectedFattalRooms] = useState<Map<number, FattalRoom>>(new Map());
   const [selectedListing, setSelectedListing] = useState<WidgetListing | null>(null);
   const [currentLang, setCurrentLang] = useState<Language>(widgetTheme.direction === 'rtl' ? 'HE' : 'EN');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -148,7 +148,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
     const hasHotelOptions = messages.some(msg => msg.hotelOptions && msg.hotelOptions.length > 0);
     const hasRoomSearchResults = messages.some(msg => msg.roomSearchResults && msg.roomSearchResults.length > 0);
     const hasListingOptions = messages.some(msg => msg.listingOptions && msg.listingOptions.length > 0);
-    const showingFattalRoomDetail = selectedFattalRoom !== null;
+    const showingFattalRoomDetail = selectedFattalRooms.size > 0;
     const showingListingDetail = selectedListing !== null;
 
     // Send resize request to parent window
@@ -172,7 +172,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
         width: newWidth
       }, '*');
     }
-  }, [messages, selectedFattalRoom, selectedListing]);
+  }, [messages, selectedFattalRooms, selectedListing]);
 
   // Handle name submission
   const handleNameSubmit = (e: React.FormEvent) => {
@@ -286,7 +286,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
     setMessages([]);
     setNameInput("");
     setIsLoading(false);
-    setSelectedFattalRoom(null);
+    setSelectedFattalRooms(new Map());
     setSelectedListing(null);
     // Notify parent page to clear conversationId and stop polling
     window.parent.postMessage({ type: ChatWidgetMessageType.RESET_CHAT }, '*');
@@ -357,18 +357,27 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
     }
   };
 
-  // Handle Fattal room selection - open detail view
-  const handleSelectFattalRoom = (room: FattalRoom) => {
-    setSelectedFattalRoom(room);
+  // Handle Fattal room selection - open detail view for a specific carousel (by message index)
+  const handleSelectFattalRoom = (messageIndex: number, room: FattalRoom) => {
+    setSelectedFattalRooms((prev) => {
+      const next = new Map(prev);
+      next.set(messageIndex, room);
+      return next;
+    });
   };
 
-  // Handle back from Fattal room detail view
-  const handleBackFromFattalRoom = () => {
-    setSelectedFattalRoom(null);
+  // Handle back from Fattal room detail view for a specific carousel
+  const handleBackFromFattalRoom = (messageIndex: number) => {
+    setSelectedFattalRooms((prev) => {
+      const next = new Map(prev);
+      next.delete(messageIndex);
+      return next;
+    });
   };
 
-  // Handle Fattal room booking confirmation
+  // Handle Fattal room booking confirmation for a specific carousel
   const handleConfirmFattalRoom = async (
+    messageIndex: number,
     room: FattalRoom,
     selectedPackage: FattalRoomPackage,
     selectedPrice: FattalPackagePrice,
@@ -396,7 +405,11 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setSelectedFattalRoom(null);
+    setSelectedFattalRooms((prev) => {
+      const next = new Map(prev);
+      next.delete(messageIndex);
+      return next;
+    });
     setIsLoading(true);
 
     // Send message to API
@@ -535,7 +548,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
       {/* Messages - Cream background */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-surface">
         <AnimatePresence>
-          {messages.map((message) => (
+          {messages.map((message, index) => (
             <div key={message.id}>
               {/* Message Bubble */}
               <motion.div
@@ -627,15 +640,15 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
               {/* Fattal Room Carousel or Detail View */}
               {message.roomSearchResults && message.roomSearchResults.length > 0 && (
                 <>
-                  {selectedFattalRoom ? (
+                  {selectedFattalRooms.get(index) ? (
                     <FattalRoomDetailView
-                      room={selectedFattalRoom}
-                      onConfirm={handleConfirmFattalRoom}
-                      onBack={handleBackFromFattalRoom}
+                      room={selectedFattalRooms.get(index)!}
+                      onConfirm={(room, pkg, price, isClubMember) => handleConfirmFattalRoom(index, room, pkg, price, isClubMember)}
+                      onBack={() => handleBackFromFattalRoom(index)}
                       lang={currentLang}
                     />
                   ) : (
-                    <FattalRoomCarousel rooms={message.roomSearchResults} onSelectRoom={handleSelectFattalRoom} lang={currentLang} />
+                    <FattalRoomCarousel rooms={message.roomSearchResults} onSelectRoom={(room) => handleSelectFattalRoom(index, room)} lang={currentLang} />
                   )}
                 </>
               )}

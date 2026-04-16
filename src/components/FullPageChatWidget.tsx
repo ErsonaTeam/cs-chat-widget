@@ -70,7 +70,7 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [selectedFattalRoom, setSelectedFattalRoom] = useState<FattalRoom | null>(null);
+  const [selectedFattalRooms, setSelectedFattalRooms] = useState<Map<number, FattalRoom>>(new Map());
   const [selectedListing, setSelectedListing] = useState<WidgetListing | null>(null);
   const [currentLang, setCurrentLang] = useState<Language>(widgetTheme.direction === 'rtl' ? 'HE' : 'EN');
 
@@ -246,7 +246,7 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
     setMessages([]);
     setNameInput("");
     setIsLoading(false);
-    setSelectedFattalRoom(null);
+    setSelectedFattalRooms(new Map());
     setSelectedListing(null);
   };
 
@@ -289,10 +289,23 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
     // isLoading stays true until poll receives response
   };
 
-  const handleSelectFattalRoom = (room: FattalRoom) => { setSelectedFattalRoom(room); };
-  const handleBackFromFattalRoom = () => { setSelectedFattalRoom(null); };
+  const handleSelectFattalRoom = (messageIndex: number, room: FattalRoom) => {
+    setSelectedFattalRooms((prev) => {
+      const next = new Map(prev);
+      next.set(messageIndex, room);
+      return next;
+    });
+  };
+  const handleBackFromFattalRoom = (messageIndex: number) => {
+    setSelectedFattalRooms((prev) => {
+      const next = new Map(prev);
+      next.delete(messageIndex);
+      return next;
+    });
+  };
 
   const handleConfirmFattalRoom = async (
+    messageIndex: number,
     room: FattalRoom,
     selectedPackage: FattalRoomPackage,
     selectedPrice: FattalPackagePrice,
@@ -320,7 +333,11 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setSelectedFattalRoom(null);
+    setSelectedFattalRooms((prev) => {
+      const next = new Map(prev);
+      next.delete(messageIndex);
+      return next;
+    });
     setIsLoading(true);
 
     await sendMessageToAPI(selectionMessage, userName);
@@ -443,7 +460,7 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-surface">
         <AnimatePresence>
-          {messages.map((message) => (
+          {messages.map((message, index) => (
             <div key={message.id}>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -526,15 +543,21 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
 
               {message.roomSearchResults && message.roomSearchResults.length > 0 && (
                 <>
-                  {selectedFattalRoom ? (
+                  {selectedFattalRooms.get(index) ? (
                     <FattalRoomDetailView
-                      room={selectedFattalRoom}
-                      onConfirm={handleConfirmFattalRoom}
-                      onBack={handleBackFromFattalRoom}
+                      room={selectedFattalRooms.get(index)!}
+                      onConfirm={(room, pkg, price, isClubMember) =>
+                        handleConfirmFattalRoom(index, room, pkg, price, isClubMember)
+                      }
+                      onBack={() => handleBackFromFattalRoom(index)}
                       lang={currentLang}
                     />
                   ) : (
-                    <FattalRoomCarousel rooms={message.roomSearchResults} onSelectRoom={handleSelectFattalRoom} lang={currentLang} />
+                    <FattalRoomCarousel
+                      rooms={message.roomSearchResults}
+                      onSelectRoom={(room) => handleSelectFattalRoom(index, room)}
+                      lang={currentLang}
+                    />
                   )}
                 </>
               )}
