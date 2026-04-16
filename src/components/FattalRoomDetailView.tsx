@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import DOMPurify from "isomorphic-dompurify";
+import DOMPurify from "dompurify";
 import { FattalRoom, FattalRoomPackage, FattalPackagePrice } from "@/types/message-types";
 import { Language, t, formatPrice, getLanguageConfig } from "@/utils/i18n";
 import { useImagePreloader } from "@/hooks/useImagePreloader";
@@ -45,9 +45,15 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
 
   useImagePreloader(images, currentImageIndex);
 
-  const sanitizedDescription = room.description
-    ? DOMPurify.sanitize(room.description)
-    : null;
+  const [sanitizedDescription, setSanitizedDescription] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (room.description) {
+      setSanitizedDescription(DOMPurify.sanitize(room.description));
+    } else {
+      setSanitizedDescription(null);
+    }
+  }, [room.description]);
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));

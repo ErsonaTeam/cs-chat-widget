@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import DOMPurify from "isomorphic-dompurify";
+import DOMPurify from "dompurify";
 import { FattalRoom } from "@/types/message-types";
 import { Language, t, formatPrice, getLanguageConfig } from "@/utils/i18n";
 import { useImagePreloader } from "@/hooks/useImagePreloader";
@@ -25,9 +25,15 @@ export default function FattalRoomCard({ room, onSelect, lang = 'HE' }: FattalRo
 
   useImagePreloader(images, currentImageIndex);
 
-  const sanitizedDescription = room.description
-    ? DOMPurify.sanitize(room.description)
-    : null;
+  const [sanitizedDescription, setSanitizedDescription] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (room.description) {
+      setSanitizedDescription(DOMPurify.sanitize(room.description));
+    } else {
+      setSanitizedDescription(null);
+    }
+  }, [room.description]);
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => prev === images.length - 1 ? 0 : prev + 1);
