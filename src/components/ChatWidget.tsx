@@ -455,7 +455,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
 
   if (!userName) {
     return (
-      <div dir={widgetTheme.direction} className="flex flex-col h-full rounded-2xl overflow-hidden shadow-xl">
+      <div dir={widgetTheme.direction} className="flex flex-col h-full sm:rounded-2xl overflow-hidden sm:shadow-xl">
         <div className="bg-primary py-2 px-4 flex items-center gap-3">
           <Image
             src={widgetTheme.logoUrl}
@@ -546,7 +546,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
       </div>
 
       {/* Messages - Cream background */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-surface">
+      <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4 bg-surface" style={{ WebkitOverflowScrolling: "touch" }}>
         <AnimatePresence>
           {messages.map((message, index) => (
             <div key={message.id}>

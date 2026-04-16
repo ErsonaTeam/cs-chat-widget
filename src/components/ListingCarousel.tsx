@@ -92,12 +92,13 @@ export default function ListingCarousel({ listings, onViewDetails, lang = 'HE' }
       <div className="relative group/carousel">
         <div
           ref={scrollContainerRef}
-          className={`flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth pb-2 ${
+          className={`flex gap-3 overflow-x-auto overscroll-x-contain touch-pan-x scrollbar-hide scroll-smooth pb-2 ${
             langConfig.dir === 'rtl' ? 'pr-3 pl-8' : 'pl-3 pr-8'
           }`}
           style={{
             scrollbarWidth: "none",
             msOverflowStyle: "none",
+            WebkitOverflowScrolling: "touch",
           }}
         >
           {listings.map((listing) => (

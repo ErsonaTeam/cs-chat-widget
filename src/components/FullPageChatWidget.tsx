@@ -458,7 +458,7 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-surface">
+      <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4 bg-surface" style={{ WebkitOverflowScrolling: "touch" }}>
         <AnimatePresence>
           {messages.map((message, index) => (
             <div key={message.id}>
