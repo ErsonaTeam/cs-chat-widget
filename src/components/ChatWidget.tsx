@@ -13,6 +13,7 @@ import FattalRoomDetailView from "./FattalRoomDetailView";
 import ListingCarousel from "./ListingCarousel";
 import ListingDetailView from "./ListingDetailView";
 import ContactForm from "./ContactForm";
+import GuestDetailsForm from "./GuestDetailsForm";
 import FattalIdCollectForm from "./FattalIdCollectForm";
 import FattalOtpVerifyForm from "./FattalOtpVerifyForm";
 import FattalCancellationForm from "./FattalCancellationForm";
@@ -306,6 +307,8 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
           : t(currentLang, 'fattalCancelDeclined');
       case WidgetFormId.FATTAL_CONTACT_UPDATE:
         return t(currentLang, 'fattalContactUpdateSubmitted');
+      case WidgetFormId.GUESTY_GUEST_DETAILS:
+        return t(currentLang, 'guestyGuestDetailsSubmitted');
       default:
         return t(currentLang, 'contactFormSubmitted');
     }
@@ -629,6 +632,14 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
                   onSubmit={handleContactFormSubmit as React.ComponentProps<typeof FattalContactUpdateForm>["onSubmit"]}
                   disabled={isLoading}
                   formData={message.formData as React.ComponentProps<typeof FattalContactUpdateForm>["formData"]}
+                />
+              )}
+              {message.formId === WidgetFormId.GUESTY_GUEST_DETAILS && (
+                <GuestDetailsForm
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit}
+                  disabled={isLoading}
+                  formData={message.formData as React.ComponentProps<typeof GuestDetailsForm>["formData"]}
                 />
               )}
 
