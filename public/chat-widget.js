@@ -39,6 +39,20 @@
     return null;
   };
 
+  const getLanguage = () => {
+    const widgetScript = document.getElementById('ersona-chat-widget');
+    if (widgetScript && widgetScript.dataset.language) {
+      return widgetScript.dataset.language;
+    }
+
+    const anyWidgetScript = document.querySelector('script[data-language]');
+    if (anyWidgetScript) {
+      return anyWidgetScript.dataset.language;
+    }
+
+    return null;
+  };
+
   // Session management - always start fresh
   const clearSessionOnLoad = () => {
     // Always clear session storage on page load to ensure fresh sessions
@@ -92,6 +106,7 @@
 
   const companyId = getCompanyId();
   const widgetTheme = getTheme();
+  const widgetLanguage = getLanguage();
 
   // Theme color map for widget button styling (mirrors theme-config.ts)
   const themeColors = {
@@ -405,7 +420,11 @@
   iframe.setAttribute("frameBorder", "0");
   iframe.style.colorScheme = "light";
   iframe.style.background = "transparent";
-  iframe.src = widgetServiceBaseUrl + "/embed-chat" + (widgetTheme ? "?theme=" + encodeURIComponent(widgetTheme) : "");
+  const iframeQuery = [
+    widgetTheme ? "theme=" + encodeURIComponent(widgetTheme) : null,
+    widgetLanguage ? "lang=" + encodeURIComponent(widgetLanguage) : null,
+  ].filter(Boolean).join("&");
+  iframe.src = widgetServiceBaseUrl + "/embed-chat" + (iframeQuery ? "?" + iframeQuery : "");
 
   // State management
   let isOpen = false;

@@ -286,5 +286,5 @@ export function parseLanguageCode(code: string | undefined | null): Language {
   if (normalized === 'HE') return 'HE';
 
   // Default to Hebrew for unknown codes
-  return 'HE';
+  return 'EN';
 }

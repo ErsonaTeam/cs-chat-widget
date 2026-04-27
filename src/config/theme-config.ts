@@ -1,6 +1,19 @@
+import type { Language } from "@/utils/i18n";
+
 export interface WelcomeMessage {
   text: string;
   direction: "ltr" | "rtl";
+}
+
+export interface WidgetThemeText {
+  welcomeTitle: string;
+  headerTitle: string;
+  nameLabel: string;
+  namePlaceholder: string;
+  startChat: string;
+  resetButton: string;
+  inputPlaceholder: string;
+  loadingPlaceholder: string;
 }
 
 export interface WidgetTheme {
@@ -15,16 +28,7 @@ export interface WidgetTheme {
   logoUrl: string;
   logoSize: { width: number; height: number };
   direction: "rtl" | "ltr";
-  text: {
-    welcomeTitle: string;
-    headerTitle: string;
-    nameLabel: string;
-    namePlaceholder: string;
-    startChat: string;
-    resetButton: string;
-    inputPlaceholder: string;
-    loadingPlaceholder: string;
-  };
+  text: Record<Language, WidgetThemeText>;
   welcomeMessage: (name: string) => WelcomeMessage;
 }
 
@@ -45,14 +49,26 @@ const defaultTheme: WidgetTheme = {
   logoSize: { width: 24, height: 24 },
   direction: "ltr",
   text: {
-    welcomeTitle: "Welcome",
-    headerTitle: "Chat with us",
-    nameLabel: "Please enter your name:",
-    namePlaceholder: "Your name...",
-    startChat: "Start Chat",
-    resetButton: "Reset",
-    inputPlaceholder: "Type a message...",
-    loadingPlaceholder: "Waiting for reply...",
+    EN: {
+      welcomeTitle: "Welcome",
+      headerTitle: "Chat with us",
+      nameLabel: "Please enter your name:",
+      namePlaceholder: "Your name...",
+      startChat: "Start Chat",
+      resetButton: "Reset",
+      inputPlaceholder: "Type a message...",
+      loadingPlaceholder: "Waiting for reply...",
+    },
+    HE: {
+      welcomeTitle: "ברוכים הבאים",
+      headerTitle: "צ׳אט איתנו",
+      nameLabel: "נא להזין את שמך:",
+      namePlaceholder: "השם שלך...",
+      startChat: "התחל צ׳אט",
+      resetButton: "איפוס",
+      inputPlaceholder: "הקלד הודעה...",
+      loadingPlaceholder: "ממתין לתשובה...",
+    },
   },
   welcomeMessage: (name) =>
     isHebrew(name)
@@ -79,14 +95,26 @@ const fattalTheme: WidgetTheme = {
   logoSize: { width: 24, height: 24 },
   direction: "rtl",
   text: {
-    welcomeTitle: "ברוכים הבאים לפתאל",
-    headerTitle: "רשת מלונות פתאל",
-    nameLabel: "נא להזין את שמך:",
-    namePlaceholder: "השם שלך...",
-    startChat: "התחל צ׳אט",
-    resetButton: "איפוס",
-    inputPlaceholder: "הקלד הודעה...",
-    loadingPlaceholder: "ממתין לתשובה...",
+    HE: {
+      welcomeTitle: "ברוכים הבאים לפתאל",
+      headerTitle: "רשת מלונות פתאל",
+      nameLabel: "נא להזין את שמך:",
+      namePlaceholder: "השם שלך...",
+      startChat: "התחל צ׳אט",
+      resetButton: "איפוס",
+      inputPlaceholder: "הקלד הודעה...",
+      loadingPlaceholder: "ממתין לתשובה...",
+    },
+    EN: {
+      welcomeTitle: "Welcome to Fattal",
+      headerTitle: "Fattal Hotels",
+      nameLabel: "Please enter your name:",
+      namePlaceholder: "Your name...",
+      startChat: "Start Chat",
+      resetButton: "Reset",
+      inputPlaceholder: "Type a message...",
+      loadingPlaceholder: "Waiting for reply...",
+    },
   },
   welcomeMessage: (name) =>
     isHebrew(name)
@@ -113,14 +141,26 @@ const eztlvTheme: WidgetTheme = {
   logoSize: { width: 44, height: 44 },
   direction: "ltr",
   text: {
-    welcomeTitle: "Welcome to EZ Group",
-    headerTitle: "EZ Group",
-    nameLabel: "Please enter your name:",
-    namePlaceholder: "Your name...",
-    startChat: "Start Chat",
-    resetButton: "Reset",
-    inputPlaceholder: "Type a message...",
-    loadingPlaceholder: "Waiting for reply...",
+    EN: {
+      welcomeTitle: "Welcome to EZ Group",
+      headerTitle: "EZ Group",
+      nameLabel: "Please enter your name:",
+      namePlaceholder: "Your name...",
+      startChat: "Start Chat",
+      resetButton: "Reset",
+      inputPlaceholder: "Type a message...",
+      loadingPlaceholder: "Waiting for reply...",
+    },
+    HE: {
+      welcomeTitle: "ברוכים הבאים ל-EZ Group",
+      headerTitle: "EZ Group",
+      nameLabel: "נא להזין את שמך:",
+      namePlaceholder: "השם שלך...",
+      startChat: "התחל צ׳אט",
+      resetButton: "איפוס",
+      inputPlaceholder: "הקלד הודעה...",
+      loadingPlaceholder: "ממתין לתשובה...",
+    },
   },
   welcomeMessage: (name) =>
     isHebrew(name)

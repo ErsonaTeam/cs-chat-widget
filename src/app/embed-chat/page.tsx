@@ -7,10 +7,11 @@ import ChatWidget from "@/components/ChatWidget";
 function EmbedChatContent() {
   const searchParams = useSearchParams();
   const theme = searchParams.get("theme");
+  const lang = searchParams.get("lang");
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-transparent">
-      <ChatWidget theme={theme} />
+      <ChatWidget theme={theme} lang={lang} />
     </div>
   );
 }
