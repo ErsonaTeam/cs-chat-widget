@@ -18,6 +18,7 @@ export enum WidgetFormId {
   FATTAL_OTP_VERIFY = 'fattal_otp_verify',
   FATTAL_CANCELLATION_CONFIRM = 'fattal_cancellation_confirm',
   FATTAL_CONTACT_UPDATE = 'fattal_contact_update',
+  GUESTY_GUEST_DETAILS = 'guesty_guest_details',
 }
 
 /**

@@ -115,6 +115,22 @@ export const translations = {
     fattalContactUpdateSubmit: 'שמור שינויים',
     fattalContactUpdateSubmitted: 'שלחתי את עדכון פרטי הקשר.',
     fattalContactUpdateLockedTooltip: 'לא ניתן לעדכן ערך קיים. לשינוי יש לפנות לשירות הלקוחות.',
+
+    // Guesty Guest Details Form
+    guestyGuestDetailsFirstName: 'שם פרטי',
+    guestyGuestDetailsFirstNamePlaceholder: 'ישראל',
+    guestyGuestDetailsLastName: 'שם משפחה',
+    guestyGuestDetailsLastNamePlaceholder: 'ישראלי',
+    guestyGuestDetailsEmail: 'אימייל',
+    guestyGuestDetailsEmailPlaceholder: 'your@email.com',
+    guestyGuestDetailsPhone: 'טלפון (אופציונלי)',
+    guestyGuestDetailsPhonePlaceholder: '054-000-0000',
+    guestyGuestDetailsSubmit: 'שלח פרטים',
+    guestyGuestDetailsSubmitted: 'שלחתי את פרטי האורח.',
+    guestyGuestDetailsInvalidFirstName: 'שם פרטי נדרש',
+    guestyGuestDetailsInvalidLastName: 'שם משפחה נדרש',
+    guestyGuestDetailsInvalidEmail: 'כתובת אימייל לא תקינה',
+    guestyGuestDetailsInvalidPhone: 'מספר טלפון לא תקין',
   },
   EN: {
     // Common
@@ -211,6 +227,22 @@ export const translations = {
     fattalContactUpdateSubmit: 'Save Changes',
     fattalContactUpdateSubmitted: "I've submitted my contact details update.",
     fattalContactUpdateLockedTooltip: 'This value is on file and cannot be changed here. Contact customer service to update.',
+
+    // Guesty Guest Details Form
+    guestyGuestDetailsFirstName: 'First Name',
+    guestyGuestDetailsFirstNamePlaceholder: 'John',
+    guestyGuestDetailsLastName: 'Last Name',
+    guestyGuestDetailsLastNamePlaceholder: 'Smith',
+    guestyGuestDetailsEmail: 'Email',
+    guestyGuestDetailsEmailPlaceholder: 'your@email.com',
+    guestyGuestDetailsPhone: 'Phone (optional)',
+    guestyGuestDetailsPhonePlaceholder: '+1-555-000-0000',
+    guestyGuestDetailsSubmit: 'Submit Details',
+    guestyGuestDetailsSubmitted: "I've submitted my guest details.",
+    guestyGuestDetailsInvalidFirstName: 'First name is required',
+    guestyGuestDetailsInvalidLastName: 'Last name is required',
+    guestyGuestDetailsInvalidEmail: 'Invalid email address',
+    guestyGuestDetailsInvalidPhone: 'Invalid phone number',
   },
 } as const;
 
