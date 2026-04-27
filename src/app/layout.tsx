@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Ubuntu } from "next/font/google";
 import "./globals.css";
 
@@ -11,6 +11,12 @@ const ubuntu = Ubuntu({
 export const metadata: Metadata = {
   title: "Ersona Agent",
   description: "Ersona Agent",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({

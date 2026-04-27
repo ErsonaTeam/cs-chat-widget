@@ -5,21 +5,20 @@ export enum ChatWidgetMessageType {
 }
 
 /**
- * A single field in a contact form
+ * Form IDs that can be sent from the backend.
+ * Each ID maps to a hardcoded form component in the widget.
+ *
+ * Used both as `formId` in incoming render messages and as `formType`
+ * in outgoing submission payloads — must stay in sync with the backend
+ * `FattalFormId` enum in embeddings-encoder.
  */
-export interface ContactFormField {
-  type: 'email' | 'phone' | 'checkbox';
-  name: string;
-  required: boolean;
-  label?: Record<string, string>;
-  message?: Record<string, string>;
-}
-
-/**
- * Contact form configuration sent by the agent
- */
-export interface ContactFormConfig {
-  fields: ContactFormField[];
+export enum WidgetFormId {
+  CONTACT_INFO = 'contact_info',
+  FATTAL_ID_COLLECT = 'fattal_id_collect',
+  FATTAL_OTP_VERIFY = 'fattal_otp_verify',
+  FATTAL_CANCELLATION_CONFIRM = 'fattal_cancellation_confirm',
+  FATTAL_CONTACT_UPDATE = 'fattal_contact_update',
+  GUESTY_GUEST_DETAILS = 'guesty_guest_details',
 }
 
 /**

@@ -11,6 +11,7 @@
             margin: 0;
             padding: 20px;
             background: #800000;
+            -webkit-text-size-adjust: 100%;
         }
         .container {
             max-width: 800px;
@@ -33,6 +34,10 @@
             border-left: 4px solid #007cba;
             margin: 20px 0;
         }
+        [dir="rtl"] .highlight {
+            border-left: none;
+            border-right: 4px solid #007cba;
+        }
         .api-buttons {
             margin: 20px 0;
             display: flex;
@@ -43,10 +48,11 @@
             background: #007cba;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 20px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 14px;
+            min-height: 44px;
         }
         button:hover {
             background: #005a8b;
@@ -58,6 +64,42 @@
             font-family: monospace;
             border: 1px solid #ddd;
             overflow-x: auto;
+        }
+        @media (max-width: 640px) {
+            body {
+                padding: 12px;
+            }
+            .container {
+                padding: 20px 16px;
+                border-radius: 8px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            h2 {
+                font-size: 1.25rem;
+            }
+            h3 {
+                font-size: 1.05rem;
+            }
+            .api-buttons {
+                gap: 8px;
+            }
+            .api-buttons button {
+                flex: 1 1 calc(50% - 4px);
+                min-width: 0;
+                padding: 12px 14px;
+                font-size: 14px;
+            }
+            .code {
+                padding: 12px;
+                font-size: 12px;
+            }
+        }
+        @media (max-width: 380px) {
+            .api-buttons button {
+                flex: 1 1 100%;
+            }
         }
     </style>
 </head>
@@ -181,6 +223,6 @@
     </script>
 
     <!-- Your chat widget script with companyId (using ID + data attribute method) -->
-    <script id="ersona-chat-widget" src="http://localhost:3000/chat-widget.js" data-company-id="widget_e97rt12sf" data-theme="eztlv"></script>
+    <script id="ersona-chat-widget" src="http://localhost:3000/chat-widget.js" data-company-id="widget_vllp2brjc"></script>
 </body>
 </html> 

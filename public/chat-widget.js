@@ -110,9 +110,8 @@
   };
 
   const widgetServiceBaseUrl = "__WIDGET_SERVICE_URL__" !== "__WIDGET_" + "SERVICE_URL__"
-    ? "__WIDGET_SERVICE_URL__"
-    : "http://localhost:3000";
-
+      ? "__WIDGET_SERVICE_URL__"
+      : "http://localhost:3000";
 
   // Clear session on every load to ensure fresh sessions
   clearSessionOnLoad();
@@ -143,7 +142,8 @@
               hotelOptions: result.data.hotelOptions,
               roomSearchResults: result.data.roomSearchResults,
               listingOptions: result.data.listingOptions,
-              contactForm: result.data.contactForm,
+              formId: result.data.formId,
+              formData: result.data.formData,
               languageCode: result.data.languageCode
             }, widgetServiceBaseUrl);
           }
@@ -233,6 +233,16 @@
     if (event.data && event.data.type === MESSAGE_TYPES.RESIZE_WIDGET) {
       const { height, width } = event.data;
       if (iframe) {
+        // On mobile, the CSS media query controls sizing — do not apply inline
+        // width/height from the iframe, otherwise it would override the
+        // near-fullscreen mobile layout.
+        const isMobileViewport = window.matchMedia('(max-width: 640px)').matches;
+        if (isMobileViewport) {
+          iframe.style.width = '';
+          iframe.style.height = '';
+          return;
+        }
+
         // Handle height changes
         if (height && typeof height === 'number') {
           const minHeight = 500;
@@ -257,8 +267,8 @@
   const styles = `
     #chat-widget-button {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
+      bottom: max(20px, env(safe-area-inset-bottom));
+      right: max(20px, env(safe-area-inset-right));
       width: 60px;
       height: 60px;
       background: ${buttonColors.primary};
@@ -299,7 +309,7 @@
       background: rgba(255, 255, 255, 0.1);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      transition: all 0.3s ease;
+      transition: opacity 0.3s ease, transform 0.3s ease;
       opacity: 0;
       transform: translateY(20px) scale(0.95);
       pointer-events: none;
@@ -313,26 +323,55 @@
       border: 1px solid rgba(0, 0, 0, 0.25);
     }
 
-    /* Mobile responsive */
-    @media (max-width: 480px) {
+    /* Mobile responsive — covers all common iPhones (375-430px) and Androids (360-412px).
+       Edge-to-edge fullscreen so the keyboard doesn't fight with margins.
+       100dvh handles iOS Safari URL bar. */
+    @media (max-width: 640px) {
       #chat-widget-iframe {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        width: 96vw;
-        height: 60vh;
-        border-radius: 16px;
-        margin: auto auto 4.5rem auto;
+        top: 0 !important;
+        left: 0 !important;
+        right: auto !important;
+        bottom: auto !important;
+        width: 100vw !important;
+        height: 100dvh !important;
+        max-height: none !important;
+        max-width: none !important;
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+
+      #chat-widget-iframe.open {
+        border: none !important;
       }
 
       #chat-widget-button {
-        bottom: 15px;
-        right: 15px;
-        width: 50px;
-        height: 50px;
-        font-size: 20px;
+        bottom: max(16px, env(safe-area-inset-bottom, 0px));
+        right: max(16px, env(safe-area-inset-right, 0px));
+        width: 56px;
+        height: 56px;
+        font-size: 22px;
+      }
+
+      /* When widget is open + fullscreen, move the close button to the top-right
+         so it doesn't sit on top of the chat input/send button at the bottom. */
+      #chat-widget-button.widget-open {
+        bottom: auto !important;
+        right: max(12px, env(safe-area-inset-right, 0px)) !important;
+        top: max(12px, env(safe-area-inset-top, 0px)) !important;
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        background: rgba(0, 0, 0, 0.45) !important;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+      }
+
+      #chat-widget-button.widget-open:hover {
+        background: rgba(0, 0, 0, 0.6) !important;
       }
     }
 
@@ -379,11 +418,13 @@
       trackActivity();
       
       iframe.classList.add("open");
+      button.classList.add("widget-open");
       button.innerHTML = '<span style="color: #ffffff;">✕</span>';
       button.setAttribute("aria-label", "Close chat widget");
       button.setAttribute("title", "Close chat");
     } else {
       iframe.classList.remove("open");
+      button.classList.remove("widget-open");
       button.innerHTML = `<img src="${widgetServiceBaseUrl}/chat-icon.png" alt="Chat" style="width: 32px; height: 32px; object-fit: contain;">`;
       button.setAttribute("aria-label", "Open chat widget");
       button.setAttribute("title", "Chat with us");
@@ -391,6 +432,22 @@
   }
 
   button.addEventListener("click", toggleChat);
+
+  // When rotating from desktop to mobile viewport, drop any inline width/height
+  // set by previous resize messages so the mobile CSS media query takes effect.
+  const mobileMediaQuery = window.matchMedia('(max-width: 640px)');
+  const handleViewportChange = (event) => {
+    if (event.matches && iframe) {
+      iframe.style.width = '';
+      iframe.style.height = '';
+    }
+  };
+  if (mobileMediaQuery.addEventListener) {
+    mobileMediaQuery.addEventListener('change', handleViewportChange);
+  } else if (mobileMediaQuery.addListener) {
+    // Safari < 14 fallback
+    mobileMediaQuery.addListener(handleViewportChange);
+  }
 
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && isOpen) {

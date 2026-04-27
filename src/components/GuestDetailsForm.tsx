@@ -4,38 +4,49 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Language, t, getLanguageConfig } from "@/utils/i18n";
 import { validatePhone, formatPhoneForStorage } from "@/utils/phone";
+import { WidgetFormId } from "@/types/message-types";
 
-interface ContactFormProps {
+interface GuestDetailsFormProps {
   lang: Language;
   onSubmit: (formData: Record<string, string | boolean>) => void;
   disabled?: boolean;
+  /** Optional prefill data from the backend (firstName, lastName, email, phone) */
+  formData?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+  };
 }
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function ContactForm({
+const COUNTRY_CODES = [
+  { code: "972", label: "+972" },
+  { code: "1", label: "+1" },
+  { code: "44", label: "+44" },
+  { code: "49", label: "+49" },
+  { code: "33", label: "+33" },
+  { code: "39", label: "+39" },
+  { code: "34", label: "+34" },
+];
+
+export default function GuestDetailsForm({
   lang,
   onSubmit,
   disabled = false,
-}: ContactFormProps) {
+  formData,
+}: GuestDetailsFormProps) {
   const langConfig = getLanguageConfig(lang);
 
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [firstName, setFirstName] = useState(formData?.firstName ?? "");
+  const [lastName, setLastName] = useState(formData?.lastName ?? "");
+  const [email, setEmail] = useState(formData?.email ?? "");
+  const [phone, setPhone] = useState(formData?.phone ?? "");
   const [countryCode, setCountryCode] = useState("972");
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
-
-  const countryCodes = [
-    { code: "972", label: "+972" },
-    { code: "1", label: "+1" },
-    { code: "44", label: "+44" },
-    { code: "49", label: "+49" },
-    { code: "33", label: "+33" },
-    { code: "39", label: "+39" },
-    { code: "34", label: "+34" },
-  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,14 +54,21 @@ export default function ContactForm({
 
     const newErrors: Record<string, string> = {};
 
-    // Validate email
-    if (!email.trim() || !EMAIL_REGEX.test(email.trim())) {
-      newErrors.email = t(lang, "contactFormInvalidEmail");
+    if (!firstName.trim()) {
+      newErrors.firstName = t(lang, "guestyGuestDetailsInvalidFirstName");
     }
 
-    // Validate phone
-    if (!phone.trim() || !validatePhone(phone, countryCode)) {
-      newErrors.phone = t(lang, "contactFormInvalidPhone");
+    if (!lastName.trim()) {
+      newErrors.lastName = t(lang, "guestyGuestDetailsInvalidLastName");
+    }
+
+    if (!email.trim() || !EMAIL_REGEX.test(email.trim())) {
+      newErrors.email = t(lang, "guestyGuestDetailsInvalidEmail");
+    }
+
+    // Phone is optional — only validate if something was entered
+    if (phone.trim() && !validatePhone(phone, countryCode)) {
+      newErrors.phone = t(lang, "guestyGuestDetailsInvalidPhone");
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -61,11 +79,19 @@ export default function ContactForm({
     setErrors({});
     setSubmitted(true);
 
-    onSubmit({
+    const payload: Record<string, string | boolean> = {
+      formType: WidgetFormId.GUESTY_GUEST_DETAILS,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
       email: email.trim(),
-      phone: formatPhoneForStorage(phone, countryCode),
       marketingOptIn,
-    });
+    };
+
+    if (phone.trim()) {
+      payload.phone = formatPhoneForStorage(phone, countryCode);
+    }
+
+    onSubmit(payload);
   };
 
   if (submitted) {
@@ -83,10 +109,56 @@ export default function ContactForm({
         onSubmit={handleSubmit}
         className="bg-white rounded-xl border border-primary/10 shadow-sm p-4 space-y-3"
       >
-        {/* Email field */}
+        {/* First Name */}
         <div>
           <label className="block text-xs font-medium text-primary/70 mb-1">
-            {t(lang, "contactFormEmail")}
+            {t(lang, "guestyGuestDetailsFirstName")}
+          </label>
+          <input
+            type="text"
+            value={firstName}
+            onChange={(e) => {
+              setFirstName(e.target.value);
+              setErrors((prev) => ({ ...prev, firstName: "" }));
+            }}
+            disabled={disabled}
+            className="w-full px-3 py-2 border-2 border-primary/20 rounded-lg
+                     bg-white text-primary text-sm focus:outline-none focus:border-accent
+                     placeholder:text-primary/40 disabled:opacity-50"
+            placeholder={t(lang, "guestyGuestDetailsFirstNamePlaceholder")}
+          />
+          {errors.firstName && (
+            <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
+          )}
+        </div>
+
+        {/* Last Name */}
+        <div>
+          <label className="block text-xs font-medium text-primary/70 mb-1">
+            {t(lang, "guestyGuestDetailsLastName")}
+          </label>
+          <input
+            type="text"
+            value={lastName}
+            onChange={(e) => {
+              setLastName(e.target.value);
+              setErrors((prev) => ({ ...prev, lastName: "" }));
+            }}
+            disabled={disabled}
+            className="w-full px-3 py-2 border-2 border-primary/20 rounded-lg
+                     bg-white text-primary text-sm focus:outline-none focus:border-accent
+                     placeholder:text-primary/40 disabled:opacity-50"
+            placeholder={t(lang, "guestyGuestDetailsLastNamePlaceholder")}
+          />
+          {errors.lastName && (
+            <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>
+          )}
+        </div>
+
+        {/* Email */}
+        <div>
+          <label className="block text-xs font-medium text-primary/70 mb-1">
+            {t(lang, "guestyGuestDetailsEmail")}
           </label>
           <input
             type="email"
@@ -100,17 +172,17 @@ export default function ContactForm({
             className="w-full px-3 py-2 border-2 border-primary/20 rounded-lg
                      bg-white text-primary text-sm focus:outline-none focus:border-accent
                      placeholder:text-primary/40 disabled:opacity-50"
-            placeholder={t(lang, "contactFormEmailPlaceholder")}
+            placeholder={t(lang, "guestyGuestDetailsEmailPlaceholder")}
           />
           {errors.email && (
             <p className="text-red-500 text-xs mt-1">{errors.email}</p>
           )}
         </div>
 
-        {/* Phone field */}
+        {/* Phone (optional) */}
         <div>
           <label className="block text-xs font-medium text-primary/70 mb-1">
-            {t(lang, "contactFormPhone")}
+            {t(lang, "guestyGuestDetailsPhone")}
           </label>
           <div className="flex gap-2" dir="ltr">
             <select
@@ -121,7 +193,7 @@ export default function ContactForm({
                        text-primary text-sm focus:outline-none focus:border-accent
                        cursor-pointer"
             >
-              {countryCodes.map((cc) => (
+              {COUNTRY_CODES.map((cc) => (
                 <option key={cc.code} value={cc.code}>
                   {cc.label}
                 </option>
@@ -138,7 +210,7 @@ export default function ContactForm({
               className="flex-1 px-3 py-2 border-2 border-primary/20 rounded-lg
                        bg-white text-primary text-sm focus:outline-none focus:border-accent
                        placeholder:text-primary/40 disabled:opacity-50"
-              placeholder={t(lang, "contactFormPhonePlaceholder")}
+              placeholder={t(lang, "guestyGuestDetailsPhonePlaceholder")}
             />
           </div>
           {errors.phone && (
@@ -170,7 +242,7 @@ export default function ContactForm({
                    rounded-lg transition-colors shadow-sm text-sm
                    disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {t(lang, "contactFormSubmit")}
+          {t(lang, "guestyGuestDetailsSubmit")}
         </motion.button>
       </form>
     </motion.div>

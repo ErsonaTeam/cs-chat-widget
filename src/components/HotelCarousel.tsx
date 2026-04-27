@@ -110,12 +110,13 @@ export default function HotelCarousel({ hotels, onSelectHotel, lang = 'HE' }: Ho
         {/* Scrollable Container */}
         <div
           ref={scrollContainerRef}
-          className={`flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth pb-2 ${
+          className={`flex gap-3 overflow-x-auto overscroll-x-contain touch-pan-x scrollbar-hide scroll-smooth pb-2 ${
             langConfig.dir === 'rtl' ? 'pr-3 pl-8' : 'pl-3 pr-8'
           }`}
           style={{
             scrollbarWidth: "none",
             msOverflowStyle: "none",
+            WebkitOverflowScrolling: "touch",
           }}
         >
           {hotels.map((hotel) => (

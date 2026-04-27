@@ -6,13 +6,18 @@ import { LuSendHorizontal } from "react-icons/lu";
 import Image from "next/image";
 import Markdown from "react-markdown";
 import LoadingSpinner from "./LoadingSpinner";
-import { ChatWidgetMessageType, FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice, WidgetListing, ContactFormConfig } from "@/types/message-types";
+import { ChatWidgetMessageType, FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice, WidgetListing, WidgetFormId } from "@/types/message-types";
 import HotelCarousel from "./HotelCarousel";
 import FattalRoomCarousel from "./FattalRoomCarousel";
 import FattalRoomDetailView from "./FattalRoomDetailView";
 import ListingCarousel from "./ListingCarousel";
 import ListingDetailView from "./ListingDetailView";
 import ContactForm from "./ContactForm";
+import GuestDetailsForm from "./GuestDetailsForm";
+import FattalIdCollectForm from "./FattalIdCollectForm";
+import FattalOtpVerifyForm from "./FattalOtpVerifyForm";
+import FattalCancellationForm from "./FattalCancellationForm";
+import FattalContactUpdateForm from "./FattalContactUpdateForm";
 import { Language, t, formatPrice as formatPriceI18n, parseLanguageCode } from "@/utils/i18n";
 import { getTheme } from "@/config/theme-config";
 
@@ -25,7 +30,8 @@ interface Message {
   hotelOptions?: FattalHotel[];
   roomSearchResults?: FattalRoom[];
   listingOptions?: WidgetListing[];
-  contactForm?: ContactFormConfig;
+  formId?: string;
+  formData?: Record<string, unknown>;
   languageCode?: string;
 }
 
@@ -64,7 +70,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [selectedFattalRoom, setSelectedFattalRoom] = useState<FattalRoom | null>(null);
+  const [selectedFattalRooms, setSelectedFattalRooms] = useState<Map<number, FattalRoom>>(new Map());
   const [selectedListing, setSelectedListing] = useState<WidgetListing | null>(null);
   const [currentLang, setCurrentLang] = useState<Language>(widgetTheme.direction === 'rtl' ? 'HE' : 'EN');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -106,7 +112,8 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
           hotelOptions: event.data.hotelOptions,
           roomSearchResults: event.data.roomSearchResults,
           listingOptions: event.data.listingOptions,
-          contactForm: event.data.contactForm,
+          formId: event.data.formId,
+          formData: event.data.formData,
           languageCode: event.data.languageCode,
         };
 
@@ -142,7 +149,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
     const hasHotelOptions = messages.some(msg => msg.hotelOptions && msg.hotelOptions.length > 0);
     const hasRoomSearchResults = messages.some(msg => msg.roomSearchResults && msg.roomSearchResults.length > 0);
     const hasListingOptions = messages.some(msg => msg.listingOptions && msg.listingOptions.length > 0);
-    const showingFattalRoomDetail = selectedFattalRoom !== null;
+    const showingFattalRoomDetail = selectedFattalRooms.size > 0;
     const showingListingDetail = selectedListing !== null;
 
     // Send resize request to parent window
@@ -166,7 +173,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
         width: newWidth
       }, '*');
     }
-  }, [messages, selectedFattalRoom, selectedListing]);
+  }, [messages, selectedFattalRooms, selectedListing]);
 
   // Handle name submission
   const handleNameSubmit = (e: React.FormEvent) => {
@@ -175,29 +182,16 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
 
     setUserName(nameInput.trim());
 
-    const firstWelcomeMessage: Message = {
-      id: Date.now().toString() + "-welcome-1",
-      text: widgetTheme.welcomeMessages.first(nameInput.trim()),
+    const welcome = widgetTheme.welcomeMessage(nameInput.trim());
+    const welcomeMessage: Message = {
+      id: Date.now().toString() + "-welcome",
+      text: welcome.text,
       sender: "bot",
       timestamp: new Date(),
-      direction: widgetTheme.welcomeMessages.firstDirection,
+      direction: welcome.direction,
     };
 
-    setMessages([firstWelcomeMessage]);
-
-    if (widgetTheme.welcomeMessages.second) {
-      setTimeout(() => {
-        const secondWelcomeMessage: Message = {
-          id: Date.now().toString() + "-welcome-2",
-          text: widgetTheme.welcomeMessages.second,
-          sender: "bot",
-          timestamp: new Date(),
-          direction: widgetTheme.welcomeMessages.secondDirection,
-        };
-
-        setMessages((prev) => [...prev, secondWelcomeMessage]);
-      }, 1500);
-    }
+    setMessages([welcomeMessage]);
   };
 
   // Send message to API and get bot response
@@ -293,17 +287,38 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
     setMessages([]);
     setNameInput("");
     setIsLoading(false);
-    setSelectedFattalRoom(null);
+    setSelectedFattalRooms(new Map());
     setSelectedListing(null);
     // Notify parent page to clear conversationId and stop polling
     window.parent.postMessage({ type: ChatWidgetMessageType.RESET_CHAT }, '*');
+  };
+
+  // Resolve the user-visible message based on formType
+  const getFormSubmittedMessage = (formData: Record<string, string | boolean>): string => {
+    const formType = formData.formType as string | undefined;
+    switch (formType) {
+      case WidgetFormId.FATTAL_ID_COLLECT:
+        return t(currentLang, 'fattalIdSubmitted');
+      case WidgetFormId.FATTAL_OTP_VERIFY:
+        return t(currentLang, 'fattalOtpSubmitted');
+      case WidgetFormId.FATTAL_CANCELLATION_CONFIRM:
+        return formData.confirmed
+          ? t(currentLang, 'fattalCancelConfirmed')
+          : t(currentLang, 'fattalCancelDeclined');
+      case WidgetFormId.FATTAL_CONTACT_UPDATE:
+        return t(currentLang, 'fattalContactUpdateSubmitted');
+      case WidgetFormId.GUESTY_GUEST_DETAILS:
+        return t(currentLang, 'guestyGuestDetailsSubmitted');
+      default:
+        return t(currentLang, 'contactFormSubmitted');
+    }
   };
 
   // Handle contact form submission
   const handleContactFormSubmit = async (formData: Record<string, string | boolean>) => {
     if (isLoading) return;
 
-    const submittedMessage = t(currentLang, 'contactFormSubmitted');
+    const submittedMessage = getFormSubmittedMessage(formData);
     const userMessage: Message = {
       id: Date.now().toString(),
       text: submittedMessage,
@@ -345,18 +360,27 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
     }
   };
 
-  // Handle Fattal room selection - open detail view
-  const handleSelectFattalRoom = (room: FattalRoom) => {
-    setSelectedFattalRoom(room);
+  // Handle Fattal room selection - open detail view for a specific carousel (by message index)
+  const handleSelectFattalRoom = (messageIndex: number, room: FattalRoom) => {
+    setSelectedFattalRooms((prev) => {
+      const next = new Map(prev);
+      next.set(messageIndex, room);
+      return next;
+    });
   };
 
-  // Handle back from Fattal room detail view
-  const handleBackFromFattalRoom = () => {
-    setSelectedFattalRoom(null);
+  // Handle back from Fattal room detail view for a specific carousel
+  const handleBackFromFattalRoom = (messageIndex: number) => {
+    setSelectedFattalRooms((prev) => {
+      const next = new Map(prev);
+      next.delete(messageIndex);
+      return next;
+    });
   };
 
-  // Handle Fattal room booking confirmation
+  // Handle Fattal room booking confirmation for a specific carousel
   const handleConfirmFattalRoom = async (
+    messageIndex: number,
     room: FattalRoom,
     selectedPackage: FattalRoomPackage,
     selectedPrice: FattalPackagePrice,
@@ -384,7 +408,11 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setSelectedFattalRoom(null);
+    setSelectedFattalRooms((prev) => {
+      const next = new Map(prev);
+      next.delete(messageIndex);
+      return next;
+    });
     setIsLoading(true);
 
     // Send message to API
@@ -430,7 +458,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
 
   if (!userName) {
     return (
-      <div dir={widgetTheme.direction} className="flex flex-col h-full rounded-2xl overflow-hidden shadow-xl">
+      <div dir={widgetTheme.direction} className="flex flex-col h-full sm:rounded-2xl overflow-hidden sm:shadow-xl">
         <div className="bg-primary py-2 px-4 flex items-center gap-3">
           <Image
             src={widgetTheme.logoUrl}
@@ -521,9 +549,9 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
       </div>
 
       {/* Messages - Cream background */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-surface">
+      <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4 bg-surface" style={{ WebkitOverflowScrolling: "touch" }}>
         <AnimatePresence>
-          {messages.map((message) => (
+          {messages.map((message, index) => (
             <div key={message.id}>
               {/* Message Bubble */}
               <motion.div
@@ -568,13 +596,50 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
                 </div>
               </motion.div>
 
-              {/* Contact Form */}
-              {message.contactForm && (
+              {/* Form rendering based on formId */}
+              {message.formId === WidgetFormId.CONTACT_INFO && (
                 <ContactForm
-                  config={message.contactForm}
                   lang={currentLang}
                   onSubmit={handleContactFormSubmit}
                   disabled={isLoading}
+                />
+              )}
+              {message.formId === WidgetFormId.FATTAL_ID_COLLECT && (
+                <FattalIdCollectForm
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit}
+                  disabled={isLoading}
+                />
+              )}
+              {message.formId === WidgetFormId.FATTAL_OTP_VERIFY && (
+                <FattalOtpVerifyForm
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit}
+                  disabled={isLoading}
+                />
+              )}
+              {message.formId === WidgetFormId.FATTAL_CANCELLATION_CONFIRM && (
+                <FattalCancellationForm
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit}
+                  disabled={isLoading}
+                  formData={message.formData as React.ComponentProps<typeof FattalCancellationForm>["formData"]}
+                />
+              )}
+              {message.formId === WidgetFormId.FATTAL_CONTACT_UPDATE && (
+                <FattalContactUpdateForm
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit as React.ComponentProps<typeof FattalContactUpdateForm>["onSubmit"]}
+                  disabled={isLoading}
+                  formData={message.formData as React.ComponentProps<typeof FattalContactUpdateForm>["formData"]}
+                />
+              )}
+              {message.formId === WidgetFormId.GUESTY_GUEST_DETAILS && (
+                <GuestDetailsForm
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit}
+                  disabled={isLoading}
+                  formData={message.formData as React.ComponentProps<typeof GuestDetailsForm>["formData"]}
                 />
               )}
 
@@ -586,15 +651,15 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
               {/* Fattal Room Carousel or Detail View */}
               {message.roomSearchResults && message.roomSearchResults.length > 0 && (
                 <>
-                  {selectedFattalRoom ? (
+                  {selectedFattalRooms.get(index) ? (
                     <FattalRoomDetailView
-                      room={selectedFattalRoom}
-                      onConfirm={handleConfirmFattalRoom}
-                      onBack={handleBackFromFattalRoom}
+                      room={selectedFattalRooms.get(index)!}
+                      onConfirm={(room, pkg, price, isClubMember) => handleConfirmFattalRoom(index, room, pkg, price, isClubMember)}
+                      onBack={() => handleBackFromFattalRoom(index)}
                       lang={currentLang}
                     />
                   ) : (
-                    <FattalRoomCarousel rooms={message.roomSearchResults} onSelectRoom={handleSelectFattalRoom} lang={currentLang} />
+                    <FattalRoomCarousel rooms={message.roomSearchResults} onSelectRoom={(room) => handleSelectFattalRoom(index, room)} lang={currentLang} />
                   )}
                 </>
               )}

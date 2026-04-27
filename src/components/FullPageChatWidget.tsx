@@ -6,13 +6,18 @@ import { LuSendHorizontal } from "react-icons/lu";
 import Image from "next/image";
 import Markdown from "react-markdown";
 import LoadingSpinner from "./LoadingSpinner";
-import { FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice, WidgetListing, ContactFormConfig } from "@/types/message-types";
+import { FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice, WidgetListing, WidgetFormId } from "@/types/message-types";
 import HotelCarousel from "./HotelCarousel";
 import FattalRoomCarousel from "./FattalRoomCarousel";
 import FattalRoomDetailView from "./FattalRoomDetailView";
 import ListingCarousel from "./ListingCarousel";
 import ListingDetailView from "./ListingDetailView";
 import ContactForm from "./ContactForm";
+import FattalIdCollectForm from "./FattalIdCollectForm";
+import FattalOtpVerifyForm from "./FattalOtpVerifyForm";
+import FattalCancellationForm from "./FattalCancellationForm";
+import FattalContactUpdateForm from "./FattalContactUpdateForm";
+import GuestDetailsForm from "./GuestDetailsForm";
 import { Language, t, formatPrice as formatPriceI18n, parseLanguageCode } from "@/utils/i18n";
 import { getTheme } from "@/config/theme-config";
 
@@ -25,7 +30,8 @@ interface Message {
   hotelOptions?: FattalHotel[];
   roomSearchResults?: FattalRoom[];
   listingOptions?: WidgetListing[];
-  contactForm?: ContactFormConfig;
+  formId?: string;
+  formData?: Record<string, unknown>;
   languageCode?: string;
 }
 
@@ -65,7 +71,7 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [selectedFattalRoom, setSelectedFattalRoom] = useState<FattalRoom | null>(null);
+  const [selectedFattalRooms, setSelectedFattalRooms] = useState<Map<number, FattalRoom>>(new Map());
   const [selectedListing, setSelectedListing] = useState<WidgetListing | null>(null);
   const [currentLang, setCurrentLang] = useState<Language>(widgetTheme.direction === 'rtl' ? 'HE' : 'EN');
 
@@ -113,7 +119,7 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
         if (epochRef.current !== myEpoch) return;
         const body = await res.json();
         const data = body.data; // unwrap from { success, data }
-        if (!data?.message && !data?.hotelOptions && !data?.listingOptions && !data?.roomSearchResults) return;
+        if (!data?.message && !data?.hotelOptions && !data?.listingOptions && !data?.roomSearchResults && !data?.formId) return;
         if (data.languageCode) setCurrentLang(parseLanguageCode(data.languageCode));
         setMessages((prev) => [...prev, {
           id: Date.now().toString() + "-agent",
@@ -124,7 +130,8 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
           hotelOptions: data.hotelOptions ?? undefined,
           roomSearchResults: data.roomSearchResults ?? undefined,
           listingOptions: data.listingOptions ?? undefined,
-          contactForm: data.contactForm ?? undefined,
+          formId: data.formId ?? undefined,
+          formData: data.formData ?? undefined,
           languageCode: data.languageCode ?? undefined,
         }]);
         setIsLoading(false);
@@ -182,34 +189,22 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
 
     setUserName(nameInput.trim());
 
-    const firstWelcomeMessage: Message = {
-      id: Date.now().toString() + "-welcome-1",
-      text: widgetTheme.welcomeMessages.first(nameInput.trim()),
+    const welcome = widgetTheme.welcomeMessage(nameInput.trim());
+    const welcomeMessage: Message = {
+      id: Date.now().toString() + "-welcome",
+      text: welcome.text,
       sender: "bot",
       timestamp: new Date(),
-      direction: widgetTheme.welcomeMessages.firstDirection,
+      direction: welcome.direction,
     };
 
-    setMessages([firstWelcomeMessage]);
-
-    if (widgetTheme.welcomeMessages.second) {
-      welcomeTimerRef.current = setTimeout(() => {
-        const secondWelcomeMessage: Message = {
-          id: Date.now().toString() + "-welcome-2",
-          text: widgetTheme.welcomeMessages.second,
-          sender: "bot",
-          timestamp: new Date(),
-          direction: widgetTheme.welcomeMessages.secondDirection,
-        };
-        setMessages((prev) => [...prev, secondWelcomeMessage]);
-      }, 1500);
-    }
+    setMessages([welcomeMessage]);
   };
 
   // Handle message submission
   const handleMessageSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputMessage.trim() || isLoading) return;
+    if (!inputMessage.trim()) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -252,15 +247,35 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
     setMessages([]);
     setNameInput("");
     setIsLoading(false);
-    setSelectedFattalRoom(null);
+    setSelectedFattalRooms(new Map());
     setSelectedListing(null);
+  };
+
+  const getFormSubmittedMessage = (formData: Record<string, string | boolean>): string => {
+    const formType = formData.formType as string | undefined;
+    switch (formType) {
+      case WidgetFormId.FATTAL_ID_COLLECT:
+        return t(currentLang, 'fattalIdSubmitted');
+      case WidgetFormId.FATTAL_OTP_VERIFY:
+        return t(currentLang, 'fattalOtpSubmitted');
+      case WidgetFormId.FATTAL_CANCELLATION_CONFIRM:
+        return formData.confirmed
+          ? t(currentLang, 'fattalCancelConfirmed')
+          : t(currentLang, 'fattalCancelDeclined');
+      case WidgetFormId.FATTAL_CONTACT_UPDATE:
+        return t(currentLang, 'fattalContactUpdateSubmitted');
+      case WidgetFormId.GUESTY_GUEST_DETAILS:
+        return t(currentLang, 'guestyGuestDetailsSubmitted');
+      default:
+        return t(currentLang, 'contactFormSubmitted');
+    }
   };
 
   // Handle contact form submission
   const handleContactFormSubmit = async (formData: Record<string, string | boolean>) => {
     if (isLoading) return;
 
-    const submittedMessage = t(currentLang, 'contactFormSubmitted');
+    const submittedMessage = getFormSubmittedMessage(formData);
     const userMessage: Message = {
       id: Date.now().toString(),
       text: submittedMessage,
@@ -295,10 +310,23 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
     // isLoading stays true until poll receives response
   };
 
-  const handleSelectFattalRoom = (room: FattalRoom) => { setSelectedFattalRoom(room); };
-  const handleBackFromFattalRoom = () => { setSelectedFattalRoom(null); };
+  const handleSelectFattalRoom = (messageIndex: number, room: FattalRoom) => {
+    setSelectedFattalRooms((prev) => {
+      const next = new Map(prev);
+      next.set(messageIndex, room);
+      return next;
+    });
+  };
+  const handleBackFromFattalRoom = (messageIndex: number) => {
+    setSelectedFattalRooms((prev) => {
+      const next = new Map(prev);
+      next.delete(messageIndex);
+      return next;
+    });
+  };
 
   const handleConfirmFattalRoom = async (
+    messageIndex: number,
     room: FattalRoom,
     selectedPackage: FattalRoomPackage,
     selectedPrice: FattalPackagePrice,
@@ -326,7 +354,11 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setSelectedFattalRoom(null);
+    setSelectedFattalRooms((prev) => {
+      const next = new Map(prev);
+      next.delete(messageIndex);
+      return next;
+    });
     setIsLoading(true);
 
     await sendMessageToAPI(selectionMessage, userName);
@@ -357,7 +389,7 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
 
   if (!userName) {
     return (
-      <div dir={widgetTheme.direction} className="flex flex-col h-screen w-screen overflow-hidden">
+      <div dir={widgetTheme.direction} className="flex flex-col h-dvh w-screen overflow-hidden">
         <div className="bg-primary py-2 px-4 flex items-center gap-3">
           <Image
             src={widgetTheme.logoUrl}
@@ -426,7 +458,7 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
   }
 
   return (
-    <div dir={widgetTheme.direction} className="flex flex-col h-screen w-screen overflow-hidden">
+    <div dir={widgetTheme.direction} className="flex flex-col h-dvh w-screen overflow-hidden">
       <div className="flex items-center justify-between py-2 px-4 bg-primary">
         <h3 className="font-semibold flex items-center gap-2 text-white text-sm">
           <Image
@@ -447,9 +479,9 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-surface">
+      <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4 bg-surface" style={{ WebkitOverflowScrolling: "touch" }}>
         <AnimatePresence>
-          {messages.map((message) => (
+          {messages.map((message, index) => (
             <div key={message.id}>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -488,12 +520,49 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
                 </div>
               </motion.div>
 
-              {message.contactForm && (
+              {message.formId === WidgetFormId.CONTACT_INFO && (
                 <ContactForm
-                  config={message.contactForm}
                   lang={currentLang}
                   onSubmit={handleContactFormSubmit}
                   disabled={isLoading}
+                />
+              )}
+              {message.formId === WidgetFormId.FATTAL_ID_COLLECT && (
+                <FattalIdCollectForm
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit}
+                  disabled={isLoading}
+                />
+              )}
+              {message.formId === WidgetFormId.FATTAL_OTP_VERIFY && (
+                <FattalOtpVerifyForm
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit}
+                  disabled={isLoading}
+                />
+              )}
+              {message.formId === WidgetFormId.FATTAL_CANCELLATION_CONFIRM && (
+                <FattalCancellationForm
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit}
+                  disabled={isLoading}
+                  formData={message.formData as React.ComponentProps<typeof FattalCancellationForm>["formData"]}
+                />
+              )}
+              {message.formId === WidgetFormId.FATTAL_CONTACT_UPDATE && (
+                <FattalContactUpdateForm
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit as React.ComponentProps<typeof FattalContactUpdateForm>["onSubmit"]}
+                  disabled={isLoading}
+                  formData={message.formData as React.ComponentProps<typeof FattalContactUpdateForm>["formData"]}
+                />
+              )}
+              {message.formId === WidgetFormId.GUESTY_GUEST_DETAILS && (
+                <GuestDetailsForm
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit}
+                  disabled={isLoading}
+                  formData={message.formData as React.ComponentProps<typeof GuestDetailsForm>["formData"]}
                 />
               )}
 
@@ -503,15 +572,21 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
 
               {message.roomSearchResults && message.roomSearchResults.length > 0 && (
                 <>
-                  {selectedFattalRoom ? (
+                  {selectedFattalRooms.get(index) ? (
                     <FattalRoomDetailView
-                      room={selectedFattalRoom}
-                      onConfirm={handleConfirmFattalRoom}
-                      onBack={handleBackFromFattalRoom}
+                      room={selectedFattalRooms.get(index)!}
+                      onConfirm={(room, pkg, price, isClubMember) =>
+                        handleConfirmFattalRoom(index, room, pkg, price, isClubMember)
+                      }
+                      onBack={() => handleBackFromFattalRoom(index)}
                       lang={currentLang}
                     />
                   ) : (
-                    <FattalRoomCarousel rooms={message.roomSearchResults} onSelectRoom={handleSelectFattalRoom} lang={currentLang} />
+                    <FattalRoomCarousel
+                      rooms={message.roomSearchResults}
+                      onSelectRoom={(room) => handleSelectFattalRoom(index, room)}
+                      lang={currentLang}
+                    />
                   )}
                 </>
               )}
@@ -555,16 +630,14 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             dir="auto"
-            disabled={isLoading}
             className="flex-1 px-4 py-3 border-2 border-primary/20 rounded-xl
                      bg-white text-primary focus:outline-none focus:border-accent
-                     text-sm placeholder:text-primary/40
-                     disabled:opacity-50 disabled:cursor-not-allowed"
+                     text-sm placeholder:text-primary/40"
             placeholder={widgetTheme.text.inputPlaceholder}
           />
           <motion.button
             type="submit"
-            disabled={isLoading || !inputMessage.trim()}
+            disabled={!inputMessage.trim()}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="bg-accent hover:bg-accent/90 text-white font-medium p-3
