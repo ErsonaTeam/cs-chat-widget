@@ -17,6 +17,7 @@ import FattalIdCollectForm from "./FattalIdCollectForm";
 import FattalOtpVerifyForm from "./FattalOtpVerifyForm";
 import FattalCancellationForm from "./FattalCancellationForm";
 import FattalContactUpdateForm from "./FattalContactUpdateForm";
+import GuestDetailsForm from "./GuestDetailsForm";
 import { Language, t, formatPrice as formatPriceI18n, parseLanguageCode } from "@/utils/i18n";
 import { getTheme } from "@/config/theme-config";
 
@@ -250,11 +251,31 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
     setSelectedListing(null);
   };
 
+  const getFormSubmittedMessage = (formData: Record<string, string | boolean>): string => {
+    const formType = formData.formType as string | undefined;
+    switch (formType) {
+      case WidgetFormId.FATTAL_ID_COLLECT:
+        return t(currentLang, 'fattalIdSubmitted');
+      case WidgetFormId.FATTAL_OTP_VERIFY:
+        return t(currentLang, 'fattalOtpSubmitted');
+      case WidgetFormId.FATTAL_CANCELLATION_CONFIRM:
+        return formData.confirmed
+          ? t(currentLang, 'fattalCancelConfirmed')
+          : t(currentLang, 'fattalCancelDeclined');
+      case WidgetFormId.FATTAL_CONTACT_UPDATE:
+        return t(currentLang, 'fattalContactUpdateSubmitted');
+      case WidgetFormId.GUESTY_GUEST_DETAILS:
+        return t(currentLang, 'guestyGuestDetailsSubmitted');
+      default:
+        return t(currentLang, 'contactFormSubmitted');
+    }
+  };
+
   // Handle contact form submission
   const handleContactFormSubmit = async (formData: Record<string, string | boolean>) => {
     if (isLoading) return;
 
-    const submittedMessage = t(currentLang, 'contactFormSubmitted');
+    const submittedMessage = getFormSubmittedMessage(formData);
     const userMessage: Message = {
       id: Date.now().toString(),
       text: submittedMessage,
@@ -534,6 +555,14 @@ export default function FullPageChatWidget({ widgetId, theme: themeId }: FullPag
                   onSubmit={handleContactFormSubmit as React.ComponentProps<typeof FattalContactUpdateForm>["onSubmit"]}
                   disabled={isLoading}
                   formData={message.formData as React.ComponentProps<typeof FattalContactUpdateForm>["formData"]}
+                />
+              )}
+              {message.formId === WidgetFormId.GUESTY_GUEST_DETAILS && (
+                <GuestDetailsForm
+                  lang={currentLang}
+                  onSubmit={handleContactFormSubmit}
+                  disabled={isLoading}
+                  formData={message.formData as React.ComponentProps<typeof GuestDetailsForm>["formData"]}
                 />
               )}
 
