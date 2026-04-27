@@ -60,10 +60,14 @@ const MarkdownLink = ({ href, children, isUserMessage }: { href?: string; childr
 
 interface ChatWidgetProps {
   theme?: string | null;
+  lang?: string | null;
 }
 
-export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
+export default function ChatWidget({ theme: themeId, lang: langProp }: ChatWidgetProps) {
   const widgetTheme = getTheme(themeId);
+  const initialLang: Language = langProp
+    ? parseLanguageCode(langProp)
+    : widgetTheme.direction === 'rtl' ? 'HE' : 'EN';
 
   const [userName, setUserName] = useState<string>("");
   const [nameInput, setNameInput] = useState<string>("");
@@ -72,7 +76,8 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedFattalRooms, setSelectedFattalRooms] = useState<Map<number, FattalRoom>>(new Map());
   const [selectedListing, setSelectedListing] = useState<WidgetListing | null>(null);
-  const [currentLang, setCurrentLang] = useState<Language>(widgetTheme.direction === 'rtl' ? 'HE' : 'EN');
+  const [currentLang, setCurrentLang] = useState<Language>(initialLang);
+  const themeText = widgetTheme.text[currentLang];
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -469,7 +474,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
             className="object-contain"
           />
           <h2 className="text-lg font-bold text-white">
-            {widgetTheme.text.welcomeTitle}
+            {themeText.welcomeTitle}
           </h2>
         </div>
 
@@ -482,7 +487,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
             <form onSubmit={handleNameSubmit} className="space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium mb-2 text-primary">
-                  {widgetTheme.text.nameLabel}
+                  {themeText.nameLabel}
                 </label>
                 <input
                   id="name"
@@ -492,7 +497,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
                   className="w-full px-4 py-3 border-2 border-primary/20 rounded-xl
                            bg-white text-primary focus:outline-none focus:border-accent
                            placeholder:text-primary/50"
-                  placeholder={widgetTheme.text.namePlaceholder}
+                  placeholder={themeText.namePlaceholder}
                   autoFocus
                 />
               </div>
@@ -503,7 +508,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
                 className="w-full bg-accent hover:bg-accent/90 text-white font-semibold py-3 px-4
                           rounded-xl transition-colors shadow-md"
               >
-                {widgetTheme.text.startChat}
+                {themeText.startChat}
               </motion.button>
             </form>
           </motion.div>
@@ -538,13 +543,13 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
             height={24}
             className="object-contain"
           />
-          <span>{widgetTheme.text.headerTitle}</span>
+          <span>{themeText.headerTitle}</span>
         </h3>
         <button
           onClick={resetChat}
           className="text-sm text-white/80 hover:text-white transition-colors"
         >
-          {widgetTheme.text.resetButton}
+          {themeText.resetButton}
         </button>
       </div>
 
@@ -709,7 +714,7 @@ export default function ChatWidget({ theme: themeId }: ChatWidgetProps) {
             className="flex-1 px-4 py-3 border-2 border-primary/20 rounded-xl
                      bg-white text-primary focus:outline-none focus:border-accent
                      text-sm placeholder:text-primary/40"
-            placeholder={widgetTheme.text.inputPlaceholder}
+            placeholder={themeText.inputPlaceholder}
           />
           <motion.button
             type="submit"
