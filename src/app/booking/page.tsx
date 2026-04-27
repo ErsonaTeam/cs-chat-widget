@@ -8,6 +8,7 @@ function BookingContent() {
   const searchParams = useSearchParams();
   const widgetId = searchParams.get("widgetId") ?? "";
   const theme = searchParams.get("theme");
+  const lang = searchParams.get("lang");
 
   if (!widgetId) {
     return (
@@ -19,7 +20,7 @@ function BookingContent() {
 
   return (
     <div className="h-dvh w-screen overflow-hidden">
-      <FullPageChatWidget widgetId={widgetId} theme={theme} />
+      <FullPageChatWidget widgetId={widgetId} theme={theme} lang={lang} />
     </div>
   );
 }
