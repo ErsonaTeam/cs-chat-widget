@@ -75,6 +75,13 @@ export const translations = {
     contactFormSubmitted: 'שלחתי את הפרטים שלי.',
     marketingOptIn: 'אני מסכים/ה לקבל הודעות שיווקיות',
 
+    // Gallery
+    galleryPhotoCount: '{count} תמונות',
+    galleryClose: 'סגור גלריה',
+    galleryPrev: 'תמונה קודמת',
+    galleryNext: 'תמונה הבאה',
+    galleryUnavailable: 'התמונה אינה זמינה',
+
     // Fattal ID Collect Form
     fattalIdLabel: 'תעודת זהות',
     fattalIdPlaceholder: 'הזן מספר תעודת זהות',
@@ -186,6 +193,13 @@ export const translations = {
     contactFormInvalidPhone: 'Invalid phone number',
     contactFormSubmitted: "I've submitted my contact details.",
     marketingOptIn: 'I agree to receive marketing communications',
+
+    // Gallery
+    galleryPhotoCount: '{count} photos',
+    galleryClose: 'Close gallery',
+    galleryPrev: 'Previous photo',
+    galleryNext: 'Next photo',
+    galleryUnavailable: 'Image unavailable',
 
     // Fattal ID Collect Form
     fattalIdLabel: 'Israeli ID',

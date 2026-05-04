@@ -6,7 +6,7 @@ import { LuSendHorizontal } from "react-icons/lu";
 import Image from "next/image";
 import Markdown from "react-markdown";
 import LoadingSpinner from "./LoadingSpinner";
-import { ChatWidgetMessageType, FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice, WidgetListing, WidgetFormId } from "@/types/message-types";
+import { ChatWidgetMessageType, FattalHotel, FattalRoom, FattalRoomPackage, FattalPackagePrice, WidgetListing, WidgetFormId, WidgetGallery } from "@/types/message-types";
 import HotelCarousel from "./HotelCarousel";
 import FattalRoomCarousel from "./FattalRoomCarousel";
 import FattalRoomDetailView from "./FattalRoomDetailView";
@@ -18,6 +18,8 @@ import FattalIdCollectForm from "./FattalIdCollectForm";
 import FattalOtpVerifyForm from "./FattalOtpVerifyForm";
 import FattalCancellationForm from "./FattalCancellationForm";
 import FattalContactUpdateForm from "./FattalContactUpdateForm";
+import GalleryCard from "./GalleryCard";
+import GalleryLightbox from "./GalleryLightbox";
 import { Language, t, formatPrice as formatPriceI18n, parseLanguageCode } from "@/utils/i18n";
 import { getTheme } from "@/config/theme-config";
 
@@ -33,6 +35,7 @@ interface Message {
   formId?: string;
   formData?: Record<string, unknown>;
   languageCode?: string;
+  gallery?: WidgetGallery | null;
 }
 
 // Hebrew character detection regex
@@ -76,6 +79,7 @@ export default function ChatWidget({ theme: themeId, lang: langProp }: ChatWidge
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedFattalRooms, setSelectedFattalRooms] = useState<Map<number, FattalRoom>>(new Map());
   const [selectedListing, setSelectedListing] = useState<WidgetListing | null>(null);
+  const [lightbox, setLightbox] = useState<{ gallery: WidgetGallery; index: number } | null>(null);
   const [currentLang, setCurrentLang] = useState<Language>(initialLang);
   const themeText = widgetTheme.text[currentLang];
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -120,6 +124,7 @@ export default function ChatWidget({ theme: themeId, lang: langProp }: ChatWidge
           formId: event.data.formId,
           formData: event.data.formData,
           languageCode: event.data.languageCode,
+          gallery: event.data.gallery,
         };
 
         // Update current language if provided in message
@@ -558,48 +563,50 @@ export default function ChatWidget({ theme: themeId, lang: langProp }: ChatWidge
         <AnimatePresence>
           {messages.map((message, index) => (
             <div key={message.id}>
-              {/* Message Bubble */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className={`flex ${
-                  message.sender === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  dir={message.direction}
-                  className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl shadow-sm ${
-                    message.sender === "user"
-                      ? "bg-accent text-primary"
-                      : "bg-white text-primary border border-primary/10"
+              {/* Message Bubble — skipped when text is empty AND we have rich content (e.g. gallery-only message) */}
+              {(message.text?.trim() || (!message.gallery && !message.hotelOptions?.length && !message.listingOptions?.length && !message.roomSearchResults?.length && !message.formId)) && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className={`flex ${
+                    message.sender === "user" ? "justify-end" : "justify-start"
                   }`}
                 >
-                  <div className="text-sm prose prose-sm max-w-none [&>p]:m-0 [&>ul]:m-0 [&>ol]:m-0 [&>p+p]:mt-2 whitespace-pre-wrap">
-                    <Markdown
-                      components={{
-                        a: ({ href, children }) => (
-                          <MarkdownLink href={href} isUserMessage={message.sender === "user"}>
-                            {children}
-                          </MarkdownLink>
-                        ),
-                        strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-                        em: ({ children }) => <em className="italic">{children}</em>,
-                      }}
-                    >
-                      {message.text}
-                    </Markdown>
+                  <div
+                    dir={message.direction}
+                    className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl shadow-sm ${
+                      message.sender === "user"
+                        ? "bg-accent text-primary"
+                        : "bg-white text-primary border border-primary/10"
+                    }`}
+                  >
+                    <div className="text-sm prose prose-sm max-w-none [&>p]:m-0 [&>ul]:m-0 [&>ol]:m-0 [&>p+p]:mt-2 whitespace-pre-wrap">
+                      <Markdown
+                        components={{
+                          a: ({ href, children }) => (
+                            <MarkdownLink href={href} isUserMessage={message.sender === "user"}>
+                              {children}
+                            </MarkdownLink>
+                          ),
+                          strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                          em: ({ children }) => <em className="italic">{children}</em>,
+                        }}
+                      >
+                        {message.text}
+                      </Markdown>
+                    </div>
+                    <p className={`text-xs mt-2 ${
+                      message.sender === "user" ? "text-primary/60" : "text-primary/50"
+                    }`}>
+                      {message.timestamp.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
                   </div>
-                  <p className={`text-xs mt-2 ${
-                    message.sender === "user" ? "text-primary/60" : "text-primary/50"
-                  }`}>
-                    {message.timestamp.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </div>
-              </motion.div>
+                </motion.div>
+              )}
 
               {/* Form rendering based on formId */}
               {message.formId === WidgetFormId.CONTACT_INFO && (
@@ -684,6 +691,19 @@ export default function ChatWidget({ theme: themeId, lang: langProp }: ChatWidge
                   )}
                 </>
               )}
+
+              {/* Gallery Card */}
+              {message.gallery && (
+                <div className="mt-2 flex justify-start">
+                  <div className="max-w-xs lg:max-w-md w-full">
+                    <GalleryCard
+                      gallery={message.gallery}
+                      lang={currentLang}
+                      onOpen={(i) => setLightbox({ gallery: message.gallery!, index: i })}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           ))}
           {/* Typing indicator */}
@@ -744,6 +764,16 @@ export default function ChatWidget({ theme: themeId, lang: langProp }: ChatWidge
           </a>
         </p>
       </div>
+
+      {/* Gallery Lightbox (single instance, opened by GalleryCard clicks) */}
+      {lightbox && (
+        <GalleryLightbox
+          gallery={lightbox.gallery}
+          startIndex={lightbox.index}
+          lang={currentLang}
+          onClose={() => setLightbox(null)}
+        />
+      )}
     </div>
   );
 }
