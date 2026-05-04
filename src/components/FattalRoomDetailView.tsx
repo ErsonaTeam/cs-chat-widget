@@ -7,6 +7,7 @@ import DOMPurify from "dompurify";
 import { FattalRoom, FattalRoomPackage, FattalPackagePrice } from "@/types/message-types";
 import { Language, t, formatPrice, getLanguageConfig } from "@/utils/i18n";
 import { useImagePreloader } from "@/hooks/useImagePreloader";
+import { useImageNavigation } from "@/hooks/useImageNavigation";
 
 interface FattalRoomDetailViewProps {
   room: FattalRoom;
@@ -29,7 +30,6 @@ interface SelectedPriceId {
 }
 
 export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = 'HE' }: FattalRoomDetailViewProps) {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isClubMember, setIsClubMember] = useState(false);
   const langConfig = getLanguageConfig(lang);
 
@@ -43,6 +43,13 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
     ? room.gallery
     : [{ url: room.imageUrl, description: null }];
 
+  const {
+    index: currentImageIndex,
+    setIndex: setCurrentImageIndex,
+    next: nextImage,
+    prev: prevImage,
+  } = useImageNavigation(images.length, 0);
+
   useImagePreloader(images, currentImageIndex);
 
   const [sanitizedDescription, setSanitizedDescription] = useState<string | null>(null);
@@ -54,14 +61,6 @@ export default function FattalRoomDetailView({ room, onConfirm, onBack, lang = '
       setSanitizedDescription(null);
     }
   }, [room.description]);
-
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
-  };
-
-  const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
-  };
 
   // Group packages by name and merge their prices
   const groupedPackages = useMemo((): GroupedPackage[] => {
