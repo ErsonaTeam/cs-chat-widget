@@ -101,6 +101,13 @@ export default function GalleryLightbox({
     : gallery.hotelName;
   const showStrip = total > 1;
 
+  // Close when clicking the dark backdrop area (not when clicking the image,
+  // controls, or thumbnails). Only fires when the click landed directly on
+  // a backdrop element rather than bubbling from a child.
+  const closeOnBackdrop = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
   return (
     <div
       role="dialog"
@@ -108,11 +115,15 @@ export default function GalleryLightbox({
       aria-label={title}
       className="fixed inset-0 z-50 flex flex-col bg-black/90 text-white"
       dir={isRTL ? "rtl" : "ltr"}
+      onClick={closeOnBackdrop}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3">
+      <div
+        className="flex items-center justify-between px-4 py-3"
+        onClick={closeOnBackdrop}
+      >
         <h2 className="truncate text-sm font-medium">{title}</h2>
         <button
           ref={closeButtonRef}
@@ -128,7 +139,10 @@ export default function GalleryLightbox({
       </div>
 
       {/* Image stage */}
-      <div className="relative flex flex-1 items-center justify-center overflow-hidden">
+      <div
+        className="relative flex flex-1 items-center justify-center overflow-hidden"
+        onClick={closeOnBackdrop}
+      >
         {imageErrored ? (
           <div className="flex h-full w-full flex-col items-center justify-center bg-gray-900 text-sm text-white/70">
             <span>{t(lang, "galleryUnavailable")}</span>
@@ -173,7 +187,10 @@ export default function GalleryLightbox({
       </div>
 
       {/* Caption + counter */}
-      <div className="px-4 pt-2 text-center text-sm">
+      <div
+        className="px-4 pt-2 text-center text-sm"
+        onClick={closeOnBackdrop}
+      >
         {current.description && (
           <p className="mb-1 text-white/80">{current.description}</p>
         )}

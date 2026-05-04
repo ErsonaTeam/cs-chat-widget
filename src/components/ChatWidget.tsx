@@ -159,6 +159,7 @@ export default function ChatWidget({ theme: themeId, lang: langProp }: ChatWidge
     const hasHotelOptions = messages.some(msg => msg.hotelOptions && msg.hotelOptions.length > 0);
     const hasRoomSearchResults = messages.some(msg => msg.roomSearchResults && msg.roomSearchResults.length > 0);
     const hasListingOptions = messages.some(msg => msg.listingOptions && msg.listingOptions.length > 0);
+    const hasGallery = messages.some(msg => Boolean(msg.gallery));
     const showingFattalRoomDetail = selectedFattalRooms.size > 0;
     const showingListingDetail = selectedListing !== null;
 
@@ -171,8 +172,8 @@ export default function ChatWidget({ theme: themeId, lang: langProp }: ChatWidge
         // Larger size for detail view
         newHeight = 700;
         newWidth = 420;
-      } else if (hasHotelOptions || hasRoomSearchResults || hasListingOptions) {
-        // Medium size for carousel
+      } else if (hasHotelOptions || hasRoomSearchResults || hasListingOptions || hasGallery) {
+        // Medium size for carousel / gallery card
         newHeight = 650;
         newWidth = 420;
       }
