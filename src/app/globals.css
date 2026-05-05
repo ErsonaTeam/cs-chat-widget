@@ -6,22 +6,30 @@
   --foreground: #171717;
 
   /* Theme color tokens (overridden at runtime per theme) */
-  --theme-primary: #1A3A5C;
-  --theme-primary-light: #244E75;
-  --theme-accent: #2685CB;
-  --theme-background: #FFFFFF;
-  --theme-accent-light: #EBF5FF;
+  --theme-primary: #0F2747;
+  --theme-primary-light: #274C77;
+  --theme-secondary: #274C77;
+  --theme-accent: #D6A85F;
+  --theme-accent-light: #F2E5CC;
+  --theme-background: #F8F7F3;
+  --theme-surface: #FFFFFF;
+  --theme-text: #0E1726;
+  --theme-border: #D9E1EA;
+  --theme-bg-treatment: linear-gradient(135deg, #0F2747 0%, #1A3A5C 60%, #274C77 100%);
 }
 
 @theme inline {
   --color-primary: var(--theme-primary);
+  --color-primary-light: var(--theme-primary-light);
+  --color-secondary: var(--theme-secondary);
   --color-accent: var(--theme-accent);
-  --color-surface: var(--theme-background);
+  --color-accent-light: var(--theme-accent-light);
+  --color-surface: var(--theme-surface);
+  --color-text: var(--theme-text);
+  --color-border: var(--theme-border);
+  /* Legacy aliases preserved for backward compatibility */
   --color-accentLight: var(--theme-accent-light);
   --color-primaryLight: var(--theme-primary-light);
-}
-
-@theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);

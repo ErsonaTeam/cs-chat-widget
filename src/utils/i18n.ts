@@ -25,6 +25,12 @@ export const translations = {
     select: 'בחר',
     startingFrom: 'החל מ-',
     back: 'חזרה',
+    welcomeSubtitle: 'בדיקת זמינות, מחירים וחבילות — במהירות ובקלות',
+    quickActionAvailability: 'בדיקת זמינות',
+    quickActionPrices: 'מחירים',
+    quickActionPackages: 'חבילות',
+    languageSelectorLabel: 'שפה',
+    poweredBy: 'Powered by Ersona',
 
     // Hotel Carousel
     availableHotels: 'מלונות זמינים',
@@ -137,6 +143,12 @@ export const translations = {
     select: 'Select',
     startingFrom: 'From ',
     back: 'Back',
+    welcomeSubtitle: 'Check availability, rates and packages — fast and easy',
+    quickActionAvailability: 'Availability',
+    quickActionPrices: 'Prices',
+    quickActionPackages: 'Packages',
+    languageSelectorLabel: 'Language',
+    poweredBy: 'Powered by Ersona',
 
     // Hotel Carousel
     availableHotels: 'Available Hotels',

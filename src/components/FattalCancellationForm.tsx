@@ -82,7 +82,7 @@ export default function FattalCancellationForm({
 
         {/* Order details */}
         {formData && (
-          <div className="bg-gray-50 rounded-lg p-3 space-y-1.5 text-xs text-primary/80">
+          <div className="bg-text/[0.04] rounded-lg p-3 space-y-1.5 text-xs text-primary/80">
             <div className="flex justify-between">
               <span className="font-medium">{t(lang, "fattalCancelHotel")}</span>
               <span>{formData.hotel}</span>
@@ -103,7 +103,7 @@ export default function FattalCancellationForm({
               <span className="font-medium">{t(lang, "fattalCancelPlan")}</span>
               <span>{formData.plan}</span>
             </div>
-            <div className="border-t border-gray-200 pt-1.5 flex justify-between font-semibold text-primary">
+            <div className="border-t border-border pt-1.5 flex justify-between font-semibold text-primary">
               <span>{t(lang, "fattalCancelTotal")}</span>
               <span dir="ltr">₪{formData.totalPrice}</span>
             </div>
@@ -133,8 +133,8 @@ export default function FattalCancellationForm({
             disabled={disabled || submitted}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="flex-1 bg-gray-100 hover:bg-gray-200 text-primary font-semibold py-2.5 px-4
-                     rounded-lg transition-colors shadow-sm text-sm border border-gray-200
+            className="flex-1 bg-text/[0.04] hover:bg-text/[0.08] text-primary font-semibold py-2.5 px-4
+                     rounded-lg transition-colors shadow-sm text-sm border border-border
                      disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t(lang, "fattalCancelDecline")}

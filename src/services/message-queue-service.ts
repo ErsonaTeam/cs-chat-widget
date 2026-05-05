@@ -8,7 +8,6 @@ import { pushPendingMessage } from './redis-service';
  * (Replaces sendPusherMessage - same signature for minimal changes to callers)
  */
 export async function queueAgentMessage(
-  companyId: string,
   conversationId: string,
   message: string,
   timestamp?: string,
@@ -39,12 +38,11 @@ export async function queueAgentMessage(
  * (Replaces sendPusherFallbackMessage)
  */
 export async function queueFallbackMessage(
-  companyId: string,
   conversationId: string,
   fallbackMessage?: string
 ): Promise<void> {
   const message =
     fallbackMessage ||
     "I'm sorry, I'm having trouble processing your message right now. Please try again later.";
-  await queueAgentMessage(companyId, conversationId, message);
+  await queueAgentMessage(conversationId, message);
 }

@@ -5,8 +5,7 @@ export type QuickActionId = 'availability' | 'prices' | 'packages';
 export const ALL_QUICK_ACTIONS: QuickActionId[] = ['availability', 'prices', 'packages'];
 
 export interface WidgetConfig {
-  widgetId: string | null;
-  companyId: string;
+  widgetId: string;
   hotelName: string | null;
   selectedTheme: string;
   enabledLanguages: Language[];
@@ -18,8 +17,7 @@ export interface WidgetConfig {
   enabledQuickActions: QuickActionId[];
 }
 
-export const DEFAULT_WIDGET_CONFIG: Omit<WidgetConfig, 'companyId'> = {
-  widgetId: null,
+export const DEFAULT_WIDGET_CONFIG: Omit<WidgetConfig, 'widgetId'> = {
   hotelName: null,
   selectedTheme: 'urban',
   enabledLanguages: ['HE', 'EN'],
