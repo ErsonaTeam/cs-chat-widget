@@ -3,7 +3,7 @@
 import { queueFallbackMessage } from '@/services/message-queue-service';
 
 export interface WidgetMessageData {
-  companyId: string;
+  widgetId: string;
   conversationId: string;
   message: string;
   userName: string;
@@ -26,18 +26,18 @@ export interface WidgetActionResult {
 export async function sendToEmbeddingsService(data: WidgetMessageData): Promise<WidgetActionResult> {
   try {
     const embeddingsServiceUrl = process.env.EMBEDDINGS_SERVICE_URL;
-    
+
     if (!embeddingsServiceUrl) {
       throw new Error('EMBEDDINGS SERVICE URL is not set');
     }
-    
+
     const response = await fetch(`${embeddingsServiceUrl}/widget/message`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        companyId: data.companyId,
+        companyId: data.widgetId,
         conversationId: data.conversationId,
         message: data.message,
         userName: data.userName,
@@ -69,24 +69,24 @@ export async function sendToEmbeddingsService(data: WidgetMessageData): Promise<
 
 // Server Action: Main widget message processing
 export async function processWidgetMessage(data: WidgetMessageData): Promise<WidgetActionResult> {
-  const { companyId, conversationId, message, userName } = data;
-  
+  const { widgetId, conversationId, message, userName } = data;
+
   // Validate required fields
-  if (!companyId || !conversationId || !message || !userName) {
+  if (!widgetId || !conversationId || !message || !userName) {
     return {
       success: false,
-      error: 'Missing required fields: companyId, conversationId, message, userName',
+      error: 'Missing required fields: widgetId, conversationId, message, userName',
       timestamp: new Date().toISOString(),
     };
   }
 
   // Send to embeddings service
   const embeddingsResult = await sendToEmbeddingsService(data);
-  
+
   // If embeddings service fails, queue fallback message
   if (!embeddingsResult.success) {
     try {
-      await queueFallbackMessage(companyId, conversationId);
+      await queueFallbackMessage(conversationId);
       return {
         success: true,
         message: 'Message processing failed, but fallback message queued',

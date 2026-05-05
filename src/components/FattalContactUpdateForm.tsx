@@ -83,7 +83,7 @@ function FieldRow({
 }
 
 const inputBaseClass =
-  "w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50";
+  "w-full text-sm border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-text/[0.04]";
 
 export default function FattalContactUpdateForm({
   lang: defaultLang,
@@ -221,7 +221,7 @@ export default function FattalContactUpdateForm({
             value={preferredMonth}
             onChange={(e) => setPreferredMonth(e.target.value)}
             disabled={disabled || !!formData?.hasPreferredMonth}
-            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 cursor-pointer"
+            className="w-full text-sm border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-text/[0.04] cursor-pointer"
           >
             <option value="">—</option>
             {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (

@@ -5,12 +5,12 @@ import { corsHeaders } from '@/utils/cors';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { companyId, conversationId, signature, quantity } = body;
+    const { widgetId, conversationId, signature, quantity } = body;
 
     // Validate required fields
-    if (!companyId || !conversationId || !signature || !quantity) {
+    if (!widgetId || !conversationId || !signature || !quantity) {
       return NextResponse.json(
-        { error: 'Missing required fields: companyId, conversationId, signature, quantity' },
+        { error: 'Missing required fields: widgetId, conversationId, signature, quantity' },
         { status: StatusCodes.BAD_REQUEST, headers: corsHeaders }
       );
     }
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     console.log('Calling checkout endpoint:', checkoutUrl);
     console.log('Request body:', {
       sessionId: conversationId,
-      widgetId: companyId,
+      widgetId,
       signature,
       quantity
     });
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         sessionId: conversationId,
-        widgetId: companyId,
+        widgetId,
         signature,
         quantity,
       }),

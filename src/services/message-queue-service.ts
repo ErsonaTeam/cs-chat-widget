@@ -1,6 +1,6 @@
 'use server';
 
-import { FattalHotel, FattalRoom, WidgetListing } from '@/types/message-types';
+import { FattalHotel, FattalRoom, WidgetListing, WidgetGallery } from '@/types/message-types';
 import { pushPendingMessage } from './redis-service';
 
 /**
@@ -8,7 +8,6 @@ import { pushPendingMessage } from './redis-service';
  * (Replaces sendPusherMessage - same signature for minimal changes to callers)
  */
 export async function queueAgentMessage(
-  companyId: string,
   conversationId: string,
   message: string,
   timestamp?: string,
@@ -18,6 +17,7 @@ export async function queueAgentMessage(
   formData?: Record<string, unknown>,
   languageCode?: string,
   listingOptions?: WidgetListing[],
+  gallery?: WidgetGallery,
 ): Promise<void> {
   const messageData = {
     conversationId,
@@ -29,6 +29,7 @@ export async function queueAgentMessage(
     formId: formId || null,
     formData: formData || null,
     languageCode: languageCode || null,
+    gallery: gallery || null,
   };
 
   await pushPendingMessage(conversationId, messageData);
@@ -39,12 +40,11 @@ export async function queueAgentMessage(
  * (Replaces sendPusherFallbackMessage)
  */
 export async function queueFallbackMessage(
-  companyId: string,
   conversationId: string,
   fallbackMessage?: string
 ): Promise<void> {
   const message =
     fallbackMessage ||
     "I'm sorry, I'm having trouble processing your message right now. Please try again later.";
-  await queueAgentMessage(companyId, conversationId, message);
+  await queueAgentMessage(conversationId, message);
 }

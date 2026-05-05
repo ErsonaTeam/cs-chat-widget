@@ -9,11 +9,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log(JSON.stringify(body));
 
-    const { companyId, conversationId, message, userName, timestamp, meta, formData } = body;
+    const { widgetId, conversationId, message, userName, timestamp, meta, formData } = body;
 
     // Prepare data for server action
     const widgetData: WidgetMessageData = {
-      companyId,
+      widgetId,
       conversationId,
       message,
       userName,

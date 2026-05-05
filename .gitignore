@@ -140,3 +140,6 @@ vite.config.ts.timestamp-*
 
 # Idea
 .idea
+
+# Local-only planning docs
+docs/superpowers/

@@ -8,50 +8,17 @@
   window.ChatWidgetInitialized = true;
 
   // === MESSAGING INTEGRATION BLOCK START ===
-  // Extract companyId from script element (multiple methods for reliability)
-  const getCompanyId = () => {
-    // Method 1: Try to get by ID (most reliable)
-    const widgetScript = document.getElementById('ersona-chat-widget');
-    if (widgetScript && widgetScript.dataset.companyId) {
-      return widgetScript.dataset.companyId;
-    }
-    
-    // Method 2: Try to find any script with data attribute
-    const anyWidgetScript = document.querySelector('script[data-company-id]');
-    if (anyWidgetScript) {
-      return anyWidgetScript.dataset.companyId;
-    }
-    
-    return 'default';
-  };
+  // Find the widget script tag.
+  // Preferred: <script id="ersona-chat-widget" data-widget-id="...">
+  // Fallback: any <script> with data-widget-id (or legacy data-company-id) on it.
+  const widgetScript = document.getElementById('ersona-chat-widget')
+                       || document.querySelector('script[data-widget-id]')
+                       || document.querySelector('script[data-company-id]');
+  const ds = (widgetScript && widgetScript.dataset) || {};
 
-  const getTheme = () => {
-    const widgetScript = document.getElementById('ersona-chat-widget');
-    if (widgetScript && widgetScript.dataset.theme) {
-      return widgetScript.dataset.theme;
-    }
-
-    const anyWidgetScript = document.querySelector('script[data-theme]');
-    if (anyWidgetScript) {
-      return anyWidgetScript.dataset.theme;
-    }
-
-    return null;
-  };
-
-  const getLanguage = () => {
-    const widgetScript = document.getElementById('ersona-chat-widget');
-    if (widgetScript && widgetScript.dataset.language) {
-      return widgetScript.dataset.language;
-    }
-
-    const anyWidgetScript = document.querySelector('script[data-language]');
-    if (anyWidgetScript) {
-      return anyWidgetScript.dataset.language;
-    }
-
-    return null;
-  };
+  // Accept data-widget-id (preferred) or legacy data-company-id (same value either way).
+  const widgetId = ds.widgetId || ds.companyId || 'default';
+  const widgetLanguage = ds.language || null;
 
   // Session management - always start fresh
   const clearSessionOnLoad = () => {
@@ -104,17 +71,10 @@
     resetInactivityTimer();
   };
 
-  const companyId = getCompanyId();
-  const widgetTheme = getTheme();
-  const widgetLanguage = getLanguage();
-
-  // Theme color map for widget button styling (mirrors theme-config.ts)
-  const themeColors = {
-    default: { primary: '#1A3A5C', primaryLight: '#244E75' },
-    fattal:  { primary: '#1d2b4d', primaryLight: '#2d3f66' },
-    eztlv:   { primary: '#2D6DA4', primaryLight: '#3A85C4' },
-  };
-  const buttonColors = themeColors[widgetTheme] || themeColors.default;
+  // Floating button color — neutral by design.
+  // The widget itself themes from MongoDB once opened; the host-page button stays neutral
+  // to avoid an extra HTTP request on every page load just to color a 60px circle.
+  const buttonColors = { primary: '#1A3A5C', primaryLight: '#244E75' };
 
   // Message type constants
   const MESSAGE_TYPES = {
@@ -159,7 +119,8 @@
               listingOptions: result.data.listingOptions,
               formId: result.data.formId,
               formData: result.data.formData,
-              languageCode: result.data.languageCode
+              languageCode: result.data.languageCode,
+              gallery: result.data.gallery
             }, widgetServiceBaseUrl);
           }
         }
@@ -181,7 +142,7 @@
 
     const postUrl = `${widgetServiceBaseUrl}/api/widget/messages`;
     const payload = {
-      companyId,
+      widgetId,
       conversationId,
       message,
       userName,
@@ -315,8 +276,8 @@
       position: fixed;
       bottom: 90px;
       right: 20px;
-      width: 350px;
-      height: 500px;
+      width: 380px;
+      height: 640px;
       border: 1px solid rgba(0, 0, 0, 1);
       border-radius: 16px;
       box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
@@ -420,11 +381,12 @@
   iframe.setAttribute("frameBorder", "0");
   iframe.style.colorScheme = "light";
   iframe.style.background = "transparent";
-  const iframeQuery = [
-    widgetTheme ? "theme=" + encodeURIComponent(widgetTheme) : null,
-    widgetLanguage ? "lang=" + encodeURIComponent(widgetLanguage) : null,
-  ].filter(Boolean).join("&");
-  iframe.src = widgetServiceBaseUrl + "/embed-chat" + (iframeQuery ? "?" + iframeQuery : "");
+  const iframeParams = new URLSearchParams();
+  if (widgetId) iframeParams.set('widgetId', widgetId);
+  const langValue = widgetLanguage;
+  if (langValue) iframeParams.set('lang', langValue);
+  const iframeQuery = iframeParams.toString();
+  iframe.src = widgetServiceBaseUrl + '/embed-chat' + (iframeQuery ? '?' + iframeQuery : '');
 
   // State management
   let isOpen = false;

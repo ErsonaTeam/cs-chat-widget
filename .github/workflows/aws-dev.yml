@@ -71,6 +71,7 @@ jobs:
           ["/dev/widget/pusher/cluster"]="NEXT_PUBLIC_PUSHER_CLUSTER"
           ["/dev/url/encoder"]="EMBEDDINGS_SERVICE_URL"
           ["/dev/url/widget/base-url"]="NEXT_PUBLIC_BASE_URL"
+          ["/dev/url/chat/domain"]="NEXT_PUBLIC_CHAT_SERVICE_URL"
         )
         
         for param_path in "${!param_mapping[@]}"; do
@@ -105,6 +106,7 @@ jobs:
         NEXT_PUBLIC_PUSHER_CLUSTER: ${{ env.NEXT_PUBLIC_PUSHER_CLUSTER }}
         EMBEDDINGS_SERVICE_URL: ${{ env.EMBEDDINGS_SERVICE_URL }}
         NEXT_PUBLIC_BASE_URL: ${{ env.NEXT_PUBLIC_BASE_URL }}
+        NEXT_PUBLIC_CHAT_SERVICE_URL: ${{ env.NEXT_PUBLIC_CHAT_SERVICE_URL }}
 
     - name: Install kubectl
       uses: azure/setup-kubectl@v3
