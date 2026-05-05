@@ -71,6 +71,7 @@ jobs:
           ["/dev/widget/pusher/cluster"]="NEXT_PUBLIC_PUSHER_CLUSTER"
           ["/dev/url/encoder"]="EMBEDDINGS_SERVICE_URL"
           ["/dev/url/widget/base-url"]="NEXT_PUBLIC_BASE_URL"
+          ["/dev/url/chat"]="NEXT_PUBLIC_CHAT_SERVICE_URL"
         )
         
         for param_path in "${!param_mapping[@]}"; do
