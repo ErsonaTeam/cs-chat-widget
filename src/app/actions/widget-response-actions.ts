@@ -5,7 +5,7 @@ import { type WidgetActionResult } from './widget-actions';
 import { FattalHotel, FattalRoom, WidgetListing, WidgetGallery } from '@/types/message-types';
 
 export interface WidgetResponseData {
-  companyId: string;
+  widgetId: string;
   conversationId: string;
   message?: string;
   timestamp?: string;
@@ -20,12 +20,12 @@ export interface WidgetResponseData {
 }
 
 export async function processWidgetResponse(data: WidgetResponseData): Promise<WidgetActionResult> {
-  const { companyId, conversationId, message, timestamp, error, hotelOptions, roomSearchResults, listingOptions, formId, formData, languageCode, gallery } = data;
+  const { widgetId, conversationId, message, timestamp, error, hotelOptions, roomSearchResults, listingOptions, formId, formData, languageCode, gallery } = data;
 
-  if (!companyId || !conversationId) {
+  if (!widgetId || !conversationId) {
     return {
       success: false,
-      error: 'Missing required fields: companyId, conversationId',
+      error: 'Missing required fields: widgetId, conversationId',
       timestamp: new Date().toISOString(),
     };
   }
@@ -43,7 +43,7 @@ export async function processWidgetResponse(data: WidgetResponseData): Promise<W
   }
 
   try {
-    await queueAgentMessage(companyId, conversationId, responseMessage, timestamp, hotelOptions, roomSearchResults, formId, formData, languageCode, listingOptions, gallery);
+    await queueAgentMessage(conversationId, responseMessage, timestamp, hotelOptions, roomSearchResults, formId, formData, languageCode, listingOptions, gallery);
 
     return {
       success: true,

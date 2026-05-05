@@ -6,11 +6,13 @@ import { processWidgetResponse, type WidgetResponseData } from '@/app/actions/wi
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-
-    const { companyId, conversationId, message, timestamp, error, hotelOptions, roomSearchResults, listingOptions, formId, formData, languageCode, gallery } = body;
+    // The encoder posts back here with a `companyId` field on the wire — internally on its
+    // side that value is the widget identifier. Renaming on destructure so internal code
+    // uses widgetId throughout. Gallery added by the widget-gallery feature.
+    const { companyId: widgetId, conversationId, message, timestamp, error, hotelOptions, roomSearchResults, listingOptions, formId, formData, languageCode, gallery } = body;
     // Prepare data for server action
     const responseData: WidgetResponseData = {
-      companyId,
+      widgetId,
       conversationId,
       message,
       timestamp,
