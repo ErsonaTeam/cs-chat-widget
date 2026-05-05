@@ -159,7 +159,8 @@
               listingOptions: result.data.listingOptions,
               formId: result.data.formId,
               formData: result.data.formData,
-              languageCode: result.data.languageCode
+              languageCode: result.data.languageCode,
+              gallery: result.data.gallery
             }, widgetServiceBaseUrl);
           }
         }

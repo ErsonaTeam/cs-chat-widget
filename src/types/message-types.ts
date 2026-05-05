@@ -111,3 +111,24 @@ export interface WidgetListing {
   imageUrl: string;
   gallery?: FattalGalleryImage[];
 }
+
+/**
+ * Single image inside a gallery payload.
+ */
+export interface WidgetGalleryImage {
+  url: string;
+  description: string | null;
+}
+
+/**
+ * Gallery payload sent from the agent for inline display in a chat bubble.
+ * Opens a fullscreen lightbox on tap.
+ */
+export interface WidgetGallery {
+  type: 'gallery';
+  hotelId: string;
+  hotelName: string;
+  roomId?: string;
+  roomName?: string;
+  images: WidgetGalleryImage[];
+}
