@@ -28,8 +28,17 @@ export default function QuickActions({
   if (enabled.length === 0) return null;
 
   if (variant === 'welcome') {
+    // Center the group when fewer than 3 actions are enabled (otherwise the
+    // 3-col grid leaves an empty cell that visually right/left-aligns the row).
+    const colsClass =
+      enabled.length === 1
+        ? 'sm:grid-cols-1 sm:max-w-[12rem] sm:mx-auto'
+        : enabled.length === 2
+        ? 'sm:grid-cols-2 sm:max-w-[20rem] sm:mx-auto'
+        : 'sm:grid-cols-3';
+
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div className={`grid grid-cols-1 ${colsClass} gap-2`}>
         {enabled.map((id) => (
           <button
             key={id}

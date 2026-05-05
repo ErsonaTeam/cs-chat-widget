@@ -2,7 +2,7 @@
 
 import { queueAgentMessage } from '@/services/message-queue-service';
 import { type WidgetActionResult } from './widget-actions';
-import { FattalHotel, FattalRoom, WidgetListing } from '@/types/message-types';
+import { FattalHotel, FattalRoom, WidgetListing, WidgetGallery } from '@/types/message-types';
 
 export interface WidgetResponseData {
   widgetId: string;
@@ -16,10 +16,11 @@ export interface WidgetResponseData {
   formId?: string;
   formData?: Record<string, unknown>;
   languageCode?: string;
+  gallery?: WidgetGallery;
 }
 
 export async function processWidgetResponse(data: WidgetResponseData): Promise<WidgetActionResult> {
-  const { widgetId, conversationId, message, timestamp, error, hotelOptions, roomSearchResults, listingOptions, formId, formData, languageCode } = data;
+  const { widgetId, conversationId, message, timestamp, error, hotelOptions, roomSearchResults, listingOptions, formId, formData, languageCode, gallery } = data;
 
   if (!widgetId || !conversationId) {
     return {
@@ -34,15 +35,15 @@ export async function processWidgetResponse(data: WidgetResponseData): Promise<W
   if (error) {
     console.error('Widget Response Actions - Error from embeddings service:', error);
     responseMessage = "I'm sorry, I encountered an error while processing your message. Please try again.";
-  } else if (!message) {
-    console.error('Widget Response Actions - No message in response from embeddings service');
+  } else if (!message && !gallery) {
+    console.error('Widget Response Actions - No message or content in response from embeddings service');
     responseMessage = "I'm sorry, I didn't receive a proper response. Please try again.";
   } else {
-    responseMessage = message;
+    responseMessage = message ?? '';
   }
 
   try {
-    await queueAgentMessage(conversationId, responseMessage, timestamp, hotelOptions, roomSearchResults, formId, formData, languageCode, listingOptions);
+    await queueAgentMessage(conversationId, responseMessage, timestamp, hotelOptions, roomSearchResults, formId, formData, languageCode, listingOptions, gallery);
 
     return {
       success: true,

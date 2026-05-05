@@ -11,6 +11,7 @@ import {
   FattalPackagePrice,
   WidgetListing,
   WidgetFormId,
+  WidgetGallery,
 } from "@/types/message-types";
 import HotelCarousel from "./HotelCarousel";
 import FattalRoomCarousel from "./FattalRoomCarousel";
@@ -23,6 +24,8 @@ import FattalIdCollectForm from "./FattalIdCollectForm";
 import FattalOtpVerifyForm from "./FattalOtpVerifyForm";
 import FattalCancellationForm from "./FattalCancellationForm";
 import FattalContactUpdateForm from "./FattalContactUpdateForm";
+import GalleryCard from "./GalleryCard";
+import GalleryLightbox from "./GalleryLightbox";
 import {
   Language,
   t,
@@ -53,6 +56,7 @@ interface Message {
   formId?: string;
   formData?: Record<string, unknown>;
   languageCode?: string;
+  gallery?: WidgetGallery | null;
 }
 
 // Hebrew character detection regex
@@ -84,6 +88,10 @@ export default function ChatWidget({ config, langOverride }: ChatWidgetProps) {
   const [selectedListing, setSelectedListing] = useState<WidgetListing | null>(
     null
   );
+  const [lightbox, setLightbox] = useState<{
+    gallery: WidgetGallery;
+    index: number;
+  } | null>(null);
   const [currentLang, setCurrentLang] = useState<Language>(initialLang);
   const themeText = widgetTheme.text[currentLang];
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -119,6 +127,7 @@ export default function ChatWidget({ config, langOverride }: ChatWidgetProps) {
           formId: event.data.formId,
           formData: event.data.formData,
           languageCode: event.data.languageCode,
+          gallery: event.data.gallery,
         };
 
         // Update current language if provided in message
@@ -154,6 +163,7 @@ export default function ChatWidget({ config, langOverride }: ChatWidgetProps) {
     const hasListingOptions = messages.some(
       (msg) => msg.listingOptions && msg.listingOptions.length > 0
     );
+    const hasGallery = messages.some((msg) => Boolean(msg.gallery));
     const showingFattalRoomDetail = selectedFattalRooms.size > 0;
     const showingListingDetail = selectedListing !== null;
 
@@ -166,8 +176,8 @@ export default function ChatWidget({ config, langOverride }: ChatWidgetProps) {
         // Larger size for detail view
         newHeight = 700;
         newWidth = 420;
-      } else if (hasHotelOptions || hasRoomSearchResults || hasListingOptions) {
-        // Medium size for carousel
+      } else if (hasHotelOptions || hasRoomSearchResults || hasListingOptions || hasGallery) {
+        // Medium size for carousel / gallery card
         newHeight = 650;
         newWidth = 420;
       }
@@ -503,48 +513,55 @@ export default function ChatWidget({ config, langOverride }: ChatWidgetProps) {
   };
 
   // ── Welcome screen ──────────────────────────────────────────────────────────
-  if (!userName) {
-    return (
-      <WidgetShell
-        theme={widgetTheme}
-        showBackground={true}
-        backgroundImageUrl={config.backgroundImageUrl}
-        direction={direction}
-      >
-        <WelcomeScreen
-          theme={widgetTheme}
-          hotelName={config.hotelName}
-          logoUrl={config.logoUrl}
-          lang={currentLang}
-          nameInput={nameInput}
-          onNameInputChange={setNameInput}
-          onStart={handleNameSubmit}
-          quickActionsEnabled={config.quickActionsEnabled}
-          enabledQuickActions={config.enabledQuickActions}
-          onQuickAction={handleWelcomeQuickAction}
-          rightSlot={
-            config.showLanguageSelector ? (
-              <LanguageSelector
-                current={currentLang}
-                enabled={config.enabledLanguages}
-                onChange={setCurrentLang}
-              />
-            ) : undefined
-          }
-        />
-      </WidgetShell>
-    );
-  }
-
-  // ── Chat screen ─────────────────────────────────────────────────────────────
+  // Single WidgetShell wraps both states; AnimatePresence morphs welcome -> chat
+  // (welcome card scales up and fades out, chat fades in). Background image only
+  // renders on welcome state.
   return (
     <WidgetShell
       theme={widgetTheme}
-      showBackground={false}
-      backgroundImageUrl={null}
+      showBackground={!userName}
+      backgroundImageUrl={!userName ? config.backgroundImageUrl : null}
       direction={direction}
     >
-      <ChatHeader
+      <AnimatePresence mode="wait" initial={false}>
+        {!userName ? (
+          <motion.div
+            key="welcome"
+            className="h-full"
+            exit={{ scale: 1.08, opacity: 0 }}
+            transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
+          >
+            <WelcomeScreen
+              theme={widgetTheme}
+              hotelName={config.hotelName}
+              logoUrl={config.logoUrl}
+              lang={currentLang}
+              nameInput={nameInput}
+              onNameInputChange={setNameInput}
+              onStart={handleNameSubmit}
+              quickActionsEnabled={config.quickActionsEnabled}
+              enabledQuickActions={config.enabledQuickActions}
+              onQuickAction={handleWelcomeQuickAction}
+              rightSlot={
+                config.showLanguageSelector ? (
+                  <LanguageSelector
+                    current={currentLang}
+                    enabled={config.enabledLanguages}
+                    onChange={setCurrentLang}
+                  />
+                ) : undefined
+              }
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="chat"
+            className="h-full flex flex-col"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.25, delay: 0.05 }}
+          >
+            <ChatHeader
         theme={widgetTheme}
         hotelName={config.hotelName}
         logoUrl={config.logoUrl}
@@ -704,6 +721,17 @@ export default function ChatWidget({ config, langOverride }: ChatWidgetProps) {
                       )}
                     </>
                   )}
+
+                {/* Gallery Card (opens lightbox) */}
+                {message.gallery && (
+                  <GalleryCard
+                    gallery={message.gallery}
+                    lang={currentLang}
+                    onOpen={(i) =>
+                      setLightbox({ gallery: message.gallery!, index: i })
+                    }
+                  />
+                )}
               </MessageBubble>
             </motion.div>
           ))}
@@ -725,6 +753,19 @@ export default function ChatWidget({ config, langOverride }: ChatWidgetProps) {
         direction={direction}
         formLabel={currentLang === "HE" ? "כתיבת הודעה" : "Message composer"}
       />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Gallery Lightbox (single instance, overlays everything regardless of state) */}
+      {lightbox && (
+        <GalleryLightbox
+          gallery={lightbox.gallery}
+          startIndex={lightbox.index}
+          lang={currentLang}
+          onClose={() => setLightbox(null)}
+        />
+      )}
     </WidgetShell>
   );
 }

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { WidgetListing } from "@/types/message-types";
 import { Language, t, formatPrice, getLanguageConfig } from "@/utils/i18n";
 import { useImagePreloader } from "@/hooks/useImagePreloader";
+import { useImageNavigation } from "@/hooks/useImageNavigation";
 
 interface ListingDetailViewProps {
   listing: WidgetListing;
@@ -22,7 +23,6 @@ const getCurrencySymbol = (currency: string): string => {
 const DESCRIPTION_TRUNCATE_LENGTH = 150;
 
 export default function ListingDetailView({ listing, onSelect, onBack, lang = 'HE' }: ListingDetailViewProps) {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const langConfig = getLanguageConfig(lang);
   const symbol = getCurrencySymbol(listing.currency);
@@ -32,15 +32,14 @@ export default function ListingDetailView({ listing, onSelect, onBack, lang = 'H
     ? listing.gallery
     : [{ url: listing.imageUrl, description: null }];
 
+  const {
+    index: currentImageIndex,
+    setIndex: setCurrentImageIndex,
+    next: nextImage,
+    prev: prevImage,
+  } = useImageNavigation(images.length, 0);
+
   useImagePreloader(images, currentImageIndex);
-
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
-  };
-
-  const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
-  };
 
   return (
     <motion.div

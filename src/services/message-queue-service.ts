@@ -1,6 +1,6 @@
 'use server';
 
-import { FattalHotel, FattalRoom, WidgetListing } from '@/types/message-types';
+import { FattalHotel, FattalRoom, WidgetListing, WidgetGallery } from '@/types/message-types';
 import { pushPendingMessage } from './redis-service';
 
 /**
@@ -17,6 +17,7 @@ export async function queueAgentMessage(
   formData?: Record<string, unknown>,
   languageCode?: string,
   listingOptions?: WidgetListing[],
+  gallery?: WidgetGallery,
 ): Promise<void> {
   const messageData = {
     conversationId,
@@ -28,6 +29,7 @@ export async function queueAgentMessage(
     formId: formId || null,
     formData: formData || null,
     languageCode: languageCode || null,
+    gallery: gallery || null,
   };
 
   await pushPendingMessage(conversationId, messageData);
