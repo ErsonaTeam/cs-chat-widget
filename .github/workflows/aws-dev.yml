@@ -106,6 +106,7 @@ jobs:
         NEXT_PUBLIC_PUSHER_CLUSTER: ${{ env.NEXT_PUBLIC_PUSHER_CLUSTER }}
         EMBEDDINGS_SERVICE_URL: ${{ env.EMBEDDINGS_SERVICE_URL }}
         NEXT_PUBLIC_BASE_URL: ${{ env.NEXT_PUBLIC_BASE_URL }}
+        NEXT_PUBLIC_CHAT_SERVICE_URL: ${{ env.NEXT_PUBLIC_CHAT_SERVICE_URL }}
 
     - name: Install kubectl
       uses: azure/setup-kubectl@v3
