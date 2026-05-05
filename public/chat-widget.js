@@ -10,12 +10,14 @@
   // === MESSAGING INTEGRATION BLOCK START ===
   // Find the widget script tag.
   // Preferred: <script id="ersona-chat-widget" data-widget-id="...">
-  // Fallback: any <script> with data-widget-id on it.
+  // Fallback: any <script> with data-widget-id (or legacy data-company-id) on it.
   const widgetScript = document.getElementById('ersona-chat-widget')
-                       || document.querySelector('script[data-widget-id]');
+                       || document.querySelector('script[data-widget-id]')
+                       || document.querySelector('script[data-company-id]');
   const ds = (widgetScript && widgetScript.dataset) || {};
 
-  const widgetId = ds.widgetId || 'default';
+  // Accept data-widget-id (preferred) or legacy data-company-id (same value either way).
+  const widgetId = ds.widgetId || ds.companyId || 'default';
   const widgetLanguage = ds.language || null;
 
   // Session management - always start fresh
