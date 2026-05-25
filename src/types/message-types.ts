@@ -128,7 +128,7 @@ export interface WidgetGallery {
   type: 'gallery';
   hotelId: string;
   hotelName: string;
-  roomId?: string;
+  roomTypeId?: string;
   roomName?: string;
   images: WidgetGalleryImage[];
 }
