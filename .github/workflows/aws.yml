@@ -171,6 +171,7 @@ jobs:
         find ./k8s -type f -name "*.yaml" -exec sed -i 's/namespace: .*/namespace: ${{ env.NAMESPACE }}/g' {} \;
         find ./k8s -type f -name "*.yaml" -exec sed -i 's/app.kubernetes.io\/namespace: .*/app.kubernetes.io\/namespace: ${{ env.NAMESPACE }}/g' {} \;
         find ./k8s -type f -name "network-policy.yaml" -exec sed -i 's/namespace: .*/namespace: ${{ env.NAMESPACE }}/g' {} \;
+        find ./k8s -type f -name "*.yaml" -exec sed -i 's/environment: dev/environment: prod/g' {} \;
         echo "Namespace updated in all manifest files"
 
     - name: Update HPA manifest
@@ -209,7 +210,8 @@ jobs:
         
         echo "Applying Deployment..."
         kubectl apply -f ./k8s/deployment.yaml
-        
+        kubectl apply -f ./k8s/pdb.yaml
+
         echo "Applying Service..."
         kubectl apply -f ./k8s/service.yaml
         

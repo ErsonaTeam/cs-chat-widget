@@ -21,6 +21,15 @@ spec:
       labels:
         app: cs-chat-widget
     spec:
+      nodeSelector:
+        environment: dev
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app: cs-chat-widget
       containers:
       - name: cs-chat-widget
         image: 448866508458.dkr.ecr.eu-north-1.amazonaws.com/dev/cs-chat-widget:latest # For local. For EKS, use ECR URL: {account-id}.dkr.ecr.eu-north-1.amazonaws.com/cs-chat-widget:{tag}
