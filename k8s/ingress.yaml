@@ -10,6 +10,8 @@ metadata:
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
     alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:eu-north-1:448866508458:certificate/3a8358f3-c582-45c7-bce1-9c2f77b090bc"
     alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/group.name: "ersona-dev"
+    external-dns.alpha.kubernetes.io/hostname: "dev-widget.ersona.co"
 spec:
   rules:
   - host: "dev-widget.ersona.co"

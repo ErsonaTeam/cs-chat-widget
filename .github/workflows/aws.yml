@@ -45,11 +45,10 @@ jobs:
         node-version: 21
 
     - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-region: ${{ env.AWS_REGION }}
-        aws-access-key-id: ${{ secrets.AWS_ECR_ACCESS_KEY_ERSONA }}
-        aws-secret-access-key: ${{ secrets.AWS_ECR_ACCESS_SECRET_ERSONA }}
+        role-to-assume: arn:aws:iam::448866508458:role/ersona-gha-deploy
 
     - name: Login to Amazon ECR
       id: login-ecr
@@ -172,6 +171,7 @@ jobs:
         find ./k8s -type f -name "*.yaml" -exec sed -i 's/namespace: .*/namespace: ${{ env.NAMESPACE }}/g' {} \;
         find ./k8s -type f -name "*.yaml" -exec sed -i 's/app.kubernetes.io\/namespace: .*/app.kubernetes.io\/namespace: ${{ env.NAMESPACE }}/g' {} \;
         find ./k8s -type f -name "network-policy.yaml" -exec sed -i 's/namespace: .*/namespace: ${{ env.NAMESPACE }}/g' {} \;
+        find ./k8s -type f -name "*.yaml" -exec sed -i 's/environment: dev/environment: prod/g' {} \;
         echo "Namespace updated in all manifest files"
 
     - name: Update HPA manifest
@@ -184,6 +184,14 @@ jobs:
         echo "Transforming existing ingress.yaml for production environment..."
         sed -i 's/namespace: dev/namespace: prod/g' ./k8s/ingress.yaml
         sed -i 's/host: "dev-widget.ersona.co"/host: "widget.ersona.co"/g' ./k8s/ingress.yaml
+
+        # Flip the IngressGroup annotation from dev to prod so this prod Ingress
+        # joins the shared ersona-prod ALB (not the dev one).
+        sed -i -E 's/(group\.name:[[:space:]]*)"ersona-dev"/\1"ersona-prod"/' ./k8s/ingress.yaml
+
+        # Flip the external-dns hostname annotation too so external-dns writes
+        # the prod hostname's A-ALIAS at the shared prod ALB.
+        sed -i -E 's/(hostname:[[:space:]]*)"dev-widget\.ersona\.co"/\1"widget.ersona.co"/' ./k8s/ingress.yaml
 
     - name: Apply Kubernetes manifests
       run: |
@@ -202,7 +210,8 @@ jobs:
         
         echo "Applying Deployment..."
         kubectl apply -f ./k8s/deployment.yaml
-        
+        kubectl apply -f ./k8s/pdb.yaml
+
         echo "Applying Service..."
         kubectl apply -f ./k8s/service.yaml
         
