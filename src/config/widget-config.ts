@@ -15,6 +15,11 @@ export interface WidgetConfig {
   backgroundImageUrl: string | null;
   quickActionsEnabled: boolean;
   enabledQuickActions: QuickActionId[];
+  // Guest contact collection (SCRUM-1089)
+  showEmail: boolean;
+  emailRequired: boolean;
+  showPhone: boolean;
+  phoneRequired: boolean;
 }
 
 export const DEFAULT_WIDGET_CONFIG: Omit<WidgetConfig, 'widgetId'> = {
@@ -27,4 +32,9 @@ export const DEFAULT_WIDGET_CONFIG: Omit<WidgetConfig, 'widgetId'> = {
   backgroundImageUrl: null,
   quickActionsEnabled: true,
   enabledQuickActions: ['availability', 'prices', 'packages'],
+  // Contact collection off by default → widgets with no config behave exactly as today (name only)
+  showEmail: false,
+  emailRequired: false,
+  showPhone: false,
+  phoneRequired: false,
 };

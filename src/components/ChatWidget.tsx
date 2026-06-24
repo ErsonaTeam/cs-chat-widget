@@ -79,6 +79,12 @@ export default function ChatWidget({ config, langOverride }: ChatWidgetProps) {
 
   const [userName, setUserName] = useState<string>("");
   const [nameInput, setNameInput] = useState<string>("");
+  // Guest contact collected on the welcome screen (SCRUM-1089). Forwarded to the
+  // encoder via formData so it can be persisted on the conversation (SCRUM-1090).
+  const [collectedContact, setCollectedContact] = useState<{
+    email?: string;
+    phone?: string;
+  }>({});
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -200,6 +206,15 @@ export default function ChatWidget({ config, langOverride }: ChatWidgetProps) {
     formData?: Record<string, string | boolean>
   ): Promise<Message | null> => {
     try {
+      // Merge welcome-screen contact (SCRUM-1089) into the outgoing formData so the
+      // encoder receives the guest's email/phone. Explicit formData (e.g. booking
+      // forms) takes precedence over the collected contact.
+      const mergedFormData: Record<string, string | boolean> = {
+        ...(collectedContact.email ? { guestEmail: collectedContact.email } : {}),
+        ...(collectedContact.phone ? { guestPhone: collectedContact.phone } : {}),
+        ...(formData ?? {}),
+      };
+      const hasFormData = Object.keys(mergedFormData).length > 0;
       // Use the widget messaging system for iframe communication
       if (
         typeof window !== "undefined" &&
@@ -212,7 +227,7 @@ export default function ChatWidget({ config, langOverride }: ChatWidgetProps) {
             type: ChatWidgetMessageType.SEND_MESSAGE,
             message: message,
             userName: senderName,
-            ...(formData ? { formData } : {}),
+            ...(hasFormData ? { formData: mergedFormData } : {}),
           },
           "*"
         );
@@ -265,12 +280,18 @@ export default function ChatWidget({ config, langOverride }: ChatWidgetProps) {
   };
 
   // Handle name submission (form submit — no quick action)
-  const handleNameSubmit = (e: React.FormEvent) => {
+  const handleNameSubmit = (
+    e: React.FormEvent,
+    contact?: { email?: string; phone?: string }
+  ) => {
     e.preventDefault();
     if (!nameInput.trim()) return;
 
     const name = nameInput.trim();
     setUserName(name);
+    if (contact && (contact.email || contact.phone)) {
+      setCollectedContact(contact);
+    }
 
     const welcome = widgetTheme.welcomeMessage(name);
     const welcomeMessage: Message = {
@@ -539,6 +560,10 @@ export default function ChatWidget({ config, langOverride }: ChatWidgetProps) {
               nameInput={nameInput}
               onNameInputChange={setNameInput}
               onStart={handleNameSubmit}
+              showEmail={config.showEmail}
+              emailRequired={config.emailRequired}
+              showPhone={config.showPhone}
+              phoneRequired={config.phoneRequired}
               quickActionsEnabled={config.quickActionsEnabled}
               enabledQuickActions={config.enabledQuickActions}
               onQuickAction={handleWelcomeQuickAction}
