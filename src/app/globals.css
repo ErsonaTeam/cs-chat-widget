@@ -64,3 +64,58 @@ body {
     font-size: 16px;
   }
 }
+
+/* Phone input (react-international-phone) themed to match the widget's text fields
+   (name/email): one rounded, filled field with the flag selector embedded. (SCRUM-1089) */
+.ersona-phone {
+  display: flex;
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem; /* rounded-xl */
+  background: color-mix(in srgb, var(--color-text) 3%, transparent); /* bg-text/[0.03] */
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.ersona-phone:focus-within {
+  background: var(--color-surface);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+.ersona-phone.ersona-phone--error {
+  border-color: #ef4444; /* red-500, matches the email field's error border */
+}
+/* Flag + dial-code selector — embedded, borderless, transparent */
+.ersona-phone .react-international-phone-country-selector-button {
+  height: auto;
+  padding: 0 0.5rem;
+  border: none;
+  border-radius: 0.75rem 0 0 0.75rem;
+  background: transparent;
+}
+.ersona-phone .react-international-phone-country-selector-button:hover {
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+}
+/* The number input — fills the rest of the field */
+.ersona-phone input.ersona-phone-input {
+  flex: 1 1 auto;
+  width: 100%;
+  height: auto;
+  padding: 0.75rem 1rem; /* py-3 px-4 */
+  border: none;
+  border-radius: 0 0.75rem 0.75rem 0;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.875rem; /* text-sm */
+}
+.ersona-phone input.ersona-phone-input::placeholder {
+  color: color-mix(in srgb, var(--color-text) 40%, transparent); /* placeholder:text-text/40 */
+}
+.ersona-phone input.ersona-phone-input:focus {
+  outline: none;
+}
+/* Country dropdown list */
+.ersona-phone .react-international-phone-country-selector-dropdown {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  z-index: 50;
+}

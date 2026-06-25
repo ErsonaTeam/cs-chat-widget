@@ -1,9 +1,9 @@
 'use client';
 
-import { type FormEvent, type ReactNode, useRef, useState } from 'react';
+import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { PhoneInput } from 'react-international-phone';
+import { PhoneInput, defaultCountries, parseCountry } from 'react-international-phone';
 import 'react-international-phone/style.css';
 import DefaultIcon from './DefaultIcon';
 import QuickActions from './QuickActions';
@@ -24,12 +24,44 @@ export interface CollectedContact {
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Guess the default phone country (iso2) from the browser locale, e.g. "he-IL" -> "il".
-// Falls back to Israel (matches DEFAULT_COUNTRY_CODE = '972').
+// Falls back to Israel (matches DEFAULT_COUNTRY_CODE = '972'). Used as the instant
+// default; refined by physical location (IP) once detectCountryByIp resolves.
 function guessDefaultCountry(): string {
   if (typeof navigator === 'undefined') return 'il';
   const locale = navigator.language || '';
   const region = locale.split('-')[1];
   return region ? region.toLowerCase() : 'il';
+}
+
+// Detect the country by the device's physical location via IP, refining the
+// locale-based default. Returns a lowercase iso2 (e.g. "il") or null. Best-effort:
+// any failure (offline, rate-limit, CORS) is swallowed and the locale default stands.
+async function detectCountryByIp(): Promise<string | null> {
+  try {
+    const res = await fetch('https://get.geojs.io/v1/ip/country.json');
+    if (!res.ok) return null;
+    const data = (await res.json()) as { country?: string };
+    const cc = data?.country?.trim().toLowerCase();
+    return cc && /^[a-z]{2}$/.test(cc) ? cc : null;
+  } catch {
+    return null;
+  }
+}
+
+// Memoize the IP lookup at module scope: one request per page load, shared by every
+// mount of the welcome screen. This avoids the refetch/abort churn that happens when
+// the widget remounts during config loading (which previously dropped the result).
+let ipCountryPromise: Promise<string | null> | null = null;
+function getIpCountryOnce(): Promise<string | null> {
+  if (!ipCountryPromise) ipCountryPromise = detectCountryByIp();
+  return ipCountryPromise;
+}
+
+// Look up a country's dial code (e.g. "il" -> "972") from react-international-phone's
+// own country data, so we can switch the selected country via the controlled value.
+function dialCodeForIso2(iso2: string): string | null {
+  const found = defaultCountries.find((c) => parseCountry(c).iso2 === iso2);
+  return found ? parseCountry(found).dialCode : null;
 }
 
 // Split an E.164 value ("+972541234567") from react-international-phone into the
@@ -90,11 +122,36 @@ export default function WelcomeScreen({
   const errorClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Guest contact collection (SCRUM-1089) ──────────────────────────────────
+  // Instant default from the browser locale; refined by IP below.
   const [defaultCountry] = useState(guessDefaultCountry);
   const [email, setEmail] = useState('');
   const [phoneE164, setPhoneE164] = useState('');
   const [phoneDialCode, setPhoneDialCode] = useState(DEFAULT_COUNTRY_CODE);
   const [showContactErrors, setShowContactErrors] = useState(false);
+  // True once the guest starts typing a phone number — freezes the auto-detected
+  // country so a late IP result never overrides what the user is entering.
+  const phoneTouchedRef = useRef(false);
+
+  // Refine the phone country by the device's physical location (IP) on top of the
+  // locale-based default, unless the guest already started typing. We switch the
+  // country through the controlled value (set it to the dial code, e.g. "+972"),
+  // which reliably moves the selector — changing defaultCountry alone does not while
+  // the value is controlled. Memoized lookup → one request across remounts. (SCRUM-1089)
+  useEffect(() => {
+    if (!showPhone) return;
+    let cancelled = false;
+    getIpCountryOnce().then((cc) => {
+      if (cancelled || !cc || phoneTouchedRef.current) return;
+      const dial = dialCodeForIso2(cc);
+      if (dial) {
+        setPhoneE164(`+${dial}`);
+        setPhoneDialCode(dial);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [showPhone]);
 
   const phoneNational = nationalNumber(phoneE164, phoneDialCode);
   const emailProvided = email.trim() !== '';
@@ -262,10 +319,13 @@ export default function WelcomeScreen({
                   onChange={(phone, meta) => {
                     setPhoneE164(phone);
                     setPhoneDialCode(meta.country.dialCode);
+                    if (phone.replace(/\D/g, '').length > meta.country.dialCode.length) {
+                      phoneTouchedRef.current = true;
+                    }
                     if (showContactErrors) setShowContactErrors(false);
                   }}
                   inputClassName="ersona-phone-input"
-                  className="ersona-phone w-full"
+                  className={`ersona-phone w-full${phoneErr ? ' ersona-phone--error' : ''}`}
                   inputProps={{ 'aria-invalid': phoneErr }}
                 />
                 {phoneErr && (
