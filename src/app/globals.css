@@ -82,16 +82,29 @@ body {
 .ersona-phone.ersona-phone--error {
   border-color: #ef4444; /* red-500, matches the email field's error border */
 }
-/* Flag + dial-code selector — embedded, borderless, transparent */
+/* Flag + dial-code selector — embedded, borderless, fills the field height so the
+   flag is vertically centered and proportionate to the input. */
+.ersona-phone .react-international-phone-country-selector {
+  display: flex;
+  align-self: stretch;
+}
 .ersona-phone .react-international-phone-country-selector-button {
   height: auto;
-  padding: 0 0.5rem;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  padding: 0 0.375rem 0 0.625rem;
   border: none;
   border-radius: 0.75rem 0 0 0.75rem;
   background: transparent;
 }
 .ersona-phone .react-international-phone-country-selector-button:hover {
   background: color-mix(in srgb, var(--color-text) 6%, transparent);
+}
+/* Flag sized to sit proportionately against the 14px input text */
+.ersona-phone .react-international-phone-flag-emoji {
+  width: 20px;
+  height: 20px;
 }
 /* The number input — fills the rest of the field */
 .ersona-phone input.ersona-phone-input {
