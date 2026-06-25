@@ -4,13 +4,14 @@ import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'rea
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { PhoneInput, defaultCountries, parseCountry } from 'react-international-phone';
+import { isValidPhoneNumber } from 'libphonenumber-js';
 import 'react-international-phone/style.css';
 import DefaultIcon from './DefaultIcon';
 import QuickActions from './QuickActions';
 import type { WidgetTheme } from '@/config/theme-config';
 import { type Language, t } from '@/utils/i18n';
 import type { QuickActionId } from '@/config/widget-config';
-import { DEFAULT_COUNTRY_CODE, validatePhone, formatPhoneForStorage } from '@/utils/phone';
+import { DEFAULT_COUNTRY_CODE, formatPhoneForStorage } from '@/utils/phone';
 
 const NAME_ERROR_CLEAR_MS = 700;
 
@@ -157,7 +158,9 @@ export default function WelcomeScreen({
   const emailProvided = email.trim() !== '';
   const phoneProvided = phoneNational.length > 0;
   const emailValid = EMAIL_REGEX.test(email.trim());
-  const phoneValid = validatePhone(phoneNational, phoneDialCode);
+  // Validate the full E.164 number against the selected country's real numbering
+  // rules (libphonenumber-js), not just length — catches too-short/invalid numbers.
+  const phoneValid = phoneProvided && isValidPhoneNumber(phoneE164);
 
   // A shown field is "ok" when: not required and empty, or its value is valid.
   const emailOk = !showEmail ? true : emailRequired ? emailValid : !emailProvided || emailValid;
@@ -316,6 +319,11 @@ export default function WelcomeScreen({
                 <PhoneInput
                   defaultCountry={defaultCountry}
                   value={phoneE164}
+                  // Dial code is a fixed, non-editable prefix (chosen via the flag
+                  // dropdown). The guest types only the national number — they can't
+                  // edit or select the "+972" as text.
+                  disableDialCodeAndPrefix
+                  showDisabledDialCodeAndPrefix
                   onChange={(phone, meta) => {
                     setPhoneE164(phone);
                     setPhoneDialCode(meta.country.dialCode);
