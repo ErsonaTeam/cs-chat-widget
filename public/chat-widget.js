@@ -84,9 +84,7 @@
     RESET_CHAT: 'CHAT_WIDGET_RESET_CHAT'
   };
 
-  const widgetServiceBaseUrl = "__WIDGET_SERVICE_URL__" !== "__WIDGET_" + "SERVICE_URL__"
-      ? "__WIDGET_SERVICE_URL__"
-      : "http://localhost:3000";
+  const widgetServiceBaseUrl = "http://localhost:3000"
 
   // Clear session on every load to ensure fresh sessions
   clearSessionOnLoad();
@@ -130,8 +128,9 @@
     }, POLLING_INTERVAL_MS);
   };
 
-  // Send message function
-  const sendMessage = async (message, userName, formData) => {
+  // Send message function. `contact` carries the welcome-screen guest details
+  // (guestPhone / guestEmail) which ride along as conversation metadata.
+  const sendMessage = async (message, userName, formData, contact) => {
     trackActivity();
 
     if (!conversationId) {
@@ -150,6 +149,8 @@
       meta: {
         userAgent: navigator.userAgent,
         referrer: document.referrer,
+        ...(contact && contact.guestPhone ? { guestPhone: contact.guestPhone } : {}),
+        ...(contact && contact.guestEmail ? { guestEmail: contact.guestEmail } : {}),
       },
       ...(formData ? { formData } : {}),
     };
@@ -192,9 +193,9 @@
     // }
 
     if (event.data && event.data.type === MESSAGE_TYPES.SEND_MESSAGE) {
-      const { message, userName, formData } = event.data;
+      const { message, userName, formData, guestPhone, guestEmail } = event.data;
       if (message && typeof message === 'string') {
-        sendMessage(message, userName, formData).catch(error => {
+        sendMessage(message, userName, formData, { guestPhone, guestEmail }).catch(error => {
           console.error('Chat Widget - Failed to send message via postMessage:', error);
         });
       }

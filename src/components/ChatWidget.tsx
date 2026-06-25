@@ -206,15 +206,11 @@ export default function ChatWidget({ config, langOverride }: ChatWidgetProps) {
     formData?: Record<string, string | boolean>
   ): Promise<Message | null> => {
     try {
-      // Merge welcome-screen contact (SCRUM-1089) into the outgoing formData so the
-      // encoder receives the guest's email/phone. Explicit formData (e.g. booking
-      // forms) takes precedence over the collected contact.
-      const mergedFormData: Record<string, string | boolean> = {
-        ...(collectedContact.email ? { guestEmail: collectedContact.email } : {}),
-        ...(collectedContact.phone ? { guestPhone: collectedContact.phone } : {}),
-        ...(formData ?? {}),
-      };
-      const hasFormData = Object.keys(mergedFormData).length > 0;
+      // Welcome-screen contact (SCRUM-1089) travels as conversation metadata
+      // (guestPhone / guestEmail), NOT as formData — so the encoder treats it as
+      // enrichment (like PMS reservation data), never as a form submission that would
+      // replace the guest's message. formData stays reserved for real booking forms.
+      const hasFormData = formData != null && Object.keys(formData).length > 0;
       // Use the widget messaging system for iframe communication
       if (
         typeof window !== "undefined" &&
@@ -227,7 +223,9 @@ export default function ChatWidget({ config, langOverride }: ChatWidgetProps) {
             type: ChatWidgetMessageType.SEND_MESSAGE,
             message: message,
             userName: senderName,
-            ...(hasFormData ? { formData: mergedFormData } : {}),
+            ...(collectedContact.phone ? { guestPhone: collectedContact.phone } : {}),
+            ...(collectedContact.email ? { guestEmail: collectedContact.email } : {}),
+            ...(hasFormData ? { formData } : {}),
           },
           "*"
         );
