@@ -24,6 +24,11 @@ interface WidgetConfigResponse {
   showLanguageSelector: boolean;
   quickActionsEnabled: boolean;
   enabledQuickActions: string[];
+  // Guest contact collection (SCRUM-1089) — optional so older chat services degrade safely
+  showEmail?: boolean;
+  emailRequired?: boolean;
+  showPhone?: boolean;
+  phoneRequired?: boolean;
 }
 
 function defaultsForWidgetId(widgetId: string): WidgetConfig {
@@ -66,6 +71,10 @@ function fromResponse(res: WidgetConfigResponse): WidgetConfig {
     backgroundImageUrl: res.backgroundImageUrl,
     quickActionsEnabled: res.quickActionsEnabled,
     enabledQuickActions: normalizeQuickActions(res.enabledQuickActions),
+    showEmail: res.showEmail ?? false,
+    emailRequired: (res.showEmail ?? false) ? (res.emailRequired ?? false) : false,
+    showPhone: res.showPhone ?? false,
+    phoneRequired: (res.showPhone ?? false) ? (res.phoneRequired ?? false) : false,
   };
 
   if (process.env.NODE_ENV !== 'production') {
