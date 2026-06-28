@@ -11,6 +11,9 @@ export interface WidgetMessageData {
   meta?: {
     userAgent?: string;
     referrer?: string;
+    // Welcome-screen guest contact (SCRUM-1089) carried as conversation metadata.
+    guestPhone?: string;
+    guestEmail?: string;
   };
   formData?: Record<string, string | boolean>;
 }
