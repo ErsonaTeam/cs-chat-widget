@@ -82,6 +82,12 @@ export default function FullPageChatWidget({
 
   const [userName, setUserName] = useState<string>("");
   const [nameInput, setNameInput] = useState<string>("");
+  // Guest contact collected on the welcome screen (SCRUM-1089). Forwarded to the
+  // encoder via meta so it can be persisted on the conversation (SCRUM-1090).
+  const [collectedContact, setCollectedContact] = useState<{
+    email?: string;
+    phone?: string;
+  }>({});
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -205,6 +211,20 @@ export default function FullPageChatWidget({
             message,
             userName: currentUserName,
             timestamp: new Date().toISOString(),
+            // Welcome-screen contact (SCRUM-1089) travels as conversation metadata
+            // so the encoder persists it on the conversation (SCRUM-1090).
+            ...(collectedContact.phone || collectedContact.email
+              ? {
+                  meta: {
+                    ...(collectedContact.phone
+                      ? { guestPhone: collectedContact.phone }
+                      : {}),
+                    ...(collectedContact.email
+                      ? { guestEmail: collectedContact.email }
+                      : {}),
+                  },
+                }
+              : {}),
             ...(formData ? { formData } : {}),
           }),
         });
@@ -215,7 +235,7 @@ export default function FullPageChatWidget({
         setIsLoading(false);
       }
     },
-    [config.widgetId, startPolling]
+    [config.widgetId, startPolling, collectedContact.phone, collectedContact.email]
   );
 
   // Post a user bubble and forward to encoder — shared by text submit and quick actions
@@ -237,11 +257,17 @@ export default function FullPageChatWidget({
   );
 
   // Handle name submission (form submit — no quick action)
-  const handleNameSubmit = (e: React.FormEvent) => {
+  const handleNameSubmit = (
+    e: React.FormEvent,
+    contact?: { email?: string; phone?: string }
+  ) => {
     e.preventDefault();
     if (!nameInput.trim()) return;
 
     setUserName(nameInput.trim());
+    if (contact && (contact.email || contact.phone)) {
+      setCollectedContact(contact);
+    }
 
     const welcome = widgetTheme.welcomeMessage(nameInput.trim());
     const welcomeMessage: Message = {
@@ -481,6 +507,10 @@ export default function FullPageChatWidget({
               nameInput={nameInput}
               onNameInputChange={setNameInput}
               onStart={handleNameSubmit}
+              showEmail={config.showEmail}
+              emailRequired={config.emailRequired}
+              showPhone={config.showPhone}
+              phoneRequired={config.phoneRequired}
               quickActionsEnabled={config.quickActionsEnabled}
               enabledQuickActions={config.enabledQuickActions}
               onQuickAction={handleWelcomeQuickAction}
