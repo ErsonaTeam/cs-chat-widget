@@ -96,21 +96,27 @@ export interface FattalRoom {
 /**
  * Listing data for display in carousel (Hostaway listings)
  */
-export interface WidgetListing {
+interface WidgetListingBase {
   listingMapId: string;
   name: string;
   city: string;
   personCapacity: number;
   bedroomsNumber: number;
   bathroomsNumber: number;
-  averageNightlyPrice: number;
-  totalPrice: number;
-  currency: string;
   averageReviewRating: number | null;
   description: string;
   imageUrl: string;
   gallery?: FattalGalleryImage[];
 }
+
+/**
+ * Available listings carry prices; unavailable ones (`available: false`) carry none.
+ */
+export type WidgetListing = WidgetListingBase &
+  (
+    | { available?: undefined; averageNightlyPrice: number; totalPrice: number; currency: string }
+    | { available: false; averageNightlyPrice?: undefined; totalPrice?: undefined; currency?: undefined }
+  );
 
 /**
  * Single image inside a gallery payload.

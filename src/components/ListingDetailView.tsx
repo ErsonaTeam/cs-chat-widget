@@ -25,7 +25,6 @@ const DESCRIPTION_TRUNCATE_LENGTH = 150;
 export default function ListingDetailView({ listing, onSelect, onBack, lang = 'HE' }: ListingDetailViewProps) {
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const langConfig = getLanguageConfig(lang);
-  const symbol = getCurrencySymbol(listing.currency);
   const isDescriptionLong = listing.description && listing.description.length > DESCRIPTION_TRUNCATE_LENGTH;
 
   const images = listing.gallery?.length
@@ -187,15 +186,19 @@ export default function ListingDetailView({ listing, onSelect, onBack, lang = 'H
 
         {/* Price */}
         <div className="border-t border-primary/10 pt-3 mb-4">
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-bold text-primary">
-              {symbol}{formatPrice(listing.averageNightlyPrice, lang)}
-            </span>
-            <span className="text-sm text-primary/60">{t(lang, 'perNight')}</span>
-            <span className="text-sm text-primary/40 ms-1">
-              ({symbol}{formatPrice(listing.totalPrice, lang)} {t(lang, 'total')})
-            </span>
-          </div>
+          {listing.available === false ? (
+            <span className="text-sm font-semibold text-primary/70">{t(lang, 'notAvailableForDates')}</span>
+          ) : (
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-bold text-primary">
+                {getCurrencySymbol(listing.currency)}{formatPrice(listing.averageNightlyPrice, lang)}
+              </span>
+              <span className="text-sm text-primary/60">{t(lang, 'perNight')}</span>
+              <span className="text-sm text-primary/40 ms-1">
+                ({getCurrencySymbol(listing.currency)}{formatPrice(listing.totalPrice, lang)} {t(lang, 'total')})
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Select Button */}
