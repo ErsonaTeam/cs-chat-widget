@@ -21,7 +21,6 @@ const getCurrencySymbol = (currency: string): string => {
 export default function ListingCard({ listing, onViewDetails, lang = 'HE' }: ListingCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const langConfig = getLanguageConfig(lang);
-  const symbol = getCurrencySymbol(listing.currency);
 
   const images = listing.gallery?.length
     ? listing.gallery
@@ -145,15 +144,21 @@ export default function ListingCard({ listing, onViewDetails, lang = 'HE' }: Lis
 
         {/* Price & Details Button */}
         <div className="pt-3 border-t border-primary/10">
-          <div className="flex items-baseline gap-1 mb-3">
-            <span className="text-xl font-bold text-primary">
-              {symbol}{formatPrice(listing.averageNightlyPrice, lang)}
-            </span>
-            <span className="text-sm text-primary/60">{t(lang, 'perNight')}</span>
-            <span className="text-sm text-primary/40 ms-1">
-              ({symbol}{formatPrice(listing.totalPrice, lang)} {t(lang, 'total')})
-            </span>
-          </div>
+          {listing.available === false ? (
+            <div className="mb-3">
+              <span className="text-sm font-semibold text-primary/70">{t(lang, 'notAvailableForDates')}</span>
+            </div>
+          ) : (
+            <div className="flex items-baseline gap-1 mb-3">
+              <span className="text-xl font-bold text-primary">
+                {getCurrencySymbol(listing.currency)}{formatPrice(listing.averageNightlyPrice, lang)}
+              </span>
+              <span className="text-sm text-primary/60">{t(lang, 'perNight')}</span>
+              <span className="text-sm text-primary/40 ms-1">
+                ({getCurrencySymbol(listing.currency)}{formatPrice(listing.totalPrice, lang)} {t(lang, 'total')})
+              </span>
+            </div>
+          )}
           <button
             onClick={() => onViewDetails(listing)}
             className="w-full bg-accent hover:bg-accent/90 text-white text-sm font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-sm"
